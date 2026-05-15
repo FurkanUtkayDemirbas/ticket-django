@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Yeni Muhatap Oluştur | MYKEEP{% endblock %}
+
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8">
+        <nav class="flex text-[10px] text-slate-400 uppercase tracking-widest mb-2 space-x-2">
+            <a href="{% url 'muhatap_listesi' %}" class="hover:text-blue-600">Muhataplar</a>
+            <span>/</span>
+            <span class="text-slate-600">Yeni Kayıt</span>
+        </nav>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Yeni Muhatap Kaydı</h1>
+        <p class="text-sm text-slate-500 mt-1">Sisteme yeni bir müşteri veya iş ortağı tanımlayın.</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <form method="post" class="p-10 space-y-8">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 gap-y-7">
+                {% for field in form %}
+                <div class="group">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-between pt-10 border-t border-slate-100 mt-4">
+                <a href="{% url 'muhatap_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Vazgeç
+                </a>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-plus mr-2"></i> Muhatabı Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}

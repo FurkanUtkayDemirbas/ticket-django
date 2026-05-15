@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Destek Türleri | MYKEEP{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
+        <div>
+            <h3 class="text-lg font-bold text-slate-800">Destek Türleri</h3>
+            <p class="text-xs text-slate-500">Ticket kayıtlarında seçilecek destek türü tanımları.</p>
+        </div>
+        <a href="{% url 'destekturu_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-500/20">
+            <i class="fa-solid fa-plus mr-2"></i>Yeni Destek Türü
+        </a>
+    </div>
+
+    <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Arama</label>
+                <input type="search" name="arama" value="{{ arama }}" placeholder="Kod veya tanım" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
+            {% if arama %}
+                <a href="{% url 'destekturu_listesi' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
+                <th class="px-8 py-4">Kod</th>
+                <th class="px-8 py-4">Tanım</th>
+                <th class="px-8 py-4 text-right">İşlemler</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for d in destek_turleri %}
+            <tr class="hover:bg-slate-50 transition">
+                <td class="px-8 py-4 text-sm font-bold">
+                    <a href="{% url 'destekturu_duzenle' d.pk %}" class="text-blue-600 hover:text-blue-800 hover:underline">{{ d.kod }}</a>
+                </td>
+                <td class="px-8 py-4 text-sm text-slate-600">
+                    <a href="{% url 'destekturu_duzenle' d.pk %}" class="hover:text-blue-700 hover:underline">{{ d.definition }}</a>
+                </td>
+                <td class="px-8 py-4 text-right space-x-2">
+                    <a href="{% url 'destekturu_duzenle' d.pk %}" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white inline-flex items-center justify-center transition shadow-sm">
+                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                    </a>
+                    <a href="{% url 'destekturu_sil' d.pk %}" onclick="return confirm('Silinsin mi?')" class="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="px-8 py-10 text-center text-sm text-slate-400">Henüz destek türü eklenmemiş.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

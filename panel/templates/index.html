@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | MYKEEP{% endblock %}
+{% block page_title %}Genel Bakış{% endblock %}
+
+{% block content %}
+<div class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Merhaba, Utkay 👋</h1>
+        <p class="text-sm text-slate-500 font-medium">Sistemin genel durumu ve güncel veriler aşağıdadır.</p>
+    </div>
+    <div class="flex space-x-2">
+        <a href="{% url 'ticket_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition shadow-lg shadow-blue-500/20 flex items-center">
+            <i class="fa-solid fa-plus mr-2"></i> Yeni Ticket
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+        <div class="relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-user-group text-sm"></i>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg uppercase tracking-wider">Müşteri</span>
+            </div>
+            <h4 class="text-3xl font-black text-slate-800">{{ toplam_muhatap }}</h4>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Kayıtlı Muhataplar</p>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-purple-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+        <div class="relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-file-signature text-sm"></i>
+                </div>
+                <span class="text-[10px] font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg uppercase tracking-wider">Sözleşme</span>
+            </div>
+            <h4 class="text-3xl font-black text-slate-800">{{ toplam_sozlesme }}</h4>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Aktif Anlaşmalar</p>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+        <div class="relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-clock text-sm"></i>
+                </div>
+                <span class="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded-lg uppercase tracking-wider">Bekleyen</span>
+            </div>
+            <h4 class="text-3xl font-black text-slate-800">{{ acik_ticketlar }}</h4>
+            <p class="text-xs text-slate-400 mt-1 font-medium">İşlem Bekleyenler</p>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+        <div class="relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-check-double text-sm"></i>
+                </div>
+                <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-wider">Çözüldü</span>
+            </div>
+            <h4 class="text-3xl font-black text-slate-800">{{ tamamlanan_count }}</h4>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Toplam Başarı</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
+    <div class="bg-white border border-slate-100 rounded-3xl shadow-sm p-8">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-lg font-bold text-slate-800">Operasyonel Durum</h3>
+            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase">Canlı Veri</span>
+        </div>
+        
+        <div class="space-y-6">
+            <div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-semibold text-slate-600">Bekleyen İşler</span>
+                    <span class="text-sm font-bold text-amber-600">{{ acik_ticketlar }} Adet</span>
+                </div>
+                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div class="bg-amber-500 h-full rounded-full" style="width: {% widthratio acik_ticketlar toplam_kayit 100 %}%"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-semibold text-slate-600">Çözülen Talepler</span>
+                    <span class="text-sm font-bold text-emerald-600">{{ tamamlanan_count }} Adet</span>
+                </div>
+                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div class="bg-emerald-500 h-full rounded-full" style="width: {% widthratio tamamlanan_count toplam_kayit 100 %}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mt-10">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Müşteri Memnuniyeti</p>
+                <p class="text-xl font-black text-slate-800">%94</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ort. Çözüm Süresi</p>
+                <p class="text-xl font-black text-slate-800">4.2 sa</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-3xl shadow-sm p-8">
+        <h3 class="text-lg font-bold text-slate-800 mb-6">Müşteri Portföyü</h3>
+        
+        <div class="flex items-center justify-center py-4">
+            <div class="relative w-40 h-40 flex items-center justify-center rounded-full border-[10px] border-blue-500 border-t-slate-100 rotate-45">
+                <div class="-rotate-45 text-center">
+                    <span class="text-3xl font-black text-slate-800">{{ toplam_muhatap }}</span>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Toplam Muhatap</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 space-y-4">
+            <div class="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-blue-200">
+                        <i class="fa-solid fa-file-contract text-xs"></i>
+                    </div>
+                    <span class="text-sm font-bold text-slate-700">Aktif Sözleşmeler</span>
+                </div>
+                <span class="text-lg font-black text-blue-600">{{ toplam_sozlesme }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ rapor_baslik }}{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'raporlar_sayfasi' %}" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200/50 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition">
+                <i class="fa-solid fa-arrow-left text-sm"></i>
+            </a>
+            <div>
+                <h3 class="text-sm font-semibold text-slate-900">{{ rapor_baslik }}</h3>
+                <p class="text-xs text-slate-500">{{ rapor_aciklama }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ export_excel_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition inline-flex items-center shadow-sm shadow-emerald-500/20">
+                <i class="fa-solid fa-file-excel mr-2"></i> Excel
+            </a>
+            <a href="{{ export_pdf_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition inline-flex items-center shadow-sm shadow-rose-500/20">
+                <i class="fa-solid fa-file-pdf mr-2"></i> PDF
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="px-6 py-5 border-b border-slate-100 bg-white">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_160px_160px_auto_auto] xl:items-end">
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Danışman</label>
+                <select name="danisman" class="w-full">
+                    <option value="">Tümü</option>
+                    {% for d in danismanlar %}
+                        <option value="{{ d.username }}" {% if secili_danisman == d.username %}selected{% endif %}>{{ d.isim }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Modül</label>
+                <select name="modul" class="w-full">
+                    <option value="">Tümü</option>
+                    {% for m in moduller %}
+                        <option value="{{ m.kod }}" {% if secili_modul == m.kod %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Başlangıç</label>
+                <input type="date" name="baslangic" value="{{ baslangic }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Bitiş</label>
+                <input type="date" name="bitis" value="{{ bitis }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
+            {% if secili_danisman or secili_modul or baslangic or bitis %}
+                <a href="{{ request.path }}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="text-[11px] uppercase tracking-wider text-slate-400 font-bold border-b border-slate-100 bg-slate-50/30">
+                    <th class="px-6 py-4">{% if grup_tipi == "modul" %}Modül{% else %}Danışman{% endif %}</th>
+                    <th class="px-6 py-4">Toplam Süre</th>
+                    <th class="px-6 py-4">Aktivite Sayısı</th>
+                    <th class="px-6 py-4">Ticket Sayısı</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for o in ozetler %}
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 text-sm font-bold text-slate-700">
+                        {% if grup_tipi == "modul" %}
+                            {% if o.modul__program or o.modul__isim %}
+                                {{ o.modul__program|default:"-" }} - {{ o.modul__isim|default:"-" }}
+                            {% else %}
+                                Atanmamış
+                            {% endif %}
+                        {% else %}
+                            {{ o.danisman__isim|default:"Atanmamış" }}
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm font-semibold text-emerald-600">{{ o.toplam_sure|default:"0" }} sa</td>
+                    <td class="px-6 py-4 text-sm text-slate-600">{{ o.aktivite_sayisi }}</td>
+                    <td class="px-6 py-4 text-sm text-slate-600">{{ o.ticket_sayisi }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-sm italic">Raporda gösterilecek özet bulunamadı.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Sözleşmeler | MYKEEP{% endblock %}
+{% block page_title %}Sözleşme Yönetimi{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
+        <div>
+            <h3 class="text-lg font-bold text-slate-800 tracking-tight">Sözleşme Listesi</h3>
+            <p class="text-xs text-slate-500">Müşterilerle yapılan aktif ve geçmiş anlaşmalar</p>
+        </div>
+        <a href="{% url 'sozlesme_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-500/20">
+            <i class="fa-solid fa-plus mr-2"></i>Yeni Sözleşme Tanımla
+        </a>
+    </div>
+
+    <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_160px_160px_auto_auto] xl:items-end">
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Sözleşme No</label>
+                <input type="search" name="sozlesme_no" value="{{ sozlesme_no }}" placeholder="2026-..." class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tip</label>
+                <select name="tip" class="w-full">
+                    <option value="">Tümü</option>
+                    {% for tip in sozlesme_tipleri %}
+                        <option value="{{ tip.tanim }}" {% if secili_tip == tip.tanim %}selected{% endif %}>{{ tip.tanim }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Muhatap</label>
+                <select name="muhatap" class="w-full">
+                    <option value="">Tümü</option>
+                    {% for m in muhataplar %}
+                        <option value="{{ m.unvan }}" {% if secili_muhatap == m.unvan %}selected{% endif %}>{{ m.unvan }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Başlangıç</label>
+                <input type="date" name="baslangic" value="{{ baslangic }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Bitiş</label>
+                <input type="date" name="bitis" value="{{ bitis }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
+            {% if sozlesme_no or secili_tip or secili_muhatap or baslangic or bitis %}
+                <a href="{% url 'sozlesme_listesi' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 bg-slate-50/10">
+                    <th class="px-8 py-4">Sözleşme / Tip</th>
+                    <th class="px-8 py-4">Muhatap (Müşteri)</th>
+                    <th class="px-8 py-4">Geçerlilik Tarihi</th>
+                    <th class="px-8 py-4 text-right">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for s in sozlesmeler %}
+                <tr class="hover:bg-slate-50/50 transition group">
+                    <td class="px-8 py-4">
+                        <div class="flex flex-col">
+                            <a href="{% url 'sozlesme_duzenle' s.pk %}" class="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">#{{ s.sozlesmeno }}</a>
+                            <span class="text-[10px] font-semibold text-blue-500 uppercase">{{ s.tip|default:"Genel" }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+                            <a href="{% url 'muhatap_duzenle' s.muhatap.pk %}" class="text-sm font-medium text-slate-600 hover:text-blue-700 hover:underline">{{ s.muhatap.unvan }}</a>
+                        </div>
+                    </td>
+                    <td class="px-8 py-4">
+                        <div class="flex flex-col">
+                            <span class="text-xs text-slate-700 font-medium">
+                                {{ s.baslangic_tarihi|date:"d.m.Y" }} - {{ s.bitis_tarihi|date:"d.m.Y" }}
+                            </span>
+                            <span class="text-[10px] text-slate-400">{{ s.tanim|truncatechars:30 }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-4 text-right">
+                        <div class="flex items-center justify-end space-x-2">
+                            <a href="{% url 'sozlesme_duzenle' s.pk %}" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </a>
+                            <a href="{% url 'sozlesme_sil' s.pk %}" onclick="return confirm('Bu sözleşmeyi silmek istediğine emin misin?')" class="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all shadow-sm">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-8 py-16 text-center text-slate-400 italic text-sm">Sisteme henüz hiç sözleşme girişi yapılmamış.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

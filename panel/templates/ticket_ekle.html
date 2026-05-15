@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Yeni Ticket Oluştur | MYKEEP{% endblock %}
+
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+    <!-- Üst Başlık Bölümü -->
+    <div class="mb-8">
+        <nav class="flex text-[10px] text-slate-400 uppercase tracking-widest mb-2 space-x-2">
+            <a href="{% url 'index' %}" class="hover:text-blue-600">Dashboard</a>
+            <span>/</span>
+            <a href="{% url 'ticket_listesi' %}" class="hover:text-blue-600">Ticketlar</a>
+            <span>/</span>
+            <span class="text-slate-600">Yeni Kayıt</span>
+        </nav>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Yeni Destek Talebi</h1>
+        <p class="text-sm text-slate-500 mt-1">Lütfen aşağıdaki alanları eksiksiz doldurarak yeni bir ticket açın.</p>
+    </div>
+
+    <!-- Ana Form Kartı -->
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <form method="post" class="p-10 space-y-8">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 gap-y-7">
+                {% for field in form %}
+                <div class="group">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-blue-600">
+                        {{ field.label }}
+                    </label>
+                    <div class="relative">
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="text-red-500 text-[10px] mt-1.5 font-semibold px-1">
+                                <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ field.errors.0 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Alt İşlem Butonları -->
+            <div class="flex items-center justify-between pt-10 border-t border-slate-100 mt-4">
+                <a href="{% url 'ticket_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Vazgeç ve Listeye Dön
+                </a>
+                
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center">
+                    <i class="fa-solid fa-plus mr-2"></i> Kaydı Oluştur ve Başlat
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}
