@@ -17,59 +17,63 @@
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+    <!-- Müşteri (Blue Card) -->
+    <div class="bg-[#eff6ff] p-6 rounded-3xl border border-[#dbeafe] shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-100 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-30"></div>
         <div class="relative">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
                     <i class="fa-solid fa-user-group text-sm"></i>
                 </div>
-                <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg uppercase tracking-wider">Müşteri</span>
+                <span class="text-[10px] font-bold text-blue-600 bg-blue-100/50 px-2 py-1 rounded-lg uppercase tracking-wider">Müşteri</span>
             </div>
-            <h4 class="text-3xl font-black text-slate-800">{{ toplam_muhatap }}</h4>
-            <p class="text-xs text-slate-400 mt-1 font-medium">Kayıtlı Muhataplar</p>
+            <h4 class="text-3xl font-black text-blue-900">{{ toplam_muhatap }}</h4>
+            <p class="text-xs text-blue-700 mt-1 font-medium">Kayıtlı Muhataplar</p>
         </div>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-16 h-16 bg-purple-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+    <!-- Bekleyen (Yellow Card) -->
+    <div class="bg-[#fffbeb] p-6 rounded-3xl border border-[#fef3c7] shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-100 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-30"></div>
         <div class="relative">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                <div class="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-amber-500/20">
+                    <i class="fa-solid fa-clock text-sm"></i>
+                </div>
+                <span class="text-[10px] font-bold text-amber-700 bg-amber-100/50 px-2 py-1 rounded-lg uppercase tracking-wider">Bekleyen</span>
+            </div>
+            <h4 class="text-3xl font-black text-amber-900">{{ acik_ticketlar }}</h4>
+            <p class="text-xs text-amber-700 mt-1 font-medium">İşlem Bekleyenler</p>
+        </div>
+    </div>
+
+    <!-- Çözüldü (Green Card) -->
+    <div class="bg-[#f0fdf4] p-6 rounded-3xl border border-[#dcfce7] shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-100 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-30"></div>
+        <div class="relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20">
+                    <i class="fa-solid fa-check-double text-sm"></i>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/50 px-2 py-1 rounded-lg uppercase tracking-wider">Çözüldü</span>
+            </div>
+            <h4 class="text-3xl font-black text-emerald-900">{{ tamamlanan_count }}</h4>
+            <p class="text-xs text-emerald-700 mt-1 font-medium">Toplam Başarı</p>
+        </div>
+    </div>
+
+    <!-- Sözleşme (White Card) -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+        <div class="relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-md shadow-slate-800/20">
                     <i class="fa-solid fa-file-signature text-sm"></i>
                 </div>
-                <span class="text-[10px] font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg uppercase tracking-wider">Sözleşme</span>
+                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg uppercase tracking-wider">Sözleşme</span>
             </div>
             <h4 class="text-3xl font-black text-slate-800">{{ toplam_sozlesme }}</h4>
             <p class="text-xs text-slate-400 mt-1 font-medium">Aktif Anlaşmalar</p>
-        </div>
-    </div>
-
-    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
-        <div class="relative">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
-                    <i class="fa-solid fa-clock text-sm"></i>
-                </div>
-                <span class="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded-lg uppercase tracking-wider">Bekleyen</span>
-            </div>
-            <h4 class="text-3xl font-black text-slate-800">{{ acik_ticketlar }}</h4>
-            <p class="text-xs text-slate-400 mt-1 font-medium">İşlem Bekleyenler</p>
-        </div>
-    </div>
-
-    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition group relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
-        <div class="relative">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                    <i class="fa-solid fa-check-double text-sm"></i>
-                </div>
-                <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-wider">Çözüldü</span>
-            </div>
-            <h4 class="text-3xl font-black text-slate-800">{{ tamamlanan_count }}</h4>
-            <p class="text-xs text-slate-400 mt-1 font-medium">Toplam Başarı</p>
         </div>
     </div>
 </div>
