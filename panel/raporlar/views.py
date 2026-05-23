@@ -4,6 +4,8 @@ from django.db.models import Count, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
+from xhtml2pdf import pisa
+from django.template.loader import render_to_string
 
 from ticket.models import aktivite, ticket
 
@@ -11,7 +13,7 @@ from ticket.models import aktivite, ticket
 def raporlar_merkezi(request):
     context = {
         "toplam_ticket": ticket.objects.count(),
-        "atanmamis_ticket": ticket.objects.filter(danisman__isnull=True).count(),
+        "atanmamis_ticket": ticket.objects.filter(danisman=None).count(),
         "onay_bekleyen": ticket.objects.filter(onay=False).count(),
         "toplam_aktivite_sure": aktivite.objects.aggregate(toplam=Sum("time"))["toplam"] or 0,
     }
@@ -28,7 +30,7 @@ def _filter_context(request):
         "baslangic": request.GET.get("baslangic", "").strip(),
         "bitis": request.GET.get("bitis", "").strip(),
         "durumlar": ticket._meta.get_field("durumtanim").remote_field.model.objects.order_by("durumtanim"),
-        "danismanlar": ticket._meta.get_field("danisman").remote_field.model.objects.order_by("isim"),
+        "danismanlar": ticket._meta.get_field("danisman").related_model.objects.order_by("isim"),
         "moduller": aktivite._meta.get_field("modul").remote_field.model.objects.order_by("program", "isim"),
         "ticketlar": ticket.objects.order_by("-ticketno"),
     }
@@ -38,8 +40,8 @@ def _ticket_queryset(request, base_queryset=None):
     queryset = base_queryset if base_queryset is not None else ticket.objects.all()
     queryset = queryset.select_related(
         "unvan", "sozlesmeno", "bolumkod", "destekturu", "oncelikkod",
-        "durumtanim", "faturadurum", "danisman",
-    ).order_by("-ticketno")
+        "durumtanim", "faturadurum",
+    ).prefetch_related("danisman").order_by("-ticketno")
 
     arama = request.GET.get("arama", "").strip()
     durum = request.GET.get("durum", "").strip()
@@ -57,7 +59,7 @@ def _ticket_queryset(request, base_queryset=None):
     if durum:
         queryset = queryset.filter(durumtanim_id=durum)
     if danisman:
-        queryset = queryset.filter(danisman_id=danisman)
+        queryset = queryset.filter(danisman__username=danisman)
     if baslangic:
         queryset = queryset.filter(taleptarih__date__gte=baslangic)
     if bitis:
@@ -111,13 +113,7 @@ def rapor_indir_excel(request):
 
 def ticket_rapor_pdf(request):
     ticketlar = _ticket_queryset(request)
-    return _pdf_response(
-        "Ticket Raporu",
-        _ticket_headers(),
-        _ticket_rows(ticketlar),
-        "ticket_raporu.pdf",
-        [8, 22, 18, 16, 14, 12, 12, 10],
-    )
+    return _pdf_response(request, "TICKET RAPORU", _ticket_headers(), _ticket_rows(ticketlar), "ticket_raporu.pdf", "Destek talepleri icin genel kayit listesi.")
 
 
 def aktivite_rapor_detay(request):
@@ -144,18 +140,12 @@ def aktivite_rapor_indir_excel(request):
 def aktivite_rapor_pdf(request):
     aktiviteler = _aktivite_queryset(request)
     rows = _aktivite_rows(aktiviteler)
-    rows.append(["", "", "", "Toplam Sure", aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0, "", ""])
-    return _pdf_response(
-        "Aktivite Raporu",
-        _aktivite_headers(),
-        rows,
-        "aktivite_raporu.pdf",
-        [10, 12, 26, 16, 10, 18, 24],
-    )
+    toplam_sure = aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0
+    return _pdf_response(request, "AKTIVITE RAPORU", _aktivite_headers(), rows, "aktivite_raporu.pdf", "Tum danisman ve efor sureleri", "Toplam Kayitli Sure", f"{toplam_sure} Saat")
 
 
 def atanmamis_ticket_raporu(request):
-    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman__isnull=True))
+    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman=None))
     context = _filter_context(request)
     context.update({
         "ticketlar": ticketlar,
@@ -169,19 +159,13 @@ def atanmamis_ticket_raporu(request):
 
 
 def atanmamis_ticket_excel(request):
-    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman__isnull=True))
+    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman=None))
     return _excel_response("Atanmamış Ticketlar", _ticket_headers(), _ticket_rows(ticketlar), "atanmamis_ticketlar.xlsx")
 
 
 def atanmamis_ticket_pdf(request):
-    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman__isnull=True))
-    return _pdf_response(
-        "Atanmamis Ticketlar",
-        _ticket_headers(),
-        _ticket_rows(ticketlar),
-        "atanmamis_ticketlar.pdf",
-        [8, 22, 18, 16, 14, 12, 12, 10],
-    )
+    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman=None))
+    return _pdf_response(request, "ATANMAMIS TICKETLAR RAPORU", _ticket_headers(), _ticket_rows(ticketlar), "atanmamis_ticketlar.pdf", "Henuz danisman atamasi yapilmamis talepler.")
 
 
 def efor_onayi_bekleyen_raporu(request):
@@ -205,13 +189,7 @@ def efor_onayi_bekleyen_excel(request):
 
 def efor_onayi_bekleyen_pdf(request):
     ticketlar = _ticket_queryset(request, ticket.objects.filter(onay=False))
-    return _pdf_response(
-        "Efor Onayi Bekleyenler",
-        _ticket_headers(),
-        _ticket_rows(ticketlar),
-        "efor_onayi_bekleyenler.pdf",
-        [8, 22, 18, 16, 14, 12, 12, 10],
-    )
+    return _pdf_response(request, "EFOR ONAYI BEKLEYENLER", _ticket_headers(), _ticket_rows(ticketlar), "efor_onayi_bekleyenler.pdf", "Onay bekleyen ticket ve efor kayitlari.")
 
 
 def danisman_efor_ozeti(request):
@@ -243,7 +221,7 @@ def danisman_efor_excel(request):
 
 def danisman_efor_pdf(request):
     ozetler = _danisman_ozet_rows(request)
-    return _pdf_response("Danisman Efor Ozeti", _ozet_headers(), ozetler, "danisman_efor_ozeti.pdf", [34, 16, 16, 16])
+    return _pdf_response(request, "DANISMAN EFOR OZETI", _ozet_headers(), ozetler, "danisman_efor_ozeti.pdf", "Danisman bazinda toplam sure ve aktivite sayilari.")
 
 
 def modul_efor_ozeti(request):
@@ -275,11 +253,11 @@ def modul_efor_excel(request):
 
 def modul_efor_pdf(request):
     ozetler = _modul_ozet_rows(request)
-    return _pdf_response("Modul Efor Ozeti", _ozet_headers(), ozetler, "modul_efor_ozeti.pdf", [34, 16, 16, 16])
+    return _pdf_response(request, "MODUL EFOR OZETI", _ozet_headers(), ozetler, "modul_efor_ozeti.pdf", "Modul bazinda toplam sure ve ticket sayilari.")
 
 
 def _ticket_headers():
-    return ["Ticket No", "Konu", "Müşteri", "Modül", "Danışman", "Tarih", "Efor", "Onay"]
+    return ["Ticket No", "Konu", "Müşteri", "Modül", "Tarih", "Efor", "Onay"]
 
 
 def _ticket_rows(ticketlar):
@@ -288,7 +266,6 @@ def _ticket_rows(ticketlar):
         t.konu,
         str(t.unvan) if t.unvan else "",
         str(t.bolumkod) if t.bolumkod else "",
-        str(t.danisman) if t.danisman else "",
         t.taleptarih.strftime("%Y-%m-%d") if t.taleptarih else "",
         t.efor or 0,
         "Onaylı" if t.onay else "Bekliyor",
@@ -366,94 +343,84 @@ def _excel_response(title, headers, rows, filename):
     return response
 
 
-def _pdf_response(title, headers, rows, filename, widths):
-    lines = [_format_pdf_row(headers, widths), "-" * min(sum(widths) + (3 * (len(widths) - 1)), 165)]
-    lines.extend(_format_pdf_row(row, widths) for row in rows)
-    pdf = _make_simple_pdf(title, lines)
-    response = HttpResponse(pdf, content_type="application/pdf")
+
+import os
+from django.conf import settings
+
+def link_callback(uri, rel):
+    """
+    Convert HTML URIs to absolute system paths so xhtml2pdf can access those
+    resources. Handles Windows path joining properly.
+    """
+    sUrl = settings.STATIC_URL
+    sRoot = settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else os.path.join(settings.BASE_DIR, 'static')
+    mUrl = settings.MEDIA_URL
+    mRoot = settings.MEDIA_ROOT
+
+    # Normalize URLs to match uri formatting
+    if not sUrl.startswith('/') and uri.startswith('/'):
+        sUrl = '/' + sUrl
+    if not mUrl.startswith('/') and uri.startswith('/'):
+        mUrl = '/' + mUrl
+
+    if uri.startswith(mUrl):
+        relative_path = uri.replace(mUrl, "", 1).lstrip('/\\')
+        path = os.path.join(mRoot, relative_path)
+    elif uri.startswith(sUrl):
+        relative_path = uri.replace(sUrl, "", 1).lstrip('/\\')
+        path = os.path.join(sRoot, relative_path)
+    else:
+        raise Exception(f'URI DID NOT MATCH: uri="{uri}", sUrl="{sUrl}", mUrl="{mUrl}"')
+
+    if not os.path.isfile(path):
+        raise Exception('media URI must start with %s or %s (Path resolved to: %s)' % (sUrl, mUrl, path))
+    
+    return path
+
+import tempfile
+
+def _pdf_response(request, title, headers, rows, filename, description="", summary_title=None, summary_value=None):
+    # Enforce strict column widths using xhtml2pdf native pdf:widths property
+    if len(headers) == 7 and headers[0] == "Ticket No":
+        widths = ["10%", "25%", "20%", "15%", "15%", "5%", "10%"]
+    elif len(headers) == 7 and headers[0] == "Aktivite No":
+        widths = ["10%", "12%", "20%", "15%", "8%", "20%", "15%"]
+    elif len(headers) == 4 and headers[0] == "Grup":
+        widths = ["40%", "20%", "20%", "20%"]
+    else:
+        widths = [f"{100.0/len(headers)}%"] * len(headers)
+        
+    pdf_widths_str = ", ".join(widths)
+
+    context = {
+        "rapor_baslik": title,
+        "rapor_aciklama": description,
+        "headers": headers,
+        "pdf_widths": pdf_widths_str,
+        "rows": rows,
+        "summary_title": summary_title,
+        "summary_value": summary_value,
+        "request": request,
+    }
+    html = render_to_string("pdf_rapor_sablonu.html", context)
+    response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    
+    # Monkeypatch NamedTemporaryFile for Windows to prevent TTFError (file lock)
+    _orig_NamedTemporaryFile = tempfile.NamedTemporaryFile
+    def _patched_NamedTemporaryFile(*args, **kwargs):
+        kwargs['delete'] = False
+        return _orig_NamedTemporaryFile(*args, **kwargs)
+    
+    tempfile.NamedTemporaryFile = _patched_NamedTemporaryFile
+    try:
+        pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
+    finally:
+        tempfile.NamedTemporaryFile = _orig_NamedTemporaryFile
+
+    if pisa_status.err:
+        return HttpResponse("PDF oluşturulurken hata oluştu", status=500)
     return response
-
-
-def _format_pdf_row(row, widths):
-    parts = []
-    for value, width in zip(row, widths):
-        text = _pdf_text(value)
-        parts.append(textwrap.shorten(text, width=width, placeholder="..").ljust(width))
-    return " | ".join(parts)
-
-
-def _pdf_text(value):
-    text = "" if value is None else str(value)
-    translation = str.maketrans({
-        "ç": "c", "Ç": "C", "ğ": "g", "Ğ": "G", "ı": "i", "İ": "I",
-        "ö": "o", "Ö": "O", "ş": "s", "Ş": "S", "ü": "u", "Ü": "U",
-    })
-    return text.translate(translation).encode("latin-1", "ignore").decode("latin-1")
-
-
-def _escape_pdf_text(text):
-    return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-
-
-def _make_simple_pdf(title, lines):
-    page_width = 842
-    page_height = 595
-    margin_x = 32
-    start_y = 555
-    line_height = 11
-    lines_per_page = 45
-    chunks = [lines[i:i + lines_per_page] for i in range(0, len(lines), lines_per_page)] or [[]]
-
-    objects = ["<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>"]
-    page_ids = []
-    content_ids = []
-
-    for chunk in chunks:
-        content_lines = [
-            "BT",
-            "/F1 12 Tf",
-            f"{margin_x} {start_y} Td",
-            f"({_escape_pdf_text(_pdf_text(title))}) Tj",
-            "0 -20 Td",
-            "/F1 7 Tf",
-        ]
-        for line in chunk:
-            content_lines.append(f"({_escape_pdf_text(line)}) Tj")
-            content_lines.append(f"0 -{line_height} Td")
-        content_lines.append("ET")
-        content = "\n".join(content_lines)
-        content_ids.append(len(objects) + 1)
-        page_ids.append(len(objects) + 2)
-        objects.append(f"<< /Length {len(content.encode('latin-1'))} >>\nstream\n{content}\nendstream")
-        objects.append("")
-
-    pages_id = len(objects) + 1
-    for index, page_id in enumerate(page_ids):
-        content_id = content_ids[index]
-        objects[page_id - 1] = (
-            f"<< /Type /Page /Parent {pages_id} 0 R /MediaBox [0 0 {page_width} {page_height}] "
-            f"/Resources << /Font << /F1 1 0 R >> >> /Contents {content_id} 0 R >>"
-        )
-
-    kids = " ".join(f"{page_id} 0 R" for page_id in page_ids)
-    objects.append(f"<< /Type /Pages /Kids [{kids}] /Count {len(page_ids)} >>")
-    catalog_id = len(objects) + 1
-    objects.append(f"<< /Type /Catalog /Pages {pages_id} 0 R >>")
-
-    pdf = bytearray(b"%PDF-1.4\n")
-    offsets = [0]
-    for object_id, body in enumerate(objects, start=1):
-        offsets.append(len(pdf))
-        pdf.extend(f"{object_id} 0 obj\n{body}\nendobj\n".encode("latin-1"))
-    xref_pos = len(pdf)
-    pdf.extend(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode("latin-1"))
-    for offset in offsets[1:]:
-        pdf.extend(f"{offset:010d} 00000 n \n".encode("latin-1"))
-    pdf.extend(
-        f"trailer\n<< /Size {len(objects) + 1} /Root {catalog_id} 0 R >>\nstartxref\n{xref_pos}\n%%EOF".encode("latin-1")
-    )
-    return bytes(pdf)
 
 
 def _fit_sheet_columns(sheet):

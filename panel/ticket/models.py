@@ -24,14 +24,14 @@ class ticket(models.Model):
     unvan = models.ForeignKey("muhatap.muhatap", to_field="unvan", on_delete=models.CASCADE, null=True)
     sozlesmeno = models.ForeignKey("sozlesme.sozlesmeler", to_field="sozlesmeno", on_delete=models.CASCADE, null=True)
     bolumkod = models.ForeignKey("modul.bolum", to_field="kod", on_delete=models.CASCADE, null=True)
-    destekturu = models.ForeignKey("destekturu.destektur", to_field="definition", on_delete=models.CASCADE, null=True)
+    destekturu = models.ForeignKey("destekturu.destektur", to_field="definition", on_delete=models.PROTECT, null=True)
     taleptarih = models.DateTimeField(auto_now_add=True)
     termintarih = models.DateTimeField(null=True, blank=True)
     oncelikkod = models.ForeignKey("destekturu.oncelik", to_field="kod", on_delete=models.CASCADE, null=True)
     aciklama = models.TextField(null=True, blank=True)
     durumtanim = models.ForeignKey("statu", to_field="durumtanim", on_delete=models.CASCADE, null=True)
     faturadurum = models.ForeignKey("faturalama", to_field="faturadurum", on_delete=models.CASCADE, null=True)
-    danisman = models.ForeignKey("modul.danisman", to_field="username", on_delete=models.CASCADE, null=True, blank=True)
+    danisman = models.ManyToManyField("modul.danisman", blank=True, related_name="ticket_danismanlar")
     efor = models.FloatField(null=True, blank=True)
     onay = models.BooleanField(default=False)
     musteri_ticket_no = models.CharField(max_length=50, null=True, blank=True, verbose_name="Müşteri Ticket No")
@@ -79,3 +79,21 @@ class aktivite ( models.Model):
 
     def __str__(self):
         return f"{self.number} - {self.ticketno}"
+
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.db.models import Sum
+
+@receiver([post_save, post_delete], sender=atama)
+def update_ticket_efor_onay(sender, instance, **kwargs):
+    if instance.ticketno:
+        ticket_obj = instance.ticketno
+        # Calculate sum of atama efor
+        toplam = atama.objects.filter(ticketno=ticket_obj).aggregate(Sum('efor'))['efor__sum']
+        ticket_obj.efor = toplam or 0
+        
+        # Determine ticket approval status based on atama approvals
+        onayli_var_mi = atama.objects.filter(ticketno=ticket_obj, onay=True).exists()
+        ticket_obj.onay = onayli_var_mi
+        
+        ticket_obj.save()

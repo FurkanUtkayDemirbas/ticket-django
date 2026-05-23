@@ -9,8 +9,8 @@ class projeler(models.Model):
         on_delete=models.CASCADE,
         verbose_name="İlgili Sözleşme"
     )
-    # Tip bilgisini sözleşmeden otomatik çekebiliriz, modelde tekrar tutmana gerek yok
-    # Ama illa tutmak istersen CharField yapabilirsin.
+    tanim = models.CharField(max_length=255, null=True, blank=True, verbose_name="Proje Tanımı")
+    aciklama = models.TextField(null=True, blank=True, verbose_name="Proje Açıklaması")
 
     def __str__(self):
         return f"{self.projeno} - {self.sozlesme_baglantisi}"

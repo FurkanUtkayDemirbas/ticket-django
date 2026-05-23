@@ -3,12 +3,12 @@
 
 {% block content %}
 <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
         <div>
-            <h3 class="text-lg font-bold text-slate-800">Aktiviteler</h3>
-            <p class="text-xs text-slate-500">Ticketlara bağlı danışman çalışma ve süre kayıtları.</p>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Aktiviteler</h2>
+            <p class="text-sm text-slate-500 font-medium mt-1">Ticketlara bağlı danışman çalışma ve süre kayıtları.</p>
         </div>
-        <a href="{% url 'aktivite_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-500/20">
+        <a href="{% url 'aktivite_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-500/20 inline-flex items-center active:scale-95">
             <i class="fa-solid fa-plus mr-2"></i>Yeni Aktivite
         </a>
     </div>
@@ -29,7 +29,7 @@
                 <select name="ticket" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
                     {% for t in form.fields.ticketno.queryset %}
-                        <option value="{{ t.ticketno }}" {% if secili_ticket == t.ticketno|stringformat:"s" %}selected{% endif %}>#{{ t.ticketno }} - {{ t.konu }}</option>
+                        <option value="{{ t.ticketno }}" {% if secili_ticket == t.ticketno|stringformat:"s" %}selected{% endif %}>{{ t.ticketno }} - {{ t.konu }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -84,7 +84,7 @@
                 <td class="px-8 py-4 text-sm font-bold text-slate-700">{{ a.number }}</td>
                 <td class="px-8 py-4 text-sm">
                     <a href="{% url 'aktivite_duzenle' a.pk %}" class="font-bold text-blue-600 hover:text-blue-800 hover:underline">
-                        {{ a.ticketno }}
+                        {{ a.ticketno.konu }}
                     </a>
                 </td>
                 <td class="px-8 py-4 text-sm text-slate-600">{{ a.date|date:"d.m.Y H:i" }}</td>

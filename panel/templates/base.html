@@ -18,6 +18,40 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
 
     <style>
+        /* ============================================
+           ÖZEL SCROLLBAR (KAYDIRMA ÇUBUĞU) TASARIMI
+           ============================================ */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Sol menü (aside) içi koyu temaya uygun scrollbar */
+        aside ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+        }
+        aside ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
         body { font-family: 'Inter', sans-serif; }
 
         /* ============================================
@@ -246,7 +280,7 @@
         }
     </style>
 </head>
-<body class="bg-[#f8fafc] text-slate-800">
+<body class="bg-[#f8fafc] text-slate-800 overflow-hidden">
     <div class="flex h-screen">
         <aside class="w-64 bg-[#0c1524] border-r-[3px] border-[#3b82f6] flex flex-col shadow-xl">
             <div class="p-6">
@@ -264,6 +298,10 @@
                 <a href="{% url 'aktivite_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'aktivite' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
                     <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                     <span class="text-sm">Aktiviteler</span>
+                </a>
+                <a href="{% url 'efor_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'efor' in request.resolver_match.url_name and 'rapor' not in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                    <i class="fa-solid fa-gauge-high text-sm"></i>
+                    <span class="text-sm">Atamalar</span>
                 </a>
                 <a href="{% url 'muhatap_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'muhatap_listesi' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
                     <i class="fa-solid fa-address-book text-sm"></i>

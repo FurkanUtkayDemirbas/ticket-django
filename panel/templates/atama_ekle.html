@@ -7,11 +7,11 @@
     <div class="flex items-end justify-between mb-8">
         <div>
             <nav class="flex text-[10px] text-slate-400 uppercase tracking-widest mb-2 space-x-2">
-                <a href="{% url 'atama_listesi' %}" class="hover:text-blue-600">Atamalar</a>
+                <a href="{% url 'efor_listesi' %}" class="hover:text-blue-600">Eforlar</a>
                 <span>/</span>
                 <span class="text-slate-600">Yeni Ekle</span>
             </nav>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Efor & Atama Girişi</h1>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Atama Girişi</h1>
             <p class="text-sm text-slate-500 mt-2">Sisteme yeni bir danışman eforu ekleyin</p>
         </div>
     </div>
@@ -39,12 +39,12 @@
             </div>
 
             <div class="flex items-center justify-between pt-10 border-t border-slate-100 mt-4">
-                <a href="{% url 'atama_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center">
+                <a href="{% url 'efor_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center">
                     <i class="fa-solid fa-arrow-left mr-2"></i> İptal ve Listeye Dön
                 </a>
                 
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center">
-                    <i class="fa-solid fa-plus mr-2"></i> Atamayı Kaydet
+                    <i class="fa-solid fa-plus mr-2"></i> Eforu Kaydet
                 </button>
             </div>
         </form>

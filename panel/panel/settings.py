@@ -25,7 +25,19 @@ SECRET_KEY = 'django-insecure-tm07-54as*xj4_*+fm1vg@by5=)!)d3fa&xzig=y(2z_l5c$^(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+# --- DEPLOYMENT & SSL SETTINGS ---
+# Reverse proxy / Nginx arkasında çalışırken HTTPS algılaması için:
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# CSRF korumasının HTTPS üzerinden gelen istekleri reddetmemesi için (kendi alan adlarınızı buraya yazın):
+CSRF_TRUSTED_ORIGINS = [
+    'https://ticket.volltr.com',
+    'https://*.voll.com.tr',
+    'https://*.mykeep.com.tr',
+]
+# ---------------------------------
 
 SITE_ID = 1
 # Application definition
@@ -126,6 +138,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static'] # Bu satırı ekle
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'

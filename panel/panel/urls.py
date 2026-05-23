@@ -20,10 +20,21 @@ urlpatterns = [
     path('ticketlar/ekle/', ticket_views.ticket_ekle, name='ticket_ekle'),
     path('ticketlar/duzenle/<int:pk>/', ticket_views.ticket_duzenle, name='ticket_duzenle'),
     path('ticketlar/sil/<int:pk>/', ticket_views.ticket_sil, name='ticket_sil'),
+    path('ticketlar/tamamla/<int:pk>/', ticket_views.ticket_tamamla, name='ticket_tamamla'),
+    path('ticketlar/duzenle/<int:ticket_pk>/aktivite-sil/<int:aktivite_pk>/', ticket_views.ticket_aktivite_sil, name='ticket_aktivite_sil'),
+    path('ticketlar/duzenle/<int:ticket_pk>/efor-sil/<int:efor_pk>/', ticket_views.ticket_efor_sil, name='ticket_efor_sil'),
     path('aktiviteler/', ticket_views.aktivite_listesi, name='aktivite_listesi'),
     path('aktiviteler/ekle/', ticket_views.aktivite_ekle, name='aktivite_ekle'),
     path('aktiviteler/duzenle/<int:pk>/', ticket_views.aktivite_duzenle, name='aktivite_duzenle'),
     path('aktiviteler/sil/<int:pk>/', ticket_views.aktivite_sil, name='aktivite_sil'),
+
+    # Efor (Atama) Modülü
+    path('eforlar/', ticket_views.efor_listesi, name='efor_listesi'),
+    path('eforlar/ekle/', ticket_views.efor_ekle, name='efor_ekle'),
+    path('eforlar/duzenle/<int:pk>/', ticket_views.efor_duzenle, name='efor_duzenle'),
+    path('eforlar/sil/<int:pk>/', ticket_views.efor_sil, name='efor_sil'),
+    path('eforlar/onayla/<int:pk>/', ticket_views.efor_onayla, name='efor_onayla'),
+
 
     # Muhatap Modülü
     path('muhataplar/', muhatap_views.muhatap_listesi, name='muhatap_listesi'),

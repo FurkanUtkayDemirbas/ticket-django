@@ -4,15 +4,18 @@
 {% block page_title %}Tüm Destek Talepleri{% endblock %}
 
 {% block content %}
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h3 class="text-sm font-semibold text-slate-900">Ticket Kayıtları</h3>
-        <a href="{% url 'ticket_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition inline-flex items-center">
+<div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden mb-10">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Ticket Yönetimi</h2>
+            <p class="text-sm text-slate-500 font-medium mt-1">Sistemdeki tüm destek kayıtları ve durumları</p>
+        </div>
+        <a href="{% url 'ticket_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-500/20 inline-flex items-center active:scale-95">
             <i class="fa-solid fa-plus mr-2"></i> Yeni Ticket
         </a>
     </div>
     
-    <form method="get" class="px-6 py-5 border-b border-slate-100 bg-white">
+    <form method="get" class="px-8 py-6 border-b border-slate-100 bg-slate-50/30">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_170px_auto_auto] xl:items-end">
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Arama</label>
@@ -50,81 +53,86 @@
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="text-[11px] uppercase tracking-wider text-slate-400 font-bold border-b border-slate-100 bg-slate-50/30">
+                <tr class="text-xs uppercase tracking-wider text-slate-400 font-bold border-b border-slate-100 bg-slate-50/50">
                     <th class="px-6 py-4">No</th>
                     <th class="px-6 py-4">Konu</th>
-                    <th class="px-6 py-4">Müşteri No</th>
-                    <th class="px-6 py-4">Müşteri (Unvan)</th>
-                    <th class="px-6 py-4">Danışman</th>
-                    <th class="px-6 py-4 text-center">Efor</th>
-                    <th class="px-6 py-4 text-center">Onay</th>
-                    <th class="px-6 py-4">Tarih</th>
-                    <th class="px-6 py-4">Durum</th>
+                    <th class="px-4 py-4">Müşteri No</th>
+                    <th class="px-4 py-4">Müşteri (Unvan)</th>
+                    <th class="px-4 py-4">Danışman</th>
+                    <th class="px-4 py-4 text-center">Efor</th>
+                    <th class="px-4 py-4 text-center">Onay</th>
+                    <th class="px-4 py-4">Tarih</th>
+                    <th class="px-4 py-4">Durum</th>
                     <th class="px-6 py-4 text-right">İşlemler</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for t in ticketlar %}
-                <tr class="hover:bg-slate-50/80 transition group">
-                    <td class="px-6 py-4 text-sm font-bold">
+                <tr class="hover:bg-slate-50 transition group">
+                    <td class="px-6 py-4 text-[15px] font-bold">
                         <a href="{% url 'ticket_duzenle' t.pk %}" class="text-blue-600 hover:text-blue-800 hover:underline">{{ t.ticketno }}</a>
                     </td>
-                    <td class="px-6 py-4 text-sm font-medium">
-                        <a href="{% url 'ticket_duzenle' t.pk %}" class="text-slate-700 hover:text-blue-700 hover:underline">{{ t.konu }}</a>
+                    <td class="px-6 py-4 text-[15px] font-medium">
+                        <a href="{% url 'ticket_duzenle' t.pk %}" class="text-slate-800 hover:text-blue-700 hover:underline">{{ t.konu }}</a>
                     </td>
-                    <td class="px-6 py-4 text-xs text-slate-500 font-mono">{{ t.musteri_ticket_no|default:"-" }}</td>
-                    <td class="px-6 py-4 text-sm text-slate-500">
+                    <td class="px-4 py-4 text-sm text-slate-500 font-mono">{{ t.musteri_ticket_no|default:"-" }}</td>
+                    <td class="px-4 py-4 text-[15px] text-slate-600">
                         {% if t.unvan %}
                             <a href="{% url 'muhatap_duzenle' t.unvan.pk %}" class="hover:text-blue-700 hover:underline">{{ t.unvan.unvan }}</a>
                         {% else %}
                             -
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-sm text-slate-500">
-                        {% if t.danisman %}
-                            {{ t.danisman.isim|default:t.danisman.username }}
-                        {% else %}
+                    <td class="px-4 py-4 text-sm text-slate-500">
+                        {% for d in t.danisman.all %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold mr-1.5 mb-1.5">{{ d.isim }}</span>
+                        {% empty %}
                             -
-                        {% endif %}
+                        {% endfor %}
                     </td>
-                    <td class="px-6 py-4 text-center text-sm font-semibold text-slate-600">{{ t.efor|default:"0" }} Sa</td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-4 py-4 text-center text-[15px] font-bold text-slate-700">{{ t.efor|default:"0" }} Sa</td>
+                    <td class="px-4 py-4 text-center">
                         {% if t.onay %}
-                            <span class="text-emerald-500 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                            <span class="text-emerald-500 text-sm"><i class="fa-solid fa-circle-check"></i></span>
                         {% else %}
-                            <span class="text-slate-300 text-xs"><i class="fa-solid fa-circle-minus"></i></span>
+                            <span class="text-slate-300 text-sm"><i class="fa-solid fa-circle-minus"></i></span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-xs text-slate-400">{{ t.taleptarih|date:"d.m.Y H:i" }}</td>
-                    <td class="px-6 py-4">
+                    <td class="px-4 py-4 text-sm text-slate-500">{{ t.taleptarih|date:"d.m.Y H:i" }}</td>
+                    <td class="px-4 py-4">
                         {% if t.durumtanim.durumtanim == "Tamamlandı" %}
-                            <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-md border border-emerald-100">TAMAMLANDI</span>
+                            <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-100">TAMAMLANDI</span>
                         {% else %}
-                            <span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-md border border-amber-100">İŞLENİYOR</span>
+                            <span class="px-3 py-1.5 bg-amber-50 text-amber-600 text-xs font-bold rounded-lg border border-amber-100">İŞLENİYOR</span>
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end space-x-2">
                             <!-- Düzenle Butonu -->
                             <a href="{% url 'ticket_duzenle' t.pk %}" 
-                            class="group flex items-center justify-center w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200 shadow-sm"
+                            class="group flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200 shadow-sm"
                             title="Düzenle">
-                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                <i class="fa-solid fa-pen-to-square"></i>
                             </a>
 
-                            <!-- Sil Butonu -->
-                            <a href="{% url 'ticket_sil' t.pk %}" 
-                            onclick="return confirm('Bu kaydı silmek istediğinize emin misiniz?')"
-                            class="group flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm"
-                            title="Sil">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </a>
+                            <!-- Tamamla Butonu -->
+                            {% if t.durumtanim.durumtanim != "Tamamlandı" %}
+                            <form method="POST" action="{% url 'ticket_tamamla' t.pk %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                onclick="return confirm('Bu kaydı TAMAMLANDI olarak işaretlemek istediğinize emin misiniz?')"
+                                class="group flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all duration-200 shadow-sm"
+                                title="Tamamlandı Olarak İşaretle">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                            </form>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="9" class="px-6 py-10 text-center text-slate-400 text-sm italic">Henüz bir ticket kaydı bulunmuyor.</td>
+                    <td colspan="10" class="px-6 py-10 text-center text-slate-400 text-sm italic">Henüz bir ticket kaydı bulunmuyor.</td>
                 </tr>
                 {% endfor %}
             </tbody>

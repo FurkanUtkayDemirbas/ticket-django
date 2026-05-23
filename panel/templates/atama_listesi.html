@@ -1,20 +1,73 @@
 {% extends 'base.html' %}
 
-{% block title %}Efor ve Atamalar | MYKEEP{% endblock %}
+{% block title %}Atama Yönetimi | MYKEEP{% endblock %}
 {% block page_title %}Atama Listesi{% endblock %}
 
 {% block content %}
 <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
     <!-- Başlık Alanı -->
-    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
         <div>
-            <h3 class="text-lg font-bold text-slate-800 tracking-tight">Danışman Eforları</h3>
-            <p class="text-xs text-slate-500">Tüm taleplere atanmış kişiler ve harcanan mesailer</p>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Atama Yönetimi</h2>
+            <p class="text-sm text-slate-500 font-medium mt-1">Tüm taleplere atanmış kişiler ve harcanan mesailer</p>
         </div>
-        <a href="{% url 'atama_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-500/20">
+        <a href="{% url 'efor_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-500/20 inline-flex items-center active:scale-95">
             <i class="fa-solid fa-plus mr-2"></i>Yeni Atama Ekle
         </a>
     </div>
+
+    <!-- Arama ve Filtreleme -->
+    <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_200px_auto_auto] xl:items-end">
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Danışman</label>
+                <select name="danisman" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    {% for d in form.fields.danisman.queryset %}
+                        <option value="{{ d.username }}" {% if secili_danisman == d.username %}selected{% endif %}>{{ d.isim }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Ticket</label>
+                <select name="ticket" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    {% for t in form.fields.ticketno.queryset %}
+                        <option value="{{ t.ticketno }}" {% if secili_ticket == t.ticketno|stringformat:"s" %}selected{% endif %}>{{ t.ticketno }} - {{ t.konu }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Modül</label>
+                <select name="modul" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    {% for m in form.fields.modul.queryset %}
+                        <option value="{{ m.kod }}" {% if secili_modul == m.kod %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Onay Durumu</label>
+                <select name="onay" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    <option value="1" {% if secili_onay == "1" %}selected{% endif %}>Onaylı</option>
+                    <option value="0" {% if secili_onay == "0" %}selected{% endif %}>Bekliyor</option>
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Kelime Arama</label>
+                <input type="search" name="arama" value="{{ arama }}" placeholder="Arama yap..." class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <div>
+                <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
+            </div>
+            <div>
+                {% if arama or secili_danisman or secili_ticket or secili_modul or secili_onay %}
+                    <a href="{% url 'efor_listesi' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
     
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -40,7 +93,7 @@
                         </div>
                     </td>
                     <td class="px-8 py-4 text-sm text-blue-600 font-semibold cursor-pointer hover:underline">
-                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}">#{{ a.ticketno.ticketno }}</a>
+                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}">{{ a.ticketno.ticketno }}</a>
                     </td>
                     <td class="px-8 py-4 text-sm text-slate-500">{{ a.modul.isim|default:"-" }}</td>
                     <td class="px-8 py-4 text-center text-sm font-semibold text-slate-600">{{ a.efor|default:"0" }} Saat</td>
@@ -57,13 +110,20 @@
                     </td>
                     <td class="px-8 py-4 text-right">
                         <div class="flex items-center justify-end space-x-2">
-                            <a href="{% url 'atama_duzenle' a.pk %}" 
+                            {% if not a.onay %}
+                            <a href="{% url 'efor_onayla' a.pk %}"
+                               class="group flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all duration-200"
+                               title="Onayla">
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'efor_duzenle' a.pk %}" 
                             class="group flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
                             title="Düzenle">
                                 <i class="fa-solid fa-pen-to-square text-xs"></i>
                             </a>
-                            <a href="{% url 'atama_sil' a.pk %}" 
-                            onclick="return confirm('Bu atamayı silmek istediğinize emin misiniz?')"
+                            <a href="{% url 'efor_sil' a.pk %}" 
+                            onclick="return confirm('Bu eforu silmek istediğinize emin misiniz?')"
                             class="group flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200"
                             title="Sil">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
@@ -73,7 +133,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="px-8 py-10 text-center text-slate-400 text-sm italic">Sistemde kayıtlı atama/efor bulunmamaktadır.</td>
+                    <td colspan="6" class="px-8 py-10 text-center text-slate-400 text-sm italic">Sistemde kayıtlı efor kaydı bulunmamaktadır.</td>
                 </tr>
                 {% endfor %}
             </tbody>

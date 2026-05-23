@@ -6,12 +6,12 @@
 {% block content %}
 <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
     <!-- Başlık Alanı -->
-    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
         <div>
-            <h3 class="text-lg font-bold text-slate-800 tracking-tight">Muhatap Listesi</h3>
-            <p class="text-xs text-slate-500">Sistemde kayıtlı muhatapların genel listesi</p>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Muhatap Listesi</h2>
+            <p class="text-sm text-slate-500 font-medium mt-1">Sistemde kayıtlı muhatapların genel listesi</p>
         </div>
-        <a href="{% url 'muhatap_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-500/20">
+        <a href="{% url 'muhatap_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-500/20 inline-flex items-center active:scale-95">
             <i class="fa-solid fa-plus mr-2"></i>Yeni Muhatap
         </a>
     </div>
@@ -41,6 +41,7 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 bg-slate-50/10">
+                    <th class="px-8 py-4 w-16 text-center">NO</th>
                     <th class="px-8 py-4">Ünvan / VKN</th>
                     <th class="px-8 py-4">İletişim</th>
                     <th class="px-8 py-4">Hesap Grubu</th>
@@ -51,6 +52,9 @@
             <tbody class="divide-y divide-slate-100">
                 {% for m in muhataplar %}
                 <tr class="hover:bg-slate-50/50 transition group">
+                    <td class="px-8 py-4 text-center">
+                        <span class="text-xs font-bold text-slate-500">{{ m.id }}</span>
+                    </td>
                     <td class="px-8 py-4">
                         <div>
                             <a href="{% url 'muhatap_duzenle' m.pk %}" class="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline block">{{ m.unvan }}</a>
@@ -93,7 +97,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="px-8 py-16 text-center text-slate-400 italic text-sm">Veritabanında kayıtlı muhatap bulunamadı.</td>
+                    <td colspan="6" class="px-8 py-16 text-center text-slate-400 italic text-sm">Veritabanında kayıtlı muhatap bulunamadı.</td>
                 </tr>
                 {% endfor %}
             </tbody>

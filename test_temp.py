@@ -1,0 +1,1 @@
+import tempfile; old = tempfile.NamedTemporaryFile; tempfile.NamedTemporaryFile = lambda *a, **k: old(*a, **{**k, 'delete': False}); from xhtml2pdf.files import getFile; f = getFile(r'file:///C:/Users/asus/Desktop/VollProjeler/MYKEEPmedine/panel/static/fonts/Roboto-Regular.ttf'); print(f.getNamedFile())

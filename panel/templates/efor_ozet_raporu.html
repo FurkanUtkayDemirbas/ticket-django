@@ -3,24 +3,28 @@
 {% block title %}{{ rapor_baslik }}{% endblock %}
 
 {% block content %}
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <div class="flex items-center space-x-3">
-            <a href="{% url 'raporlar_sayfasi' %}" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200/50 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition">
-                <i class="fa-solid fa-arrow-left text-sm"></i>
+<div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden mb-10">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'raporlar_sayfasi' %}" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition">
+                <i class="fa-solid fa-arrow-left text-base"></i>
             </a>
             <div>
-                <h3 class="text-sm font-semibold text-slate-900">{{ rapor_baslik }}</h3>
-                <p class="text-xs text-slate-500">{{ rapor_aciklama }}</p>
+                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ rapor_baslik }}</h2>
+                <p class="text-sm text-slate-500 font-medium mt-1">{{ rapor_aciklama }}</p>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ export_excel_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition inline-flex items-center shadow-sm shadow-emerald-500/20">
-                <i class="fa-solid fa-file-excel mr-2"></i> Excel
-            </a>
-            <a href="{{ export_pdf_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition inline-flex items-center shadow-sm shadow-rose-500/20">
-                <i class="fa-solid fa-file-pdf mr-2"></i> PDF
-            </a>
+        <div class="flex items-center gap-3">
+            {% if export_excel_url %}
+                <a href="{{ export_excel_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition inline-flex items-center shadow-lg shadow-emerald-500/20 active:scale-95">
+                    <i class="fa-solid fa-file-excel mr-2"></i> Excel
+                </a>
+            {% endif %}
+            {% if export_pdf_url %}
+                <a href="{{ export_pdf_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition inline-flex items-center shadow-lg shadow-rose-500/20 active:scale-95">
+                    <i class="fa-solid fa-file-pdf mr-2"></i> PDF
+                </a>
+            {% endif %}
         </div>
     </div>
 

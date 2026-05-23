@@ -43,6 +43,13 @@ def destekturu_duzenle(request, pk):
 
 
 def destekturu_sil(request, pk):
+    from django.db.models import ProtectedError
     kayit = get_object_or_404(destektur, pk=pk)
-    kayit.delete()
-    return redirect("destekturu_listesi")
+    try:
+        kayit.delete()
+        return redirect("destekturu_listesi")
+    except ProtectedError:
+        destek_turleri = destektur.objects.all().order_by("kod")
+        arama = request.GET.get("arama", "").strip()
+        error_msg = "Bu destek türü bir veya daha fazla ticket'a atanmış olduğu için silinemez."
+        return render(request, "destekturu_listesi.html", {"destek_turleri": destek_turleri, "arama": arama, "error": error_msg})

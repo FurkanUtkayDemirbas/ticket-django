@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ rapor_baslik }}</title>
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Regular.ttf" %}');
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Bold.ttf" %}');
+            font-weight: bold;
+        }
+        @page {
+            size: a4 landscape;
+            margin: 1.2cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 1cm;
+                margin-left: 1.2cm;
+                margin-right: 1.2cm;
+                height: 1cm;
+            }
+        }
+        body {
+            font-family: roboto, Helvetica, Arial, sans-serif;
+            font-size: 9pt;
+            color: #1e293b;
+        }
+        .header-table {
+            width: 100%;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        .header-title {
+            color: #1e3a8a;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+            text-transform: uppercase;
+        }
+        .header-subtitle {
+            color: #475569;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+        .header-info {
+            text-align: right;
+            font-size: 9px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        .header-info strong {
+            color: #334155;
+        }
+        .summary-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+        .summary-title {
+            color: #1d4ed8;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .summary-value {
+            color: #1e40af;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .data-table th {
+            background-color: #1e293b;
+            color: #f8fafc;
+            font-weight: bold;
+            text-align: left;
+            padding: 6px 4px;
+            font-size: 8pt;
+            text-transform: uppercase;
+            border: 1px solid #1e293b;
+            word-wrap: break-word;
+        }
+        .data-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #e2e8f0;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 8pt;
+            word-wrap: break-word;
+        }
+        .data-table tr {
+            page-break-inside: avoid;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .footer-line {
+            border-top: 1px solid #cbd5e1;
+            margin-bottom: 5px;
+            padding-top: 5px;
+        }
+        .footer-text {
+            text-align: center;
+            font-size: 8px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+        .brand-text {
+            color: #2563eb;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="footerContent">
+        <div class="footer-line"></div>
+        <div class="footer-text">
+            Bu belge <span class="brand-text">MYKEEP Sistemleri</span> tarafından otomatik olarak oluşturulmuştur.<br>
+            Elektronik ortamda üretildiği için imza gerektirmez. | © {% now "Y" %} MYKEEP
+        </div>
+    </div>
+
+    <table class="header-table">
+        <tr>
+            <td style="width: 60%; vertical-align: bottom;">
+                <div class="header-title">{{ rapor_baslik }}</div>
+                <div class="header-subtitle">{{ rapor_aciklama }}</div>
+            </td>
+            <td style="width: 40%; vertical-align: bottom;">
+                <div class="header-info">
+                    <strong>Tarih:</strong> {% now "d.m.Y H:i" %}<br>
+                    <strong>Belge No:</strong> RPR-{% now "YmdHi" %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    {% if summary_title and summary_value %}
+    <div class="summary-box">
+        <div class="summary-title">{{ summary_title }}</div>
+        <div class="summary-value">{{ summary_value }}</div>
+    </div>
+    {% endif %}
+
+    <table class="data-table" repeat="1" pdf:widths="{{ pdf_widths }}">
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

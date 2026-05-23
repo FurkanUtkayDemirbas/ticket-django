@@ -4,12 +4,12 @@
 
 {% block content %}
 <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
         <div>
-            <h3 class="text-lg font-bold text-slate-800">Proje Portföyü</h3>
-            <p class="text-xs text-slate-500">Sözleşmelere bağlı aktif projeler.</p>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Proje Portföyü</h2>
+            <p class="text-sm text-slate-500 font-medium mt-1">Sözleşmelere bağlı aktif projeler.</p>
         </div>
-        <a href="{% url 'proje_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-500/20">
+        <a href="{% url 'proje_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-500/20 inline-flex items-center active:scale-95">
             <i class="fa-solid fa-diagram-project mr-2"></i>Yeni Proje Başlat
         </a>
     </div>
@@ -32,31 +32,51 @@
             <thead>
                 <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 bg-slate-50/10">
                     <th class="px-8 py-4">Proje No</th>
-                    <th class="px-8 py-4">İlgili Sözleşme</th>
+                    <th class="px-8 py-4">Proje Tanımı</th>
+                    <th class="px-8 py-4">Sözleşme No</th>
                     <th class="px-8 py-4">Müşteri</th>
                     <th class="px-8 py-4 text-right">İşlemler</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for p in projeler %}
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="px-8 py-4 text-sm font-bold">
-                        <a href="{% url 'proje_duzenle' p.pk %}" class="text-blue-600 hover:text-blue-800 hover:underline">P-{{ p.projeno }}</a>
+                <tr class="hover:bg-slate-50/80 transition group">
+                    <td class="px-8 py-4 text-sm font-bold text-slate-700">
+                        <a href="{% url 'proje_duzenle' p.pk %}" class="text-blue-600 hover:text-blue-800 hover:underline">{{ p.projeno }}</a>
                     </td>
-                    <td class="px-8 py-4 text-sm font-bold">
-                        <a href="{% url 'sozlesme_duzenle' p.sozlesme_baglantisi.pk %}" class="text-blue-600 hover:text-blue-800 hover:underline">{{ p.sozlesme_baglantisi.sozlesmeno }}</a>
+                    <td class="px-8 py-4 text-sm text-slate-600 w-1/3">
+                        <div class="line-clamp-2" title="{{ p.tanim }}">
+                            {% if p.tanim %}
+                                {{ p.tanim }}
+                            {% else %}
+                                <span class="text-xs text-slate-400 italic">Tanım girilmemiş</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-8 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
+                        <a href="{% url 'sozlesme_duzenle' p.sozlesme_baglantisi.pk %}" class="hover:text-blue-600 hover:underline transition">
+                            <i class="fa-solid fa-file-contract text-slate-400 mr-2"></i>{{ p.sozlesme_baglantisi.sozlesmeno }}
+                        </a>
                     </td>
                     <td class="px-8 py-4 text-sm text-slate-600">
-                        <a href="{% url 'muhatap_duzenle' p.sozlesme_baglantisi.muhatap.pk %}" class="hover:text-blue-700 hover:underline">{{ p.sozlesme_baglantisi.muhatap.unvan }}</a>
+                        <a href="{% url 'muhatap_duzenle' p.sozlesme_baglantisi.muhatap.pk %}" class="hover:text-blue-600 hover:underline transition">
+                            <i class="fa-solid fa-building text-slate-400 mr-2"></i>{{ p.sozlesme_baglantisi.muhatap.unvan }}
+                        </a>
                     </td>
-                    <td class="px-8 py-4 text-right space-x-2">
-                    <a href="{% url 'proje_duzenle' p.pk %}" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white inline-flex items-center justify-center transition shadow-sm">
-                        <i class="fa-solid fa-pen-to-square text-xs"></i>
-                    </a>
-                    <a href="{% url 'proje_sil' p.pk %}" onclick="return confirm('Silinsin mi?')" class="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </a>
-                </td>
+                    <td class="px-8 py-4 text-right">
+                        <div class="flex items-center justify-end space-x-2">
+                            <a href="{% url 'proje_duzenle' p.pk %}" class="group flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200" title="Düzenle">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </a>
+                            <a href="{% url 'proje_sil' p.pk %}" onclick="return confirm('Bu projeyi silmek istediğinize emin misiniz?')" class="group flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200" title="Sil">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-8 py-10 text-center text-slate-400 text-sm italic">Sistemde kayıtlı proje bulunmamaktadır.</td>
                 </tr>
                 {% endfor %}
             </tbody>

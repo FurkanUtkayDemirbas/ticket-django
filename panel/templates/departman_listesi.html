@@ -4,12 +4,12 @@
 
 {% block content %}
 <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
         <div>
-            <h3 class="text-lg font-bold text-slate-800">Departmanlar</h3>
-            <p class="text-xs text-slate-500">Şirket içi birim tanımlamaları.</p>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Departmanlar</h2>
+            <p class="text-sm text-slate-500 font-medium mt-1">Şirket içi birim tanımlamaları.</p>
         </div>
-        <a href="{% url 'departman_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-500/20">
+        <a href="{% url 'departman_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-500/20 inline-flex items-center active:scale-95">
             <i class="fa-solid fa-plus mr-2"></i>Yeni Departman
         </a>
     </div>
