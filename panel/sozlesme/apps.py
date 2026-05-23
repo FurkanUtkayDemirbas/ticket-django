@@ -1,5 +1,5 @@
-from idlelib.autocomplete import AutoComplete
-
 from django.apps import AppConfig
 
-
+class SozlesmeConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'sozlesme'

@@ -1,4 +1,3 @@
-from tkinter.constants import CASCADE
 from typing import Any
 
 from django.db import models
