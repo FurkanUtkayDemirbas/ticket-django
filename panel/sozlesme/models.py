@@ -14,9 +14,9 @@ class sozlesmetip(models.Model):
 
 # Create your models here.
 class sozlesmeler(models.Model):
-    sozlesmeno = models.CharField(unique=True, null=False, blank=False, default="2026-")
+    sozlesmeno = models.CharField(max_length=50, unique=True, null=False, blank=False, default="2026-")
     tip = models.ForeignKey("sozlesmetip", to_field="tanim", on_delete=models.CASCADE,null=True)
-    tanim = models.CharField(null=False, blank=False)
+    tanim = models.CharField(max_length=200, null=False, blank=False)
     muhatap = models.ForeignKey("muhatap.muhatap", to_field="unvan", on_delete=models.CASCADE)
     baslangic_tarihi = models.DateTimeField(blank=True, null=True)
     bitis_tarihi = models.DateTimeField(blank=True, null=True)
