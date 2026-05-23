@@ -418,13 +418,21 @@ def _pdf_response(request, title, headers, rows, filename, description="", summa
         kwargs.pop('usedforsecurity', None)
         return _orig_md5(*args, **kwargs)
     
+    import reportlab.pdfbase.pdfdoc
+    _orig_rl_md5 = getattr(reportlab.pdfbase.pdfdoc, 'md5', None)
+    
     tempfile.NamedTemporaryFile = _patched_NamedTemporaryFile
     hashlib.md5 = _patched_md5
+    if _orig_rl_md5:
+        reportlab.pdfbase.pdfdoc.md5 = _patched_md5
+        
     try:
         pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
     finally:
         tempfile.NamedTemporaryFile = _orig_NamedTemporaryFile
         hashlib.md5 = _orig_md5
+        if _orig_rl_md5:
+            reportlab.pdfbase.pdfdoc.md5 = _orig_rl_md5
 
     if pisa_status.err:
         return HttpResponse("PDF oluşturulurken hata oluştu", status=500)
