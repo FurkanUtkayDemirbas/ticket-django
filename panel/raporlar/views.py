@@ -412,11 +412,19 @@ def _pdf_response(request, title, headers, rows, filename, description="", summa
         kwargs['delete'] = False
         return _orig_NamedTemporaryFile(*args, **kwargs)
     
+    import hashlib
+    _orig_md5 = hashlib.md5
+    def _patched_md5(*args, **kwargs):
+        kwargs.pop('usedforsecurity', None)
+        return _orig_md5(*args, **kwargs)
+    
     tempfile.NamedTemporaryFile = _patched_NamedTemporaryFile
+    hashlib.md5 = _patched_md5
     try:
         pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
     finally:
         tempfile.NamedTemporaryFile = _orig_NamedTemporaryFile
+        hashlib.md5 = _orig_md5
 
     if pisa_status.err:
         return HttpResponse("PDF oluşturulurken hata oluştu", status=500)

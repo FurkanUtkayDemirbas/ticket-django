@@ -73,8 +73,8 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 bg-slate-50/10">
-                    <th class="px-8 py-4">Danışman</th>
                     <th class="px-8 py-4">Ticket</th>
+                    <th class="px-8 py-4">Danışman</th>
                     <th class="px-8 py-4">Modül</th>
                     <th class="px-8 py-4 text-center">Efor</th>
                     <th class="px-8 py-4 text-center">Onay Durumu</th>
@@ -84,6 +84,9 @@
             <tbody class="divide-y divide-slate-100">
                 {% for a in atamalar %}
                 <tr class="hover:bg-slate-50/80 transition group">
+                    <td class="px-8 py-4 text-sm text-blue-600 font-semibold cursor-pointer hover:underline">
+                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}">{{ a.ticketno.ticketno }}</a>
+                    </td>
                     <td class="px-8 py-4 text-sm font-bold text-slate-700">
                         <div class="flex items-center">
                             <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs mr-3">
@@ -91,9 +94,6 @@
                             </div>
                             {{ a.danisman.isim|default:a.danisman.username }}
                         </div>
-                    </td>
-                    <td class="px-8 py-4 text-sm text-blue-600 font-semibold cursor-pointer hover:underline">
-                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}">{{ a.ticketno.ticketno }}</a>
                     </td>
                     <td class="px-8 py-4 text-sm text-slate-500">{{ a.modul.isim|default:"-" }}</td>
                     <td class="px-8 py-4 text-center text-sm font-semibold text-slate-600">{{ a.efor|default:"0" }} Saat</td>
