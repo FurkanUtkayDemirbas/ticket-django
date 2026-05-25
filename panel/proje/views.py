@@ -5,6 +5,14 @@ from .forms import ProjeForm
 
 def proje_listesi(request):
     veriler = projeler.objects.select_related("sozlesme_baglantisi", "sozlesme_baglantisi__muhatap").all()
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            veriler = veriler.filter(sozlesme_baglantisi__muhatap=profile.muhatap_firma)
+        elif profile.role == 'Danisman':
+            veriler = veriler.none() # Danışmanlar projeleri göremez
+
     arama = request.GET.get("arama", "").strip()
 
     if arama:

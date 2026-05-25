@@ -303,10 +303,12 @@
                     <i class="fa-solid fa-gauge-high text-sm"></i>
                     <span class="text-sm">Atamalar</span>
                 </a>
+                {% if request.user.userprofile.role != 'Firma' %}
                 <a href="{% url 'muhatap_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'muhatap_listesi' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
                     <i class="fa-solid fa-address-book text-sm"></i>
                     <span class="text-sm">Muhataplar</span>
                 </a>
+                {% endif %}
                 <a href="{% url 'sozlesme_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'sozlesme_listesi' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
                     <i class="fa-solid fa-file-contract text-sm"></i>
                     <span class="text-sm">Sözleşmeler</span>
@@ -315,6 +317,7 @@
                     <i class="fa-solid fa-diagram-project text-sm"></i>
                     <span class="text-sm">Projeler</span>
                 </a>
+                {% if request.user.userprofile.role != 'Firma' %}
                 <!-- Tanimlar Acilir Menu -->
                 <details class="group" {% if 'departman' in request.resolver_match.url_name or 'modul' in request.resolver_match.url_name or 'danisman' in request.resolver_match.url_name or 'destekturu' in request.resolver_match.url_name %}open{% endif %}>
                     <summary class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition text-slate-400 hover:text-white hover:bg-[#1e293b]/50 select-none">
@@ -345,6 +348,7 @@
                         </a>
                     </div>
                 </details>
+                {% endif %}
                 <a href="{% url 'raporlar_sayfasi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'rapor' in request.resolver_match.url_name or 'efor' in request.resolver_match.url_name or 'atanmamis' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
                     <i class="fa-solid fa-chart-pie text-sm"></i>
                     <span class="text-sm">Raporlar</span>

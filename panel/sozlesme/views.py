@@ -5,6 +5,14 @@ from .forms import SozlesmeForm
 
 def sozlesme_listesi(request):
     veriler = sozlesmeler.objects.select_related("tip", "muhatap").all().order_by('-baslangic_tarihi')
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            veriler = veriler.filter(muhatap=profile.muhatap_firma)
+        elif profile.role == 'Danisman':
+            veriler = veriler.none() # Danışmanlar sözleşmeleri göremez
+
     arama = request.GET.get("arama", "").strip()
     sozlesme_no = request.GET.get("sozlesme_no", "").strip()
     tip = request.GET.get("tip", "").strip()

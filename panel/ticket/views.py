@@ -6,10 +6,18 @@ from .forms import AktiviteForm, TicketForm, TicketIciAktiviteForm, AtamaForm, T
 # 1. DASHBOARD (ANA SAYFA)
 def ana_sayfa(request):
     """Sistem özetini ve istatistikleri gösteren ana ekran."""
-    toplam = ticket.objects.count()
-    acik = ticket.objects.exclude(durumtanim__durumtanim="Tamamlandı").count()
-    tamamlanan = ticket.objects.filter(durumtanim__durumtanim="Tamamlandı").count()
-    son_eklenenler = ticket.objects.all().order_by('-taleptarih')[:5]
+    ticket_qs = ticket.objects.all()
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            ticket_qs = ticket_qs.filter(unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            ticket_qs = ticket_qs.filter(danisman=profile.danisman_profil)
+
+    toplam = ticket_qs.count()
+    acik = ticket_qs.exclude(durumtanim__durumtanim="Tamamlandı").count()
+    tamamlanan = ticket_qs.filter(durumtanim__durumtanim="Tamamlandı").count()
+    son_eklenenler = ticket_qs.order_by('-taleptarih')[:5]
 
     context = {
         'toplam_kayit': toplam,
@@ -23,6 +31,14 @@ def ana_sayfa(request):
 def ticket_listesi(request):
     """Tüm ticket kayıtlarını tablo halinde listeler."""
     tum_ticketlar = ticket.objects.select_related("unvan", "durumtanim").prefetch_related("danisman").all().order_by('-ticketno')
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            tum_ticketlar = tum_ticketlar.filter(unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            tum_ticketlar = tum_ticketlar.filter(danisman=profile.danisman_profil)
+
     arama = request.GET.get("arama", "").strip()
     durum = request.GET.get("durum", "").strip()
     danisman = request.GET.get("danisman", "").strip()
@@ -219,6 +235,14 @@ def ticket_efor_sil(request, ticket_pk, efor_pk):
 
 def aktivite_listesi(request):
     aktiviteler = aktivite.objects.select_related("ticketno", "danisman", "modul").all().order_by("-date")
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            aktiviteler = aktiviteler.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            aktiviteler = aktiviteler.filter(danisman=profile.danisman_profil)
+
     aktivite_no = request.GET.get("aktivite_no", "").strip()
     ticket_secimi = request.GET.get("ticket", "").strip()
     danisman = request.GET.get("danisman", "").strip()
@@ -287,6 +311,14 @@ def aktivite_sil(request, pk):
 def efor_listesi(request):
     """Tüm efor/atama kayıtlarını listeler."""
     atamalar = atama.objects.select_related("danisman", "ticketno", "modul").all().order_by("-pk")
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            atamalar = atamalar.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            atamalar = atamalar.filter(danisman=profile.danisman_profil)
+
     arama = request.GET.get("arama", "").strip()
     danisman = request.GET.get("danisman", "").strip()
     ticket_secimi = request.GET.get("ticket", "").strip()
