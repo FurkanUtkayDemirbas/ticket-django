@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Ticket Düzenle | #{{ kayit.ticketno }}{% endblock %}
+{% block title %}Ticket Düzenle | {{ kayit.ticketno }}{% endblock %}
 
 {% block content %}
 
@@ -8,8 +8,8 @@
     <!-- Üst Başlık Bölümü -->
     <div class="mb-8 flex items-end justify-between">
         <div>
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Kayıt No</span>
-            <h1 class="text-3xl font-extrabold text-blue-600 tracking-tight">#{{ kayit.ticketno }}</h1>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Ticket No</span>
+            <h1 class="text-3xl font-extrabold text-blue-600 tracking-tight">{{ kayit.ticketno }}</h1>
         </div>
     </div>
 
@@ -78,7 +78,7 @@
                     {% csrf_token %}
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                         {% for field in aktivite_form %}
-                        <div class="group">
+                        <div class="group {% if field.name == 'aciklama' %}md:col-span-2 xl:col-span-4{% endif %}">
                             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 px-1 transition-colors group-focus-within:text-emerald-600">
                                 {{ field.label }}
                             </label>
@@ -130,13 +130,14 @@
                             <th class="px-3 py-3.5 text-center">Süre (Saat)</th>
                             <th class="px-3 py-3.5">Danışman</th>
                             <th class="px-3 py-3.5">Modül</th>
+                            <th class="px-3 py-3.5">Açıklama</th>
                             <th class="px-3 py-3.5 text-right pr-4">İşlemler</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         {% for a in aktiviteler %}
                         <tr class="hover:bg-slate-50 transition group">
-                            <td class="px-4 py-3.5 text-sm font-bold text-slate-700">{{ a.number }}</td>
+                            <td class="px-4 py-3.5 text-sm font-bold text-slate-700">{{ a.number|stringformat:"08d" }}</td>
                             <td class="px-3 py-3.5 text-sm text-slate-600">{{ a.date|date:"d.m.Y H:i" }}</td>
                             <td class="px-3 py-3.5 text-sm text-center">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs">
@@ -151,18 +152,26 @@
                                 {% endif %}
                             </td>
                             <td class="px-3 py-3.5 text-sm text-slate-600">{{ a.modul|default:"-" }}</td>
+                            <td class="px-3 py-3.5 text-sm text-slate-500">{{ a.aciklama|default:"-"|truncatechars:80 }}</td>
                             <td class="px-3 py-3.5 text-right pr-4">
-                                <a href="{% url 'ticket_aktivite_sil' ticket_pk=kayit.ticketno aktivite_pk=a.pk %}"
-                                   onclick="return confirm('Bu aktiviteyi silmek istediğinize emin misiniz?')"
-                                   class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm"
-                                   title="Sil">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </a>
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{% url 'aktivite_duzenle' a.pk %}"
+                                       class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white inline-flex items-center justify-center transition shadow-sm"
+                                       title="Düzenle">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </a>
+                                    <a href="{% url 'ticket_aktivite_sil' ticket_pk=kayit.ticketno aktivite_pk=a.pk %}"
+                                       onclick="return confirm('Bu aktiviteyi silmek istediğinize emin misiniz?')"
+                                       class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm"
+                                       title="Sil">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="px-4 py-10 text-center">
+                            <td colspan="7" class="px-4 py-10 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
                                         <i class="fa-solid fa-inbox text-slate-300 text-lg"></i>
@@ -183,7 +192,7 @@
                                     {{ toplam_efor }} Sa
                                 </span>
                             </td>
-                            <td colspan="3"></td>
+                            <td colspan="4"></td>
                         </tr>
                     </tfoot>
                     {% endif %}
@@ -298,12 +307,19 @@
                                 {% endif %}
                             </td>
                             <td class="px-3 py-3.5 text-right pr-4">
-                                <a href="{% url 'ticket_efor_sil' ticket_pk=kayit.ticketno efor_pk=e.pk %}"
-                                   onclick="return confirm('Bu efor kaydını silmek istediğinize emin misiniz?')"
-                                   class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm"
-                                   title="Sil">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </a>
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{% url 'efor_duzenle' e.pk %}"
+                                       class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white inline-flex items-center justify-center transition shadow-sm"
+                                       title="Düzenle">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </a>
+                                    <a href="{% url 'ticket_efor_sil' ticket_pk=kayit.ticketno efor_pk=e.pk %}"
+                                       onclick="return confirm('Bu efor kaydını silmek istediğinize emin misiniz?')"
+                                       class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm"
+                                       title="Sil">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}

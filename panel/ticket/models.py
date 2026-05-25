@@ -70,15 +70,17 @@ class aktivite ( models.Model):
     time = models.IntegerField(null=False, blank=True)
     danisman = models.ForeignKey("modul.danisman", to_field="username", on_delete=models.CASCADE, null=True)
     modul = models.ForeignKey("modul.bolum", to_field="kod", on_delete=models.CASCADE, null=True)
+    aciklama = models.TextField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.number:
             last_aktivite = aktivite.objects.all().order_by("number").last()
-            self.number = last_aktivite.number + 1 if last_aktivite else 1
+            self.number = last_aktivite.number + 1 if last_aktivite else 100
         super(aktivite, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.number} - {self.ticketno}"
+
 
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -97,3 +99,14 @@ def update_ticket_efor_onay(sender, instance, **kwargs):
         ticket_obj.onay = onayli_var_mi
         
         ticket_obj.save()
+        
+        # Danışmanı ticket'a otomatik ekle
+        if instance.danisman and hasattr(ticket_obj, 'danisman'):
+            ticket_obj.danisman.add(instance.danisman)
+
+@receiver([post_save, post_delete], sender=aktivite)
+def update_ticket_aktivite_danisman(sender, instance, **kwargs):
+    if instance.ticketno and instance.danisman:
+        ticket_obj = instance.ticketno
+        if hasattr(ticket_obj, 'danisman'):
+            ticket_obj.danisman.add(instance.danisman)

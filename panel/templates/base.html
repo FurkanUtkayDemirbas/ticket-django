@@ -315,22 +315,36 @@
                     <i class="fa-solid fa-diagram-project text-sm"></i>
                     <span class="text-sm">Projeler</span>
                 </a>
-                <a href="{% url 'departman_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'departman' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
-                    <i class="fa-solid fa-building text-sm"></i>
-                    <span class="text-sm">Departmanlar</span>
-                </a>
-                <a href="{% url 'modul_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'modul' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
-                    <i class="fa-solid fa-cubes text-sm"></i>
-                    <span class="text-sm">Modüller</span>
-                </a>
-                <a href="{% url 'danisman_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'danisman' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
-                    <i class="fa-solid fa-user-tie text-sm"></i>
-                    <span class="text-sm">Danışmanlar</span>
-                </a>
-                <a href="{% url 'destekturu_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'destekturu' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
-                    <i class="fa-solid fa-life-ring text-sm"></i>
-                    <span class="text-sm">Destek Türleri</span>
-                </a>
+                <!-- Tanimlar Acilir Menu -->
+                <details class="group" {% if 'departman' in request.resolver_match.url_name or 'modul' in request.resolver_match.url_name or 'danisman' in request.resolver_match.url_name or 'destekturu' in request.resolver_match.url_name %}open{% endif %}>
+                    <summary class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition text-slate-400 hover:text-white hover:bg-[#1e293b]/50 select-none">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-layer-group text-sm"></i>
+                            <span class="text-sm">Tanımlar</span>
+                        </div>
+                        <span class="transition group-open:rotate-180">
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </span>
+                    </summary>
+                    <div class="mt-1 pl-8 space-y-1">
+                        <a href="{% url 'departman_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'departman' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                            <i class="fa-solid fa-building text-xs"></i>
+                            <span class="text-xs">Departmanlar</span>
+                        </a>
+                        <a href="{% url 'modul_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'modul' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                            <i class="fa-solid fa-cubes text-xs"></i>
+                            <span class="text-xs">Modüller</span>
+                        </a>
+                        <a href="{% url 'danisman_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'danisman' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                            <i class="fa-solid fa-user-tie text-xs"></i>
+                            <span class="text-xs">Danışmanlar</span>
+                        </a>
+                        <a href="{% url 'destekturu_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'destekturu' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                            <i class="fa-solid fa-life-ring text-xs"></i>
+                            <span class="text-xs">Destek Türleri</span>
+                        </a>
+                    </div>
+                </details>
                 <a href="{% url 'raporlar_sayfasi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'rapor' in request.resolver_match.url_name or 'efor' in request.resolver_match.url_name or 'atanmamis' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
                     <i class="fa-solid fa-chart-pie text-sm"></i>
                     <span class="text-sm">Raporlar</span>
@@ -362,8 +376,18 @@
                 new TomSelect(el, {
                     create: false,
                     placeholder: 'Seçim yapınız...',
-                    sortField: { field: "text", direction: "asc" }
+                    sortField: { field: "text", direction: "asc" },
+                    dropdownParent: "body"
                 });
+            });
+
+            // Flatpickr (Tarih Seçici)
+            flatpickr('input[type="date"]', {
+                locale: 'tr',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd.m.Y',
+                disableMobile: true,
             });
 
             // Flatpickr (Gelişmiş Tarih/Saat Seçici)
@@ -382,6 +406,18 @@
                     btn.className = 'flatpickr-save-btn';
                     btn.addEventListener('click', function() { fp.close(); });
                     fp.calendarContainer.appendChild(btn);
+                }
+            });
+
+            // Enter ile form gönderme (Filtreler için)
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    // Eğer focuslanan eleman bir form içindeyse ve bu form GET metoduyla çalışıyorsa (filtre formu)
+                    var form = e.target.closest('form');
+                    if (form && form.method.toLowerCase() === 'get') {
+                        e.preventDefault();
+                        form.submit();
+                    }
                 }
             });
         });

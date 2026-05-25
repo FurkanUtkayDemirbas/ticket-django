@@ -75,7 +75,6 @@
                     <th class="px-6 py-4">Konu</th>
                     <th class="px-6 py-4">Müşteri</th>
                     <th class="px-6 py-4">Danışman</th>
-                    <th class="px-6 py-4">Efor</th>
                     <th class="px-6 py-4">Tarih</th>
                     <th class="px-6 py-4">Durum</th>
                 </tr>
@@ -83,25 +82,36 @@
             <tbody class="divide-y divide-slate-100">
                 {% for t in ticketlar %}
                 <tr class="hover:bg-slate-50/80 transition group">
-                    <td class="px-6 py-4 text-sm font-bold text-blue-600">{{ t.ticketno }}</td>
-                    <td class="px-6 py-4 text-sm text-slate-700 font-medium">{{ t.konu }}</td>
-                    <td class="px-6 py-4 text-sm text-slate-500">{{ t.unvan.unvan|default:"-" }}</td>
+                    <td class="px-6 py-4 text-sm font-bold text-blue-600">
+                        <a href="{% url 'ticket_duzenle' t.pk %}" class="hover:underline hover:text-blue-800 transition">{{ t.ticketno }}</a>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-700 font-medium">
+                        <a href="{% url 'ticket_duzenle' t.pk %}" class="hover:text-blue-600 transition">{{ t.konu }}</a>
+                    </td>
                     <td class="px-6 py-4 text-sm text-slate-500">
-                        {% for d in t.danisman.all %}
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[11px] font-semibold mr-1">{{ d.isim }}</span>
+                        {% if t.unvan %}
+                            <a href="{% url 'muhatap_duzenle' t.unvan.pk %}" class="hover:text-blue-600 hover:underline transition">{{ t.unvan.unvan }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-500">
+                        {% for d_info in t.danisman_efor_detay %}
+                            <a href="{% url 'danisman_duzenle' d_info.danisman.pk %}" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold mr-1.5 mb-1.5 hover:bg-blue-100 hover:underline transition whitespace-nowrap">
+                                {{ d_info.danisman.isim }} &mdash; {{ d_info.efor|default:"0" }} sa
+                            </a>
                         {% empty %}
                             -
                         {% endfor %}
                     </td>
-                    <td class="px-6 py-4 text-sm text-slate-600">{{ t.efor|default:"0" }} sa</td>
-                    <td class="px-6 py-4 text-xs text-slate-400">{{ t.taleptarih|date:"d.m.Y" }}</td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 text-xs text-slate-400 whitespace-nowrap">{{ t.taleptarih|date:"d.m.Y" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                         {% if t.durumtanim and t.durumtanim.durumtanim == "Tamamlandı" %}
-                            <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-md border border-emerald-100">TAMAMLANDI</span>
+                            <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-md border border-emerald-100 whitespace-nowrap">TAMAMLANDI</span>
                         {% elif t.durumtanim %}
-                            <span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-md border border-amber-100">{{ t.durumtanim.durumtanim|upper }}</span>
+                            <span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-md border border-amber-100 whitespace-nowrap">{{ t.durumtanim.durumtanim|upper }}</span>
                         {% else %}
-                            <span class="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-md border border-slate-200">BELİRTİLMEDİ</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-md border border-slate-200 whitespace-nowrap">BELİRTİLMEDİ</span>
                         {% endif %}
                     </td>
                 </tr>

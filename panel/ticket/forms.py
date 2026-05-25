@@ -4,7 +4,7 @@ from .models import aktivite, ticket
 class TicketForm(forms.ModelForm):
     class Meta:
         model = ticket
-        fields = ['konu', 'unvan', 'sozlesmeno', 'bolumkod', 'destekturu', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum', 'danisman']
+        fields = ['konu', 'unvan', 'sozlesmeno', 'bolumkod', 'destekturu', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum']
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,12 +50,13 @@ class AktiviteForm(forms.ModelForm):
 
     class Meta:
         model = aktivite
-        fields = ["ticketno", "date", "time", "danisman", "modul"]
+        fields = ["ticketno", "date", "time", "danisman", "modul", "aciklama"]
         labels = {
             "ticketno": "Ticket",
             "time": "Süre (Saat)",
             "danisman": "Danışman",
             "modul": "Modül",
+            "aciklama": "Açıklama",
         }
 
     def __init__(self, *args, **kwargs):
@@ -66,6 +67,14 @@ class AktiviteForm(forms.ModelForm):
                 "focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 "
                 "outline-none transition-all cursor-pointer select-none"
             )
+        self.fields["aciklama"].widget = forms.Textarea(attrs={
+            "class": (
+                "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm "
+                "focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 "
+                "outline-none transition-all"
+            ),
+            "rows": 4,
+        })
 
 
 class TicketIciAktiviteForm(forms.ModelForm):
@@ -78,21 +87,31 @@ class TicketIciAktiviteForm(forms.ModelForm):
 
     class Meta:
         model = aktivite
-        fields = ["date", "time", "danisman", "modul"]
+        fields = ["date", "time", "danisman", "modul", "aciklama"]
         labels = {
             "time": "Süre (Saat)",
             "danisman": "Danışman",
             "modul": "Modül",
+            "aciklama": "Açıklama",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
+            field.required = False
             field.widget.attrs["class"] = (
                 "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm "
                 "focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 "
                 "outline-none transition-all cursor-pointer select-none"
             )
+        self.fields["aciklama"].widget = forms.Textarea(attrs={
+            "class": (
+                "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm "
+                "focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 "
+                "outline-none transition-all"
+            ),
+            "rows": 3,
+        })
 
 
 class TicketIciEforForm(forms.ModelForm):
@@ -111,6 +130,7 @@ class TicketIciEforForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
+            field.required = False
             if field_name != 'onay':
                 field.widget.attrs["class"] = (
                     "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm "

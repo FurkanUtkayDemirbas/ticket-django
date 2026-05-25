@@ -155,11 +155,11 @@
     </div>
     {% endif %}
 
-    <table class="data-table" repeat="1" pdf:widths="{{ pdf_widths }}">
+    <table class="data-table" repeat="1">
         <thead>
             <tr>
-                {% for header in headers %}
-                <th>{{ header }}</th>
+                {% for header, width in headers %}
+                <th style="width: {{ width }};">{{ header }}</th>
                 {% endfor %}
             </tr>
         </thead>
@@ -167,7 +167,7 @@
             {% for row in rows %}
             <tr>
                 {% for cell in row %}
-                <td>{{ cell }}</td>
+                <td>{{ cell|linebreaksbr }}</td>
                 {% endfor %}
             </tr>
             {% endfor %}

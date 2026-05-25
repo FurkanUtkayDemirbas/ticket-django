@@ -56,13 +56,13 @@
                 <tr class="text-xs uppercase tracking-wider text-slate-400 font-bold border-b border-slate-100 bg-slate-50/50">
                     <th class="px-6 py-4">No</th>
                     <th class="px-6 py-4">Konu</th>
-                    <th class="px-4 py-4">Müşteri No</th>
+                    <th class="px-4 py-4">Müşteri Ticket No</th>
                     <th class="px-4 py-4">Müşteri (Unvan)</th>
                     <th class="px-4 py-4">Danışman</th>
-                    <th class="px-4 py-4 text-center">Efor</th>
                     <th class="px-4 py-4 text-center">Onay</th>
                     <th class="px-4 py-4">Tarih</th>
                     <th class="px-4 py-4">Durum</th>
+                    <th class="px-4 py-4">Fatura Durumu</th>
                     <th class="px-6 py-4 text-right">İşlemler</th>
                 </tr>
             </thead>
@@ -84,13 +84,12 @@
                         {% endif %}
                     </td>
                     <td class="px-4 py-4 text-sm text-slate-500">
-                        {% for d in t.danisman.all %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold mr-1.5 mb-1.5">{{ d.isim }}</span>
+                        {% for d in t.danisman_efor_list %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold mr-1.5 mb-1.5">{{ d }}</span>
                         {% empty %}
                             -
                         {% endfor %}
                     </td>
-                    <td class="px-4 py-4 text-center text-[15px] font-bold text-slate-700">{{ t.efor|default:"0" }} Sa</td>
                     <td class="px-4 py-4 text-center">
                         {% if t.onay %}
                             <span class="text-emerald-500 text-sm"><i class="fa-solid fa-circle-check"></i></span>
@@ -101,9 +100,18 @@
                     <td class="px-4 py-4 text-sm text-slate-500">{{ t.taleptarih|date:"d.m.Y H:i" }}</td>
                     <td class="px-4 py-4">
                         {% if t.durumtanim.durumtanim == "Tamamlandı" %}
-                            <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-100">TAMAMLANDI</span>
+                            <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-100" id="status-{{ t.pk }}">TAMAMLANDI</span>
                         {% else %}
-                            <span class="px-3 py-1.5 bg-amber-50 text-amber-600 text-xs font-bold rounded-lg border border-amber-100">İŞLENİYOR</span>
+                            <span class="px-3 py-1.5 bg-amber-50 text-amber-600 text-xs font-bold rounded-lg border border-amber-100" id="status-{{ t.pk }}">{{ t.durumtanim.durumtanim|upper }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-4">
+                        {% if t.faturadurum.faturadurum == "Faturalandı" %}
+                            <span class="px-3 py-1.5 bg-purple-50 text-purple-600 text-xs font-bold rounded-lg border border-purple-100" id="fatura-status-{{ t.pk }}">FATURALANDI</span>
+                        {% elif t.faturadurum.faturadurum %}
+                            <span class="px-3 py-1.5 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg border border-slate-200" id="fatura-status-{{ t.pk }}">{{ t.faturadurum.faturadurum|upper }}</span>
+                        {% else %}
+                            -
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-right">
@@ -117,13 +125,25 @@
 
                             <!-- Tamamla Butonu -->
                             {% if t.durumtanim.durumtanim != "Tamamlandı" %}
-                            <form method="POST" action="{% url 'ticket_tamamla' t.pk %}" class="inline">
+                            <form method="POST" action="{% url 'ticket_tamamla' t.pk %}" class="inline tamamla-form" onsubmit="event.preventDefault(); submitTamamlaForm(this, '{{ t.pk }}');">
                                 {% csrf_token %}
                                 <button type="submit" 
-                                onclick="return confirm('Bu kaydı TAMAMLANDI olarak işaretlemek istediğinize emin misiniz?')"
                                 class="group flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all duration-200 shadow-sm"
                                 title="Tamamlandı Olarak İşaretle">
                                     <i class="fa-solid fa-check"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Faturalama Tamamla Butonu -->
+                            {% if t.faturadurum.faturadurum != "Faturalandı" %}
+                            <form method="POST" action="{% url 'ticket_faturalama_tamamla' t.pk %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                class="group flex items-center justify-center w-10 h-10 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white transition-all duration-200 shadow-sm"
+                                title="Faturalama Tamamlandı Olarak İşaretle"
+                                onclick="return confirm('Faturalama işlemini Tamamlandı olarak işaretlemek istediğininze emin misiniz?');">
+                                    <i class="fa-solid fa-flag-checkered"></i>
                                 </button>
                             </form>
                             {% endif %}
@@ -139,4 +159,30 @@
         </table>
     </div>
 </div>
+<script>
+    function submitTamamlaForm(form, ticketId) {
+        if (!confirm('Bu kaydı TAMAMLANDI olarak işaretlemek istediğinize emin misiniz?')) return;
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(response => {
+            if (response.ok) {
+                // Durum etiketini TAMAMLANDI yap
+                let statusSpan = document.getElementById('status-' + ticketId);
+                if (statusSpan) {
+                    statusSpan.className = "px-3 py-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-100";
+                    statusSpan.innerText = "TAMAMLANDI";
+                }
+                // Formu/Butonu gizle
+                form.style.display = 'none';
+            } else {
+                alert('Bir hata oluştu!');
+            }
+        }).catch(err => alert('Bağlantı hatası!'));
+    }
+</script>
 {% endblock %}

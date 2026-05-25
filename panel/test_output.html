@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>TICKET RAPORU</title>
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('/static/fonts/Roboto-Regular.ttf');
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('/static/fonts/Roboto-Bold.ttf');
+            font-weight: bold;
+        }
+        @page {
+            size: a4 landscape;
+            margin: 1.2cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 1cm;
+                margin-left: 1.2cm;
+                margin-right: 1.2cm;
+                height: 1cm;
+            }
+        }
+        body {
+            font-family: roboto, Helvetica, Arial, sans-serif;
+            font-size: 9pt;
+            color: #1e293b;
+        }
+        .header-table {
+            width: 100%;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        .header-title {
+            color: #1e3a8a;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+            text-transform: uppercase;
+        }
+        .header-subtitle {
+            color: #475569;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+        .header-info {
+            text-align: right;
+            font-size: 9px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        .header-info strong {
+            color: #334155;
+        }
+        .summary-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+        .summary-title {
+            color: #1d4ed8;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .summary-value {
+            color: #1e40af;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .data-table th {
+            background-color: #1e293b;
+            color: #f8fafc;
+            font-weight: bold;
+            text-align: left;
+            padding: 6px 4px;
+            font-size: 8pt;
+            text-transform: uppercase;
+            border: 1px solid #1e293b;
+            word-wrap: break-word;
+        }
+        .data-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #e2e8f0;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 8pt;
+            word-wrap: break-word;
+        }
+        .data-table tr {
+            page-break-inside: avoid;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .footer-line {
+            border-top: 1px solid #cbd5e1;
+            margin-bottom: 5px;
+            padding-top: 5px;
+        }
+        .footer-text {
+            text-align: center;
+            font-size: 8px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+        .brand-text {
+            color: #2563eb;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="footerContent">
+        <div class="footer-line"></div>
+        <div class="footer-text">
+            Bu belge <span class="brand-text">MYKEEP Sistemleri</span> tarafından otomatik olarak oluşturulmuştur.<br>
+            Elektronik ortamda üretildiği için imza gerektirmez. | © 2026 MYKEEP
+        </div>
+    </div>
+
+    <table class="header-table">
+        <tr>
+            <td style="width: 60%; vertical-align: bottom;">
+                <div class="header-title">TICKET RAPORU</div>
+                <div class="header-subtitle"></div>
+            </td>
+            <td style="width: 40%; vertical-align: bottom;">
+                <div class="header-info">
+                    <strong>Tarih:</strong> 25.05.2026 11:05<br>
+                    <strong>Belge No:</strong> RPR-202605251105
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    
+
+    <table class="data-table" repeat="1">
+        <thead>
+            <tr>
+                
+                <th style="width: 8%;">Ticket No</th>
+                
+                <th style="width: 22%;">Konu</th>
+                
+                <th style="width: 15%;">Müşteri</th>
+                
+                <th style="width: 20%;">Danışman</th>
+                
+                <th style="width: 10%;">Modül</th>
+                
+                <th style="width: 10%;">Tarih</th>
+                
+                <th style="width: 5%;">Efor</th>
+                
+                <th style="width: 10%;">Onay</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            
+            <tr>
+                
+                <td>1008</td>
+                
+                <td>Deneme452</td>
+                
+                <td>SAPANKA   </td>
+                
+                <td></td>
+                
+                <td>SAP-PP</td>
+                
+                <td>2026-05-25</td>
+                
+                <td>0</td>
+                
+                <td>Bekliyor</td>
+                
+            </tr>
+            
+            <tr>
+                
+                <td>1007</td>
+                
+                <td>Deneme45</td>
+                
+                <td>DIA   </td>
+                
+                <td></td>
+                
+                <td>SAP-ABAP</td>
+                
+                <td>2026-05-25</td>
+                
+                <td>0</td>
+                
+                <td>Bekliyor</td>
+                
+            </tr>
+            
+            <tr>
+                
+                <td>1006</td>
+                
+                <td>Deneme</td>
+                
+                <td>DIA   </td>
+                
+                <td>Furkan Utkay Demirbaş (4.0 sa)</td>
+                
+                <td>SAP-PP</td>
+                
+                <td>2026-05-25</td>
+                
+                <td>4.0</td>
+                
+                <td>Onaylı</td>
+                
+            </tr>
+            
+            <tr>
+                
+                <td>1005</td>
+                
+                <td>Deneme2</td>
+                
+                <td>LUPE YAZILIM   </td>
+                
+                <td>Hüseyin Ağaç (7.0 sa)<br>Furkan Utkay Demirbaş (25.0 sa)</td>
+                
+                <td>SAP-MM</td>
+                
+                <td>2026-05-08</td>
+                
+                <td>32.0</td>
+                
+                <td>Onaylı</td>
+                
+            </tr>
+            
+            <tr>
+                
+                <td>1004</td>
+                
+                <td>Deneme</td>
+                
+                <td>VOLL YAZILIM   </td>
+                
+                <td>Furkan Utkay Demirbaş (8.0 sa)</td>
+                
+                <td>SAP-MM</td>
+                
+                <td>2026-05-07</td>
+                
+                <td>8.0</td>
+                
+                <td>Onaylı</td>
+                
+            </tr>
+            
+            <tr>
+                
+                <td>1003</td>
+                
+                <td>Fiyatlandırma</td>
+                
+                <td>SEÇİL KAUÇUK   </td>
+                
+                <td>Hüseyin Ağaç (5.0 sa)<br>Furkan Utkay Demirbaş (2.0 sa)</td>
+                
+                <td>SAP-SD</td>
+                
+                <td>2026-03-19</td>
+                
+                <td>7.0</td>
+                
+                <td>Onaylı</td>
+                
+            </tr>
+            
+            <tr>
+                
+                <td>1002</td>
+                
+                <td>El Terminali Yazılımı</td>
+                
+                <td>COŞKUNÖZ MAKİNE SANAYİ   </td>
+                
+                <td>Hüseyin Ağaç (5.0 sa)</td>
+                
+                <td>SAP-PP</td>
+                
+                <td>2026-03-18</td>
+                
+                <td>5.0</td>
+                
+                <td>Bekliyor</td>
+                
+            </tr>
+            
+            <tr>
+                
+                <td>1001</td>
+                
+                <td>SAT ONAY STRATEJİSİ</td>
+                
+                <td>SAPANKA   </td>
+                
+                <td>Hüseyin Ağaç (40.0 sa)</td>
+                
+                <td>SAP-MM</td>
+                
+                <td>2026-03-18</td>
+                
+                <td>40.0</td>
+                
+                <td>Onaylı</td>
+                
+            </tr>
+            
+        </tbody>
+    </table>
+</body>
+</html>

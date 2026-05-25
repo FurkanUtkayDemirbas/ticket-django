@@ -78,13 +78,17 @@
                 <tr class="hover:bg-slate-50/80 transition">
                     <td class="px-6 py-4 text-sm font-bold text-slate-700">
                         {% if grup_tipi == "modul" %}
-                            {% if o.modul__program or o.modul__isim %}
-                                {{ o.modul__program|default:"-" }} - {{ o.modul__isim|default:"-" }}
+                            {% if o.modul__pk %}
+                                <a href="{% url 'modul_duzenle' o.modul__pk %}" class="hover:text-blue-600 hover:underline transition">{{ o.modul__program|default:"-" }} - {{ o.modul__isim|default:"-" }}</a>
                             {% else %}
                                 Atanmamış
                             {% endif %}
                         {% else %}
-                            {{ o.danisman__isim|default:"Atanmamış" }}
+                            {% if o.danisman__pk %}
+                                <a href="{% url 'danisman_duzenle' o.danisman__pk %}" class="hover:text-blue-600 hover:underline transition">{{ o.danisman__isim|default:"Atanmamış" }}</a>
+                            {% else %}
+                                Atanmamış
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-sm font-semibold text-emerald-600">{{ o.toplam_sure|default:"0" }} sa</td>

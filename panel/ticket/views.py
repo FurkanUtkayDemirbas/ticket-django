@@ -42,8 +42,18 @@ def ticket_listesi(request):
     if tarih:
         tum_ticketlar = tum_ticketlar.filter(taleptarih__date=tarih)
 
+    # Her ticket için danışman eforlarını hesapla
+    tum_ticketlar_list = list(tum_ticketlar)
+    for t in tum_ticketlar_list:
+        danisman_eforlari = {}
+        for a in t.atama_set.all():
+            if a.danisman:
+                isim = a.danisman.isim or a.danisman.username
+                danisman_eforlari[isim] = danisman_eforlari.get(isim, 0) + (a.efor or 0)
+        t.danisman_efor_list = [f"{isim} — {efor} Saat" for isim, efor in danisman_eforlari.items()]
+
     context = {
-        'ticketlar': tum_ticketlar,
+        'ticketlar': tum_ticketlar_list,
         'arama': arama,
         'secili_durum': durum,
         'secili_danisman': danisman,
@@ -55,16 +65,42 @@ def ticket_listesi(request):
 
 # 3. YENİ EKLEME
 def ticket_ekle(request):
-    """Sıfırdan yeni bir ticket oluşturur."""
+    """Sıfırdan yeni bir ticket oluşturur. Aynı ekranda aktivite ve atama da eklenebilir."""
     if request.method == "POST":
         form = TicketForm(request.POST)
+        aktivite_form = TicketIciAktiviteForm(request.POST)
+        efor_form = TicketIciEforForm(request.POST)
+
         if form.is_valid():
             yeni_ticket = form.save()
-            return redirect('ticket_duzenle', pk=yeni_ticket.pk)
+            
+            # Eğer aktivite formu doldurulmuşsa (örn: açıklama veya süre varsa) kaydet
+            if aktivite_form.is_valid() and (aktivite_form.cleaned_data.get('aciklama') or aktivite_form.cleaned_data.get('time')):
+                yeni_aktivite = aktivite_form.save(commit=False)
+                yeni_aktivite.ticketno = yeni_ticket
+                yeni_aktivite.save()
+                if yeni_aktivite.danisman:
+                    yeni_ticket.danisman.add(yeni_aktivite.danisman)
+            
+            # Eğer efor formu doldurulmuşsa (örn: efor saati veya danışman varsa) kaydet
+            if efor_form.is_valid() and (efor_form.cleaned_data.get('efor') or efor_form.cleaned_data.get('danisman')):
+                yeni_efor = efor_form.save(commit=False)
+                yeni_efor.ticketno = yeni_ticket
+                yeni_efor.save()
+                if yeni_efor.danisman:
+                    yeni_ticket.danisman.add(yeni_efor.danisman)
+
+            return redirect('ticket_listesi')
     else:
-        # Varsayılan değerler: durumtanim='Efor Onayında', faturadurum='Bekliyor'
         form = TicketForm(initial={'durumtanim': 'Efor Onayında', 'faturadurum': 'Bekliyor'})
-    return render(request, 'ticket_ekle.html', {'form': form})
+        aktivite_form = TicketIciAktiviteForm()
+        efor_form = TicketIciEforForm()
+    
+    return render(request, 'ticket_ekle.html', {
+        'form': form,
+        'aktivite_form': aktivite_form,
+        'efor_form': efor_form
+    })
 
 # 4. DÜZENLEME (Aktivite + Efor sekmeli destek ile)
 def ticket_duzenle(request, pk):
@@ -149,6 +185,18 @@ def ticket_tamamla(request, pk):
     return redirect('ticket_listesi')
 
 
+def ticket_faturalama_tamamla(request, pk):
+    """Bir ticket kaydının faturalama durumunu 'Faturalandı' olarak günceller."""
+    if request.method == "POST":
+        kayit = get_object_or_404(ticket, pk=pk)
+        from .models import faturalama
+        fatura_statu = faturalama.objects.filter(faturadurum="Faturalandı").first()
+        if fatura_statu:
+            kayit.faturadurum = fatura_statu
+            kayit.save()
+    return redirect('ticket_listesi')
+
+
 # 6. TICKET İÇİNDEN AKTİVİTE SİLME
 def ticket_aktivite_sil(request, ticket_pk, aktivite_pk):
     """Ticket düzenleme sayfasından bir aktiviteyi siler."""
@@ -182,7 +230,7 @@ def aktivite_listesi(request):
     if ticket_secimi:
         aktiviteler = aktiviteler.filter(ticketno_id=ticket_secimi)
     if danisman:
-        aktiviteler = aktiviteler.filter(danisman_id=danisman)
+        aktiviteler = aktiviteler.filter(danisman__username=danisman)
     if modul:
         aktiviteler = aktiviteler.filter(modul_id=modul)
     if tarih:
@@ -253,7 +301,7 @@ def efor_listesi(request):
             | Q(ticketno__konu__icontains=arama)
         )
     if danisman:
-        atamalar = atamalar.filter(danisman_id=danisman)
+        atamalar = atamalar.filter(danisman__username=danisman)
     if ticket_secimi:
         atamalar = atamalar.filter(ticketno_id=ticket_secimi)
     if modul:

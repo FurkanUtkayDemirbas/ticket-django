@@ -65,7 +65,18 @@ def _ticket_queryset(request, base_queryset=None):
     if bitis:
         queryset = queryset.filter(taleptarih__date__lte=bitis)
 
-    return queryset
+    ticketlar = list(queryset)
+    for t in ticketlar:
+        danisman_eforlari = {}
+        for a in t.atama_set.all():
+            if a.danisman:
+                danisman_eforlari[a.danisman] = danisman_eforlari.get(a.danisman, 0) + (a.efor or 0)
+        
+        t.danisman_efor_detay = []
+        for d, efor in danisman_eforlari.items():
+            t.danisman_efor_detay.append({"danisman": d, "efor": efor})
+
+    return ticketlar
 
 
 def _aktivite_queryset(request):
@@ -195,7 +206,7 @@ def efor_onayi_bekleyen_pdf(request):
 def danisman_efor_ozeti(request):
     aktiviteler = _aktivite_queryset(request)
     ozetler = aktiviteler.values(
-        "danisman_id", "danisman__isim"
+        "danisman__pk", "danisman__isim"
     ).annotate(
         toplam_sure=Sum("time"),
         aktivite_sayisi=Count("number"),
@@ -227,7 +238,7 @@ def danisman_efor_pdf(request):
 def modul_efor_ozeti(request):
     aktiviteler = _aktivite_queryset(request)
     ozetler = aktiviteler.values(
-        "modul_id", "modul__program", "modul__isim"
+        "modul__pk", "modul__program", "modul__isim"
     ).annotate(
         toplam_sure=Sum("time"),
         aktivite_sayisi=Count("number"),
@@ -257,16 +268,17 @@ def modul_efor_pdf(request):
 
 
 def _ticket_headers():
-    return ["Ticket No", "Konu", "Müşteri", "Modül", "Tarih", "Efor", "Onay"]
+    return ["Ticket No", "Konu", "Müşteri", "Danışman", "Modül", "Tarih", "Efor", "Onay"]
 
 
 def _ticket_rows(ticketlar):
     return [[
         t.ticketno,
         t.konu,
-        str(t.unvan) if t.unvan else "",
-        str(t.bolumkod) if t.bolumkod else "",
-        t.taleptarih.strftime("%Y-%m-%d") if t.taleptarih else "",
+        str(t.unvan) if t.unvan else "-",
+        "\n".join([f"{d['danisman'].isim} ({d['efor']} sa)" for d in getattr(t, 'danisman_efor_detay', [])]) or "-",
+        str(t.bolumkod) if t.bolumkod else "-",
+        t.taleptarih.strftime("%Y-%m-%d") if t.taleptarih else "-",
         t.efor or 0,
         "Onaylı" if t.onay else "Bekliyor",
     ] for t in ticketlar]
@@ -381,7 +393,9 @@ import tempfile
 
 def _pdf_response(request, title, headers, rows, filename, description="", summary_title=None, summary_value=None):
     # Enforce strict column widths using xhtml2pdf native pdf:widths property
-    if len(headers) == 7 and headers[0] == "Ticket No":
+    if len(headers) == 8 and headers[0] == "Ticket No":
+        widths = ["8%", "22%", "15%", "20%", "10%", "10%", "5%", "10%"]
+    elif len(headers) == 7 and headers[0] == "Ticket No":
         widths = ["10%", "25%", "20%", "15%", "15%", "5%", "10%"]
     elif len(headers) == 7 and headers[0] == "Aktivite No":
         widths = ["10%", "12%", "20%", "15%", "8%", "20%", "15%"]
@@ -395,7 +409,7 @@ def _pdf_response(request, title, headers, rows, filename, description="", summa
     context = {
         "rapor_baslik": title,
         "rapor_aciklama": description,
-        "headers": headers,
+        "headers": zip(headers, widths),
         "pdf_widths": pdf_widths_str,
         "rows": rows,
         "summary_title": summary_title,
