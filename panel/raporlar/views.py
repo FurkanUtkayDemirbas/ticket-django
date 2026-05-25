@@ -11,11 +11,23 @@ from ticket.models import aktivite, ticket
 
 
 def raporlar_merkezi(request):
+    t_qs = ticket.objects.all()
+    a_qs = aktivite.objects.all()
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            t_qs = t_qs.filter(unvan=profile.muhatap_firma)
+            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            t_qs = t_qs.filter(danisman=profile.danisman_profil)
+            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+
     context = {
-        "toplam_ticket": ticket.objects.count(),
-        "atanmamis_ticket": ticket.objects.filter(danisman=None).count(),
-        "onay_bekleyen": ticket.objects.filter(onay=False).count(),
-        "toplam_aktivite_sure": aktivite.objects.aggregate(toplam=Sum("time"))["toplam"] or 0,
+        "toplam_ticket": t_qs.count(),
+        "atanmamis_ticket": t_qs.filter(danisman=None).count(),
+        "onay_bekleyen": t_qs.filter(onay=False).count(),
+        "toplam_aktivite_sure": a_qs.aggregate(toplam=Sum("time"))["toplam"] or 0,
     }
     return render(request, "raporlar_merkezi.html", context)
 
@@ -32,12 +44,20 @@ def _filter_context(request):
         "durumlar": ticket._meta.get_field("durumtanim").remote_field.model.objects.order_by("durumtanim"),
         "danismanlar": ticket._meta.get_field("danisman").related_model.objects.order_by("isim"),
         "moduller": aktivite._meta.get_field("modul").remote_field.model.objects.order_by("program", "isim"),
-        "ticketlar": ticket.objects.order_by("-ticketno"),
+        "ticketlar": ticket.objects.filter(unvan=request.user.userprofile.muhatap_firma).order_by("-ticketno") if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'Firma' else ticket.objects.order_by("-ticketno"),
     }
 
 
 def _ticket_queryset(request, base_queryset=None):
     queryset = base_queryset if base_queryset is not None else ticket.objects.all()
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            queryset = queryset.filter(unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            queryset = queryset.filter(danisman=profile.danisman_profil)
+
     queryset = queryset.select_related(
         "unvan", "sozlesmeno", "bolumkod", "destekturu", "oncelikkod",
         "durumtanim", "faturadurum",
@@ -80,7 +100,16 @@ def _ticket_queryset(request, base_queryset=None):
 
 
 def _aktivite_queryset(request):
-    queryset = aktivite.objects.select_related("ticketno", "danisman", "modul").order_by("-date")
+    queryset = aktivite.objects.all()
+    
+    if hasattr(request.user, 'userprofile'):
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            queryset = queryset.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            queryset = queryset.filter(danisman=profile.danisman_profil)
+
+    queryset = queryset.select_related("ticketno", "danisman", "modul").order_by("-date")
 
     ticket_no = request.GET.get("ticket", "").strip()
     danisman = request.GET.get("danisman", "").strip()
