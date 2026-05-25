@@ -4,7 +4,7 @@ from .models import aktivite, ticket
 class TicketForm(forms.ModelForm):
     class Meta:
         model = ticket
-        fields = ['konu', 'unvan', 'sozlesmeno', 'bolumkod', 'destekturu', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum']
+        fields = ['konu', 'unvan', 'sozlesmeno', 'bolumkod', 'destekturu', 'taleptarih', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum']
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,8 +19,8 @@ class TicketForm(forms.ModelForm):
             if field_name == 'aciklama':
                 field.widget.attrs['rows'] = '4'
             
-            # Termin tarihi için HTML5 datetime-local tipi ekle (Flatpickr takvimi için)
-            if field_name == 'termintarih':
+            # Tarihler için HTML5 datetime-local tipi ekle (Flatpickr takvimi için)
+            if field_name in ['taleptarih', 'termintarih']:
                 field.widget.input_type = 'datetime-local'
 
 from .models import atama

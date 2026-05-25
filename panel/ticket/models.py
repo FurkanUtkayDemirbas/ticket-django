@@ -2,6 +2,7 @@ from typing import Any
 
 from django.db import models
 from django.db.models import CharField
+from django.utils import timezone
 
 class statu(models.Model):
     durumtanim = models.CharField(max_length=70, null=True, unique=True)
@@ -25,7 +26,7 @@ class ticket(models.Model):
     sozlesmeno = models.ForeignKey("sozlesme.sozlesmeler", to_field="sozlesmeno", on_delete=models.CASCADE, null=True)
     bolumkod = models.ForeignKey("modul.bolum", to_field="kod", on_delete=models.CASCADE, null=True)
     destekturu = models.ForeignKey("destekturu.destektur", to_field="definition", on_delete=models.PROTECT, null=True)
-    taleptarih = models.DateTimeField(auto_now_add=True)
+    taleptarih = models.DateTimeField(default=timezone.now)
     termintarih = models.DateTimeField(null=True, blank=True)
     oncelikkod = models.ForeignKey("destekturu.oncelik", to_field="kod", on_delete=models.CASCADE, null=True)
     aciklama = models.TextField(null=True, blank=True)
