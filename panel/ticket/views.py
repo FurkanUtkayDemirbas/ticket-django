@@ -7,7 +7,7 @@ from .forms import AktiviteForm, TicketForm, TicketIciAktiviteForm, AtamaForm, T
 def ana_sayfa(request):
     """Sistem özetini ve istatistikleri gösteren ana ekran."""
     ticket_qs = ticket.objects.all()
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             ticket_qs = ticket_qs.filter(unvan=profile.muhatap_firma)
@@ -32,12 +32,12 @@ def ticket_listesi(request):
     """Tüm ticket kayıtlarını tablo halinde listeler."""
     tum_ticketlar = ticket.objects.select_related("unvan", "durumtanim").prefetch_related("danisman").all().order_by('-ticketno')
     
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             tum_ticketlar = tum_ticketlar.filter(unvan=profile.muhatap_firma)
         elif profile.role == 'Danisman' and profile.danisman_profil:
-            tum_ticketlar = tum_ticketlar.filter(danisman=profile.danisman_profil)
+            tum_ticketlar = tum_ticketlar.filter(danisman=profile.danisman_profil).distinct()
 
     arama = request.GET.get("arama", "").strip()
     durum = request.GET.get("durum", "").strip()
@@ -83,12 +83,18 @@ def ticket_listesi(request):
 def ticket_ekle(request):
     """Sıfırdan yeni bir ticket oluşturur. Aynı ekranda aktivite ve atama da eklenebilir."""
     if request.method == "POST":
-        form = TicketForm(request.POST)
+        form = TicketForm(request.POST, user=request.user, is_creation=True)
         aktivite_form = TicketIciAktiviteForm(request.POST)
         efor_form = TicketIciEforForm(request.POST)
 
         if form.is_valid():
-            yeni_ticket = form.save()
+            yeni_ticket = form.save(commit=False)
+            from .models import statu
+            statu_obj = statu.objects.filter(durumtanim="Yeni Talep").first()
+            if statu_obj:
+                yeni_ticket.durumtanim = statu_obj
+            yeni_ticket.save()
+            form.save_m2m()
             
             # Eğer aktivite formu doldurulmuşsa (örn: açıklama veya süre varsa) kaydet
             if aktivite_form.is_valid() and (aktivite_form.cleaned_data.get('aciklama') or aktivite_form.cleaned_data.get('time')):
@@ -108,7 +114,7 @@ def ticket_ekle(request):
 
             return redirect('ticket_listesi')
     else:
-        form = TicketForm(initial={'durumtanim': 'Efor Onayında', 'faturadurum': 'Bekliyor'})
+        form = TicketForm(initial={'faturadurum': 'Bekliyor'}, user=request.user, is_creation=True)
         aktivite_form = TicketIciAktiviteForm()
         efor_form = TicketIciEforForm()
     
@@ -122,6 +128,16 @@ def ticket_ekle(request):
 def ticket_duzenle(request, pk):
     """Mevcut bir ticket kaydını günceller. Aktivite ve Efor ekleme/listeleme desteği içerir."""
     kayit = get_object_or_404(ticket, pk=pk)
+
+    # YETKİ KONTROLÜ: Firma başka firmanın ticket'ına URL'den erişmeye çalışıyorsa engelle
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if profile.danisman_profil not in kayit.danisman.all():
+                return render(request, '403.html', status=403)
 
     # Ticket'a ait aktiviteler
     aktiviteler = aktivite.objects.filter(ticketno=kayit).select_related("danisman", "modul").order_by('-date')
@@ -143,7 +159,7 @@ def ticket_duzenle(request, pk):
                     kayit.danisman.add(yeni.danisman)
                 return redirect('ticket_duzenle', pk=pk)
             # Aktivite form hatalıysa ticket formunu boş oluştur
-            form = TicketForm(instance=kayit)
+            form = TicketForm(instance=kayit, user=request.user)
             efor_form = TicketIciEforForm()
         elif 'efor_ekle' in request.POST:
             # Efor ekleme işlemi
@@ -155,18 +171,18 @@ def ticket_duzenle(request, pk):
                 if yeni_efor.danisman:
                     kayit.danisman.add(yeni_efor.danisman)
                 return redirect('ticket_duzenle', pk=pk)
-            form = TicketForm(instance=kayit)
+            form = TicketForm(instance=kayit, user=request.user)
             aktivite_form = TicketIciAktiviteForm()
         else:
             # Ticket güncelleme işlemi
-            form = TicketForm(request.POST, instance=kayit)
+            form = TicketForm(request.POST, instance=kayit, user=request.user)
             if form.is_valid():
                 form.save()
                 return redirect('ticket_listesi')
             aktivite_form = TicketIciAktiviteForm()
             efor_form = TicketIciEforForm()
     else:
-        form = TicketForm(instance=kayit)
+        form = TicketForm(instance=kayit, user=request.user)
         aktivite_form = TicketIciAktiviteForm()
         efor_form = TicketIciEforForm()
 
@@ -185,6 +201,17 @@ def ticket_duzenle(request, pk):
 def ticket_sil(request, pk):
     """Bir ticket kaydını kalıcı olarak siler."""
     kayit = get_object_or_404(ticket, pk=pk)
+    
+    # YETKİ KONTROLÜ: Firma başka firmanın ticket'ını URL'den silmeye çalışıyorsa engelle
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if profile.danisman_profil not in kayit.danisman.all():
+                return render(request, '403.html', status=403)
+                
     kayit.delete()
     return redirect('ticket_listesi')
 
@@ -193,6 +220,17 @@ def ticket_tamamla(request, pk):
     """Bir ticket kaydının durumunu Tamamlandı olarak günceller."""
     if request.method == "POST":
         kayit = get_object_or_404(ticket, pk=pk)
+        
+        # YETKİ KONTROLÜ
+        if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+            profile = request.user.userprofile
+            if profile.role == 'Firma' and profile.muhatap_firma:
+                if kayit.unvan != profile.muhatap_firma:
+                    return render(request, '403.html', status=403)
+            elif profile.role == 'Danisman' and profile.danisman_profil:
+                if profile.danisman_profil not in kayit.danisman.all():
+                    return render(request, '403.html', status=403)
+                    
         from .models import statu
         tamamlandi_statu = statu.objects.filter(durumtanim="Tamamlandı").first()
         if tamamlandi_statu:
@@ -205,6 +243,17 @@ def ticket_faturalama_tamamla(request, pk):
     """Bir ticket kaydının faturalama durumunu 'Faturalandı' olarak günceller."""
     if request.method == "POST":
         kayit = get_object_or_404(ticket, pk=pk)
+        
+        # YETKİ KONTROLÜ
+        if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+            profile = request.user.userprofile
+            if profile.role == 'Firma' and profile.muhatap_firma:
+                if kayit.unvan != profile.muhatap_firma:
+                    return render(request, '403.html', status=403)
+            elif profile.role == 'Danisman' and profile.danisman_profil:
+                if profile.danisman_profil not in kayit.danisman.all():
+                    return render(request, '403.html', status=403)
+                    
         from .models import faturalama
         fatura_statu = faturalama.objects.filter(faturadurum="Faturalandı").first()
         if fatura_statu:
@@ -217,6 +266,17 @@ def ticket_faturalama_tamamla(request, pk):
 def ticket_aktivite_sil(request, ticket_pk, aktivite_pk):
     """Ticket düzenleme sayfasından bir aktiviteyi siler."""
     kayit = get_object_or_404(aktivite, pk=aktivite_pk, ticketno_id=ticket_pk)
+    
+    # YETKİ KONTROLÜ
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if kayit.danisman != profile.danisman_profil:
+                return render(request, '403.html', status=403)
+                
     kayit.delete()
     return redirect('ticket_duzenle', pk=ticket_pk)
 
@@ -225,6 +285,17 @@ def ticket_aktivite_sil(request, ticket_pk, aktivite_pk):
 def ticket_efor_sil(request, ticket_pk, efor_pk):
     """Ticket düzenleme sayfasından bir efor kaydını siler."""
     kayit = get_object_or_404(atama, pk=efor_pk, ticketno_id=ticket_pk)
+    
+    # YETKİ KONTROLÜ
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if kayit.danisman != profile.danisman_profil:
+                return render(request, '403.html', status=403)
+                
     kayit.delete()
     return redirect('ticket_duzenle', pk=ticket_pk)
 
@@ -236,7 +307,7 @@ def ticket_efor_sil(request, ticket_pk, efor_pk):
 def aktivite_listesi(request):
     aktiviteler = aktivite.objects.select_related("ticketno", "danisman", "modul").all().order_by("-date")
     
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             aktiviteler = aktiviteler.filter(ticketno__unvan=profile.muhatap_firma)
@@ -260,46 +331,75 @@ def aktivite_listesi(request):
     if tarih:
         aktiviteler = aktiviteler.filter(date__date=tarih)
 
+    a_qs = aktivite.objects.order_by("number")
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+            
     context = {
         "aktiviteler": aktiviteler,
-        "aktivite_nolari": aktivite.objects.order_by("number").values_list("number", flat=True),
+        "aktivite_nolari": a_qs.values_list("number", flat=True),
+        "filtre_ticketlari": ticket.objects.filter(aktivite__in=a_qs).distinct().order_by("-ticketno"),
         "secili_aktivite_no": aktivite_no,
         "secili_ticket": ticket_secimi,
         "secili_danisman": danisman,
         "secili_modul": modul,
         "tarih": tarih,
-        "form": AktiviteForm(),
+        "form": AktiviteForm(user=request.user),
     }
     return render(request, "aktivite_listesi.html", context)
 
 
 def aktivite_ekle(request):
     if request.method == "POST":
-        form = AktiviteForm(request.POST)
+        form = AktiviteForm(request.POST, user=request.user)
         if form.is_valid():
             form.save()
             return redirect("aktivite_listesi")
     else:
-        form = AktiviteForm()
+        form = AktiviteForm(user=request.user)
 
     return render(request, "aktivite_ekle.html", {"form": form})
 
 
 def aktivite_duzenle(request, pk):
     kayit = get_object_or_404(aktivite, pk=pk)
+    
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if kayit.danisman != profile.danisman_profil:
+                return render(request, '403.html', status=403)
+
     if request.method == "POST":
-        form = AktiviteForm(request.POST, instance=kayit)
+        form = AktiviteForm(request.POST, instance=kayit, user=request.user)
         if form.is_valid():
             form.save()
             return redirect("aktivite_listesi")
     else:
-        form = AktiviteForm(instance=kayit)
+        form = AktiviteForm(instance=kayit, user=request.user)
 
     return render(request, "aktivite_duzenle.html", {"form": form, "kayit": kayit})
 
 
 def aktivite_sil(request, pk):
     kayit = get_object_or_404(aktivite, pk=pk)
+    
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if kayit.danisman != profile.danisman_profil:
+                return render(request, '403.html', status=403)
+                
     kayit.delete()
     return redirect("aktivite_listesi")
 
@@ -312,7 +412,7 @@ def efor_listesi(request):
     """Tüm efor/atama kayıtlarını listeler."""
     atamalar = atama.objects.select_related("danisman", "ticketno", "modul").all().order_by("-pk")
     
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             atamalar = atamalar.filter(ticketno__unvan=profile.muhatap_firma)
@@ -343,14 +443,23 @@ def efor_listesi(request):
     elif onay == "0":
         atamalar = atamalar.filter(onay=False)
 
+    a_qs = atama.objects.all()
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+
     context = {
         "atamalar": atamalar,
+        "filtre_ticketlari": ticket.objects.filter(atama__in=a_qs).distinct().order_by("-ticketno"),
         "arama": arama,
         "secili_danisman": danisman,
         "secili_ticket": ticket_secimi,
         "secili_modul": modul,
         "secili_onay": onay,
-        "form": AtamaForm(),
+        "form": AtamaForm(user=request.user),
     }
     return render(request, "atama_listesi.html", context)
 
@@ -358,37 +467,66 @@ def efor_listesi(request):
 def efor_ekle(request):
     """Yeni efor/atama kaydı oluşturur."""
     if request.method == "POST":
-        form = AtamaForm(request.POST)
+        form = AtamaForm(request.POST, user=request.user)
         if form.is_valid():
             form.save()
             return redirect("efor_listesi")
     else:
-        form = AtamaForm()
+        form = AtamaForm(user=request.user)
     return render(request, "atama_ekle.html", {"form": form})
 
 
 def efor_duzenle(request, pk):
     """Mevcut bir efor/atama kaydını günceller."""
     kayit = get_object_or_404(atama, pk=pk)
+    
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if kayit.danisman != profile.danisman_profil:
+                return render(request, '403.html', status=403)
+
     if request.method == "POST":
-        form = AtamaForm(request.POST, instance=kayit)
+        form = AtamaForm(request.POST, instance=kayit, user=request.user)
         if form.is_valid():
             form.save()
             return redirect("efor_listesi")
     else:
-        form = AtamaForm(instance=kayit)
+        form = AtamaForm(instance=kayit, user=request.user)
     return render(request, "atama_duzenle.html", {"form": form, "kayit": kayit})
 
 
 def efor_sil(request, pk):
     """Bir efor/atama kaydını siler."""
     kayit = get_object_or_404(atama, pk=pk)
+    
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            if kayit.danisman != profile.danisman_profil:
+                return render(request, '403.html', status=403)
+                
     kayit.delete()
     return redirect("efor_listesi")
 
 def efor_onayla(request, pk):
     """Bir efor/atama kaydını onaylar."""
     kayit = get_object_or_404(atama, pk=pk)
+    
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman':
+            return render(request, '403.html', status=403)
+                
     kayit.onay = True
     kayit.save()
     return redirect("efor_listesi")

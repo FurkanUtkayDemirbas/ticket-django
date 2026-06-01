@@ -2,10 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from .models import muhatap
 from .forms import MuhatapForm
+from uyelik.decorators import admin_only
 
 # MUHATAP LİSTESİ
+@admin_only
 def muhatap_listesi(request):
-    muhataplar = muhatap.objects.all().order_by('unvan')
+    muhataplar = muhatap.objects.all().order_by('id')
     arama = request.GET.get("arama", "").strip()
     durum = request.GET.get("durum", "").strip()
 
@@ -27,6 +29,7 @@ def muhatap_listesi(request):
     })
 
 # YENİ MUHATAP EKLEME
+@admin_only
 def muhatap_ekle(request):
     if request.method == "POST":
         form = MuhatapForm(request.POST)
@@ -38,6 +41,7 @@ def muhatap_ekle(request):
     return render(request, 'muhatap_ekle.html', {'form': form})
 
 # MEVCUT MUHATABI DÜZENLEME
+@admin_only
 def muhatap_duzenle(request, pk):
     kayit = get_object_or_404(muhatap, pk=pk)
     if request.method == "POST":
@@ -50,6 +54,7 @@ def muhatap_duzenle(request, pk):
     return render(request, 'muhatap_duzenle.html', {'form': form, 'kayit': kayit})
 
 # MUHATAP SİLME
+@admin_only
 def muhatap_sil(request, pk):
     kayit = get_object_or_404(muhatap, pk=pk)
     kayit.delete()

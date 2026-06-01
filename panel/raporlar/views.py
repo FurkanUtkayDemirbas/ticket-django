@@ -7,14 +7,15 @@ from django.urls import reverse
 from xhtml2pdf import pisa
 from django.template.loader import render_to_string
 
-from ticket.models import aktivite, ticket
+from ticket.models import aktivite, atama, ticket
+from proje.models import projeler
 
 
 def raporlar_merkezi(request):
     t_qs = ticket.objects.all()
     a_qs = aktivite.objects.all()
     
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             t_qs = t_qs.filter(unvan=profile.muhatap_firma)
@@ -33,25 +34,44 @@ def raporlar_merkezi(request):
 
 
 def _filter_context(request):
+    t_qs = ticket.objects.order_by("-ticketno")
+    m_qs = ticket._meta.get_field("unvan").remote_field.model.objects.order_by("unvan")
+    p_qs = projeler.objects.order_by("projeno")
+    
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            t_qs = t_qs.filter(unvan=profile.muhatap_firma)
+            m_qs = m_qs.filter(unvan=profile.muhatap_firma.unvan)
+            p_qs = p_qs.filter(sozlesme_baglantisi__muhatap=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            t_qs = t_qs.filter(danisman=profile.danisman_profil)
+            m_qs = m_qs.filter(ticket__danisman=profile.danisman_profil).distinct()
+            p_qs = p_qs.filter(sozlesme_baglantisi__ticket__danisman=profile.danisman_profil).distinct()
+
     return {
         "arama": request.GET.get("arama", "").strip(),
         "ticket_secimi": request.GET.get("ticket", "").strip(),
         "secili_durum": request.GET.get("durum", "").strip(),
         "secili_danisman": request.GET.get("danisman", "").strip(),
         "secili_modul": request.GET.get("modul", "").strip(),
+        "secili_muhatap": request.GET.get("muhatap", "").strip(),
+        "secili_proje": request.GET.get("proje", "").strip(),
         "baslangic": request.GET.get("baslangic", "").strip(),
         "bitis": request.GET.get("bitis", "").strip(),
         "durumlar": ticket._meta.get_field("durumtanim").remote_field.model.objects.order_by("durumtanim"),
         "danismanlar": ticket._meta.get_field("danisman").related_model.objects.order_by("isim"),
         "moduller": aktivite._meta.get_field("modul").remote_field.model.objects.order_by("program", "isim"),
-        "ticketlar": ticket.objects.filter(unvan=request.user.userprofile.muhatap_firma).order_by("-ticketno") if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'Firma' else ticket.objects.order_by("-ticketno"),
+        "ticketlar": t_qs,
+        "muhataplar": m_qs,
+        "projeler": p_qs,
     }
 
 
 def _ticket_queryset(request, base_queryset=None):
     queryset = base_queryset if base_queryset is not None else ticket.objects.all()
     
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             queryset = queryset.filter(unvan=profile.muhatap_firma)
@@ -99,10 +119,56 @@ def _ticket_queryset(request, base_queryset=None):
     return ticketlar
 
 
+def _ticket_detay_base_queryset(request):
+    queryset = ticket.objects.select_related(
+        "unvan", "durumtanim", "faturadurum"
+    ).order_by("-ticketno")
+
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            queryset = queryset.filter(unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            queryset = queryset.filter(danisman=profile.danisman_profil)
+
+    return queryset
+
+
+def _ticket_detay_rows(request):
+    ticket_no = request.GET.get("ticket", "").strip()
+    if not ticket_no:
+        return []
+
+    ticketlar = _ticket_detay_base_queryset(request).filter(ticketno=ticket_no)
+    rows = []
+    for t in ticketlar:
+        eforlar = atama.objects.filter(ticketno=t).select_related("modul")
+        aktiviteler = aktivite.objects.filter(ticketno=t).select_related("modul")
+
+        yazilim_eforu = sum((e.efor or 0) for e in eforlar if e.modul and e.modul.yazilim_eforuna_dahil)
+        modul_eforu = sum((e.efor or 0) for e in eforlar if not (e.modul and e.modul.yazilim_eforuna_dahil))
+        yazilim_aktivite = sum((a.time or 0) for a in aktiviteler if a.modul and a.modul.yazilim_eforuna_dahil)
+        modul_aktivite = sum((a.time or 0) for a in aktiviteler if not (a.modul and a.modul.yazilim_eforuna_dahil))
+
+        rows.append({
+            "ticket_no": t.ticketno,
+            "ticket_tanimi": t.konu,
+            "musteri_adi": t.unvan.unvan if t.unvan else "-",
+            "termin_tarihi": t.termintarih,
+            "ticket_durumu": t.durumtanim.durumtanim if t.durumtanim else "-",
+            "faturalama_durumu": t.faturadurum.faturadurum if t.faturadurum else "-",
+            "yazilim_eforu": yazilim_eforu,
+            "modul_eforu": modul_eforu,
+            "yazilim_aktivite_toplami": yazilim_aktivite,
+            "modul_aktivite_toplami": modul_aktivite,
+        })
+    return rows
+
+
 def _aktivite_queryset(request):
     queryset = aktivite.objects.all()
     
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             queryset = queryset.filter(ticketno__unvan=profile.muhatap_firma)
@@ -114,6 +180,8 @@ def _aktivite_queryset(request):
     ticket_no = request.GET.get("ticket", "").strip()
     danisman = request.GET.get("danisman", "").strip()
     modul = request.GET.get("modul", "").strip()
+    muhatap = request.GET.get("muhatap", "").strip()
+    proje = request.GET.get("proje", "").strip()
     baslangic = request.GET.get("baslangic", "").strip()
     bitis = request.GET.get("bitis", "").strip()
 
@@ -123,6 +191,10 @@ def _aktivite_queryset(request):
         queryset = queryset.filter(danisman_id=danisman)
     if modul:
         queryset = queryset.filter(modul_id=modul)
+    if muhatap:
+        queryset = queryset.filter(ticketno__unvan__unvan=muhatap)
+    if proje:
+        queryset = queryset.filter(ticketno__sozlesmeno__projeler__projeno=proje)
     if baslangic:
         queryset = queryset.filter(date__date__gte=baslangic)
     if bitis:
@@ -156,11 +228,44 @@ def ticket_rapor_pdf(request):
     return _pdf_response(request, "TICKET RAPORU", _ticket_headers(), _ticket_rows(ticketlar), "ticket_raporu.pdf", "Destek talepleri icin genel kayit listesi.")
 
 
+def ticket_detay_raporu(request):
+    context = {
+        "ticketlar": _ticket_detay_base_queryset(request),
+        "ticket_secimi": request.GET.get("ticket", "").strip(),
+        "rows": _ticket_detay_rows(request),
+        "rapor_baslik": "Ticket Özet Raporu",
+        "rapor_aciklama": "Seçilen ticket için durum, fatura, yazılım ve modül efor özetleri.",
+        "export_excel_url": reverse("ticket_ozet_raporu_excel"),
+        "export_pdf_url": reverse("ticket_ozet_raporu_pdf"),
+    }
+    return render(request, "ticket_detay_raporu.html", context)
+
+
+def ticket_detay_raporu_excel(request):
+    rows = _ticket_detay_export_rows(_ticket_detay_rows(request))
+    return _excel_response("Ticket Özet Raporu", _ticket_detay_headers(), rows, "ticket_ozet_raporu.xlsx")
+
+
+def ticket_detay_raporu_pdf(request):
+    rows = _ticket_detay_export_rows(_ticket_detay_rows(request))
+    return _pdf_response(request, "TICKET OZET RAPORU", _ticket_detay_headers(), rows, "ticket_ozet_raporu.pdf", "Secilen ticket icin efor ve aktivite ozetleri.")
+
+
 def aktivite_rapor_detay(request):
     aktiviteler = _aktivite_queryset(request)
     context = _filter_context(request)
+    
+    a_qs = aktivite.objects.all()
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+            
     context.update({
         "aktiviteler": aktiviteler,
+        "ticketlar": ticket.objects.filter(aktivite__in=a_qs).distinct().order_by("-ticketno"),
         "toplam_sure": aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0,
         "rapor_baslik": "Genel Aktivite Raporu",
         "rapor_aciklama": "Danışman, modül, ticket ve tarih aralığına göre aktivite ve efor raporu.",
@@ -173,7 +278,7 @@ def aktivite_rapor_detay(request):
 def aktivite_rapor_indir_excel(request):
     aktiviteler = _aktivite_queryset(request)
     rows = _aktivite_rows(aktiviteler)
-    rows.append(["", "", "", "Toplam Süre", aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0, "", ""])
+    rows.append(["", "", "", "", "Toplam Süre", aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0, "", ""])
     return _excel_response("Aktivite Raporu", _aktivite_headers(), rows, "aktivite_raporu.xlsx")
 
 
@@ -185,7 +290,7 @@ def aktivite_rapor_pdf(request):
 
 
 def atanmamis_ticket_raporu(request):
-    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman=None))
+    ticketlar = _ticket_queryset(request, ticket.objects.filter(atama__isnull=True))
     context = _filter_context(request)
     context.update({
         "ticketlar": ticketlar,
@@ -199,12 +304,12 @@ def atanmamis_ticket_raporu(request):
 
 
 def atanmamis_ticket_excel(request):
-    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman=None))
+    ticketlar = _ticket_queryset(request, ticket.objects.filter(atama__isnull=True))
     return _excel_response("Atanmamış Ticketlar", _ticket_headers(), _ticket_rows(ticketlar), "atanmamis_ticketlar.xlsx")
 
 
 def atanmamis_ticket_pdf(request):
-    ticketlar = _ticket_queryset(request, ticket.objects.filter(danisman=None))
+    ticketlar = _ticket_queryset(request, ticket.objects.filter(atama__isnull=True))
     return _pdf_response(request, "ATANMAMIS TICKETLAR RAPORU", _ticket_headers(), _ticket_rows(ticketlar), "atanmamis_ticketlar.pdf", "Henuz danisman atamasi yapilmamis talepler.")
 
 
@@ -300,6 +405,36 @@ def _ticket_headers():
     return ["Ticket No", "Konu", "Müşteri", "Danışman", "Modül", "Tarih", "Efor", "Onay"]
 
 
+def _ticket_detay_headers():
+    return [
+        "Ticket No",
+        "Ticket Tanımı",
+        "Müşteri Adı",
+        "Termin Tarihi",
+        "Ticket Durumu",
+        "Faturalama Durumu",
+        "Yazılım Eforu",
+        "Modül Eforu",
+        "Yazılım Aktivite Toplamı",
+        "Modül Aktivite Toplamı",
+    ]
+
+
+def _ticket_detay_export_rows(rows):
+    return [[
+        row["ticket_no"],
+        row["ticket_tanimi"],
+        row["musteri_adi"],
+        row["termin_tarihi"].strftime("%Y-%m-%d %H:%M") if row["termin_tarihi"] else "-",
+        row["ticket_durumu"],
+        row["faturalama_durumu"],
+        row["yazilim_eforu"],
+        row["modul_eforu"],
+        row["yazilim_aktivite_toplami"],
+        row["modul_aktivite_toplami"],
+    ] for row in rows]
+
+
 def _ticket_rows(ticketlar):
     return [[
         t.ticketno,
@@ -314,12 +449,13 @@ def _ticket_rows(ticketlar):
 
 
 def _aktivite_headers():
-    return ["Aktivite No", "Ticket", "Ticket Konusu", "Tarih", "Süre", "Danışman", "Modül"]
+    return ["Muhatap Kodu", "Muhatap Adı", "Ticket No", "Ticket Adı", "Tarih", "Süre", "Danışman", "Modül"]
 
 
 def _aktivite_rows(aktiviteler):
     return [[
-        a.number,
+        a.ticketno.unvan.vkn if a.ticketno and a.ticketno.unvan else "",
+        a.ticketno.unvan.unvan if a.ticketno and a.ticketno.unvan else "",
         a.ticketno.ticketno if a.ticketno else "",
         a.ticketno.konu if a.ticketno else "",
         a.date.strftime("%Y-%m-%d %H:%M") if a.date else "",
@@ -424,6 +560,8 @@ def _pdf_response(request, title, headers, rows, filename, description="", summa
     # Enforce strict column widths using xhtml2pdf native pdf:widths property
     if len(headers) == 8 and headers[0] == "Ticket No":
         widths = ["8%", "22%", "15%", "20%", "10%", "10%", "5%", "10%"]
+    elif len(headers) == 10 and headers[0] == "Ticket No":
+        widths = ["7%", "13%", "11%", "11%", "10%", "11%", "9%", "9%", "10%", "9%"]
     elif len(headers) == 7 and headers[0] == "Ticket No":
         widths = ["10%", "25%", "20%", "15%", "15%", "5%", "10%"]
     elif len(headers) == 7 and headers[0] == "Aktivite No":

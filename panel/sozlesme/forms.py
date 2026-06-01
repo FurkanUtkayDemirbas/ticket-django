@@ -20,7 +20,16 @@ class SozlesmeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        # Firmalar sözleşme eklerken veya düzenlerken sadece kendi firmalarını seçebilir
+        if self.user and hasattr(self.user, 'userprofile') and not self.user.is_superuser:
+            profile = self.user.userprofile
+            if profile.role == 'Firma' and profile.muhatap_firma:
+                self.fields['muhatap'].queryset = self.fields['muhatap'].queryset.filter(unvan=profile.muhatap_firma.unvan)
+                self.fields['muhatap'].initial = profile.muhatap_firma
+                
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = (
                 'w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm '

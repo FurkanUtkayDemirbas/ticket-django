@@ -42,13 +42,11 @@ class ticket(models.Model):
         if not self.ticketno:
             # Mevcut en yüksek ticketno'yu bul
             last_ticket = ticket.objects.all().order_by('ticketno').last()
-            if last_ticket:
+            if last_ticket and last_ticket.ticketno >= 100000:
                 self.ticketno = last_ticket.ticketno + 1
             else:
-                self.ticketno = 1000  # Başlangıç değeri belirleyebilirsiniz
+                self.ticketno = 100001
         super(ticket, self).save(*args, **kwargs)
-
-
 
 
     def __str__(self):

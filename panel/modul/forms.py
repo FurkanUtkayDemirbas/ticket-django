@@ -13,17 +13,24 @@ BASE_INPUT_CLASS = (
 class BolumForm(forms.ModelForm):
     class Meta:
         model = bolum
-        fields = ["kod", "program", "isim", "programresim"]
+        fields = ["kod", "program", "isim", "programresim", "yazilim_eforuna_dahil"]
         labels = {
             "kod": "Modül Kodu",
             "program": "Program",
             "isim": "Modül Adı",
             "programresim": "Program Görseli",
+            "yazilim_eforuna_dahil": "Yazılım Eforuna Dahil Et",
+        }
+        widgets = {
+            "yazilim_eforuna_dahil": forms.CheckboxInput,
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
+        for field_name, field in self.fields.items():
+            if field_name == "yazilim_eforuna_dahil":
+                field.widget.attrs["class"] = "h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                continue
             field.widget.attrs["class"] = BASE_INPUT_CLASS
 
 

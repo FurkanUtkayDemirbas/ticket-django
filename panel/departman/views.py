@@ -2,7 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from .models import departman
 from .forms import DepartmanForm
+from uyelik.decorators import admin_only
 
+@admin_only
 def departman_listesi(request):
     veriler = departman.objects.all().order_by('kod')
     arama = request.GET.get("arama", "").strip()
@@ -23,6 +25,7 @@ def departman_listesi(request):
         'tanim': tanim,
     })
 
+@admin_only
 def departman_duzenle(request, pk):
     """Mevcut bir departman kaydını günceller."""
     kayit = get_object_or_404(departman, pk=pk)
@@ -35,6 +38,7 @@ def departman_duzenle(request, pk):
         form = DepartmanForm(instance=kayit)
     return render(request, 'departman_duzenle.html', {'form': form, 'kayit': kayit})
 
+@admin_only
 def departman_ekle(request):
     if request.method == "POST":
         form = DepartmanForm(request.POST)
@@ -45,6 +49,7 @@ def departman_ekle(request):
         form = DepartmanForm()
     return render(request, 'departman_ekle.html', {'form': form})
 
+@admin_only
 def departman_sil(request, pk):
     kayit = get_object_or_404(departman, pk=pk)
     kayit.delete()

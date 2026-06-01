@@ -9,9 +9,11 @@
             <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Proje Portföyü</h2>
             <p class="text-sm text-slate-500 font-medium mt-1">Sözleşmelere bağlı aktif projeler.</p>
         </div>
+        {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
         <a href="{% url 'proje_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-500/20 inline-flex items-center active:scale-95">
             <i class="fa-solid fa-diagram-project mr-2"></i>Yeni Proje Başlat
         </a>
+        {% endif %}
     </div>
     
     <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
@@ -35,7 +37,9 @@
                     <th class="px-8 py-4">Proje Tanımı</th>
                     <th class="px-8 py-4">Sözleşme No</th>
                     <th class="px-8 py-4">Müşteri</th>
+                    {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
                     <th class="px-8 py-4 text-right">İşlemler</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -63,6 +67,7 @@
                             <i class="fa-solid fa-building text-slate-400 mr-2"></i>{{ p.sozlesme_baglantisi.muhatap.unvan }}
                         </a>
                     </td>
+                    {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
                     <td class="px-8 py-4 text-right">
                         <div class="flex items-center justify-end space-x-2">
                             <a href="{% url 'proje_duzenle' p.pk %}" class="group flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200" title="Düzenle">
@@ -73,6 +78,7 @@
                             </a>
                         </div>
                     </td>
+                    {% endif %}
                 </tr>
                 {% empty %}
                 <tr>

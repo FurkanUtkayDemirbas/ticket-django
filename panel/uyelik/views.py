@@ -5,6 +5,10 @@ from .forms import KayitForm
 from .models import UserProfile
 
 def kayit_view(request):
+    # Kayıt olma sayfası dışarıya kapatıldı. Ziyaretçiyi uyarıp giriş sayfasına yönlendir.
+    messages.warning(request, "Yeni kayıt işlemleri sadece sistem yöneticisi tarafından yapılmaktadır.")
+    return redirect('uyelik:giris')
+
     if request.method == "POST":
         form = KayitForm(request.POST)
 

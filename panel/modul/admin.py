@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models import bolum, danisman
 
 class bolumAdmin(admin.ModelAdmin):
-    list_display = ('kod','isim', 'programresim')
+    list_display = ('kod','isim', 'programresim', 'yazilim_eforuna_dahil')
 admin.site.register(bolum,bolumAdmin)
 class danismanAdmin(admin.ModelAdmin):
     list_display = ('username','isim','telefon')

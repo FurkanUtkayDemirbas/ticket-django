@@ -13,7 +13,15 @@ class ProjeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        # Firmalar sadece kendi firmalarına ait sözleşmeleri seçebilir
+        if self.user and hasattr(self.user, 'userprofile') and not self.user.is_superuser:
+            profile = self.user.userprofile
+            if profile.role == 'Firma' and profile.muhatap_firma:
+                self.fields['sozlesme_baglantisi'].queryset = self.fields['sozlesme_baglantisi'].queryset.filter(muhatap=profile.muhatap_firma)
+                
         for field_name, field in self.fields.items():
             if field_name == 'aciklama':
                 field.widget = forms.Textarea(attrs={

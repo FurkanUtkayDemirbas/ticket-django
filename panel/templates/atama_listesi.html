@@ -19,6 +19,7 @@
     <!-- Arama ve Filtreleme -->
     <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_200px_auto_auto] xl:items-end">
+            {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Danışman</label>
                 <select name="danisman" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
@@ -28,11 +29,12 @@
                     {% endfor %}
                 </select>
             </div>
+            {% endif %}
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Ticket</label>
                 <select name="ticket" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
-                    {% for t in form.fields.ticketno.queryset %}
+                    {% for t in filtre_ticketlari %}
                         <option value="{{ t.ticketno }}" {% if secili_ticket == t.ticketno|stringformat:"s" %}selected{% endif %}>{{ t.ticketno }} - {{ t.konu }}</option>
                     {% endfor %}
                 </select>

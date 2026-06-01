@@ -57,6 +57,7 @@
                     {% endfor %}
                 </select>
             </div>
+            {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
             <div class="min-w-[220px] flex-1">
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Danışman</label>
                 <select name="danisman" class="w-full">
@@ -66,6 +67,7 @@
                     {% endfor %}
                 </select>
             </div>
+            {% endif %}
             <div class="min-w-[220px] flex-1">
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Modül</label>
                 <select name="modul" class="w-full">
@@ -84,7 +86,7 @@
                     <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Bitiş</label>
                     <input type="date" name="bitis" value="{{ bitis }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                 </div>
-                <div class="relative z-20 flex min-w-[190px] shrink-0 gap-3">
+                <div class="flex min-w-[190px] shrink-0 gap-3">
                     <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
                     {% if ticket_secimi or secili_muhatap or secili_proje or secili_danisman or secili_modul or baslangic or bitis %}
                         <a href="{{ request.path }}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>

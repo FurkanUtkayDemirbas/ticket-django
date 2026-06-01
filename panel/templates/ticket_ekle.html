@@ -41,26 +41,6 @@
                 {% endfor %}
             </div>
 
-            <!-- Aktivite Formu Ekleme -->
-            <div class="mt-8 border-t border-slate-100 pt-8">
-                <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-clock-rotate-left mr-2 text-blue-500"></i>Aktivite Ekle (İsteğe Bağlı)</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {% for field in aktivite_form %}
-                    <div class="group">
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-blue-600">
-                            {{ field.label }}
-                        </label>
-                        <div class="relative">
-                            {{ field }}
-                            {% if field.errors %}
-                                <p class="text-red-500 text-[10px] mt-1 font-semibold px-1">{{ field.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
             <!-- Efor (Atama) Formu Ekleme -->
             <div class="mt-8 border-t border-slate-100 pt-8">
                 <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-gauge-high mr-2 text-violet-500"></i>Atama Ekle (İsteğe Bağlı)</h3>
@@ -79,6 +59,26 @@
                             {% else %}
                                 {{ field }}
                             {% endif %}
+                            {% if field.errors %}
+                                <p class="text-red-500 text-[10px] mt-1 font-semibold px-1">{{ field.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Aktivite Formu Ekleme -->
+            <div class="mt-8 border-t border-slate-100 pt-8">
+                <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-clock-rotate-left mr-2 text-blue-500"></i>Aktivite Ekle (İsteğe Bağlı)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for field in aktivite_form %}
+                    <div class="group">
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-blue-600">
+                            {{ field.label }}
+                        </label>
+                        <div class="relative">
+                            {{ field }}
                             {% if field.errors %}
                                 <p class="text-red-500 text-[10px] mt-1 font-semibold px-1">{{ field.errors.0 }}</p>
                             {% endif %}

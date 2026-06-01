@@ -6,8 +6,13 @@ class bolum(models.Model):
     program = models.CharField(max_length=40, null=True)
     isim = models.CharField(max_length=20)
     programresim = models.ImageField(upload_to='resimler', null=True, blank=True)
+    yazilim_eforuna_dahil = models.BooleanField(default=False)
 
-    list_display = ('kod', 'program', 'isim', 'programresim')
+    list_display = ('kod', 'program', 'isim', 'programresim', 'yazilim_eforuna_dahil')
+
+    @property
+    def efor_tipi(self):
+        return "YAZILIM" if self.yazilim_eforuna_dahil else "MODUL"
 
     def __str__(self):
         return f"{self.program}-{self.isim}"

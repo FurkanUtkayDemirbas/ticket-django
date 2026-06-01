@@ -6,7 +6,7 @@ from .forms import SozlesmeForm
 def sozlesme_listesi(request):
     veriler = sozlesmeler.objects.select_related("tip", "muhatap").all().order_by('-baslangic_tarihi')
     
-    if hasattr(request.user, 'userprofile'):
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firma:
             veriler = veriler.filter(muhatap=profile.muhatap_firma)
@@ -47,31 +47,54 @@ def sozlesme_listesi(request):
         'baslangic': baslangic,
         'bitis': bitis,
         'sozlesme_tipleri': sozlesmeler._meta.get_field("tip").remote_field.model.objects.order_by("tanim"),
-        'muhataplar': sozlesmeler._meta.get_field("muhatap").remote_field.model.objects.order_by("unvan"),
+        'muhataplar': sozlesmeler._meta.get_field("muhatap").remote_field.model.objects.filter(unvan=request.user.userprofile.muhatap_firma) if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'Firma' else sozlesmeler._meta.get_field("muhatap").remote_field.model.objects.order_by("unvan"),
     })
 
 def sozlesme_ekle(request):
+    if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'Danisman':
+        return render(request, '403.html', status=403)
+        
     if request.method == "POST":
-        form = SozlesmeForm(request.POST)
+        form = SozlesmeForm(request.POST, user=request.user)
         if form.is_valid():
             form.save()
             return redirect('sozlesme_listesi')
     else:
-        form = SozlesmeForm()
+        form = SozlesmeForm(user=request.user)
     return render(request, 'sozlesme_ekle.html', {'form': form})
 
 def sozlesme_duzenle(request, pk):
     kayit = get_object_or_404(sozlesmeler, pk=pk)
+    
+    # YETKİ KONTROLÜ
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.muhatap != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman':
+            return render(request, '403.html', status=403)
+
     if request.method == "POST":
-        form = SozlesmeForm(request.POST, instance=kayit)
+        form = SozlesmeForm(request.POST, instance=kayit, user=request.user)
         if form.is_valid():
             form.save()
             return redirect('sozlesme_listesi')
     else:
-        form = SozlesmeForm(instance=kayit)
+        form = SozlesmeForm(instance=kayit, user=request.user)
     return render(request, 'sozlesme_duzenle.html', {'form': form, 'kayit': kayit})
 
 def sozlesme_sil(request, pk):
     kayit = get_object_or_404(sozlesmeler, pk=pk)
+    
+    # YETKİ KONTROLÜ
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            if kayit.muhatap != profile.muhatap_firma:
+                return render(request, '403.html', status=403)
+        elif profile.role == 'Danisman':
+            return render(request, '403.html', status=403)
+                
     kayit.delete()
     return redirect('sozlesme_listesi')

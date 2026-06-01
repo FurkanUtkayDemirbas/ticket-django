@@ -7,7 +7,13 @@ class TicketForm(forms.ModelForm):
         fields = ['konu', 'unvan', 'sozlesmeno', 'bolumkod', 'destekturu', 'taleptarih', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum']
         
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        self.is_creation = kwargs.pop('is_creation', False)
         super().__init__(*args, **kwargs)
+        
+        if self.is_creation:
+            self.fields.pop('durumtanim', None)
+            
         for field_name, field in self.fields.items():
             # Modern ve sade sınıflar
             field.widget.attrs['class'] = (
@@ -22,6 +28,14 @@ class TicketForm(forms.ModelForm):
             # Tarihler için HTML5 datetime-local tipi ekle (Flatpickr takvimi için)
             if field_name in ['taleptarih', 'termintarih']:
                 field.widget.input_type = 'datetime-local'
+        
+        # Firmalar sadece kendi firmaları için ticket oluşturabilir ve sadece kendi sözleşmelerini seçebilir
+        if self.user and hasattr(self.user, 'userprofile') and not self.user.is_superuser:
+            profile = self.user.userprofile
+            if profile.role == 'Firma' and profile.muhatap_firma:
+                self.fields['unvan'].queryset = self.fields['unvan'].queryset.filter(unvan=profile.muhatap_firma.unvan)
+                self.fields['unvan'].initial = profile.muhatap_firma
+                self.fields['sozlesmeno'].queryset = self.fields['sozlesmeno'].queryset.filter(muhatap=profile.muhatap_firma)
 
 from .models import atama
 
@@ -31,7 +45,16 @@ class AtamaForm(forms.ModelForm):
         fields = ['ticketno', 'danisman', 'modul', 'efor', 'onay']
         
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        if self.user and hasattr(self.user, 'userprofile') and not self.user.is_superuser:
+            profile = self.user.userprofile
+            if profile.role == 'Firma' and profile.muhatap_firma:
+                self.fields['ticketno'].queryset = self.fields['ticketno'].queryset.filter(unvan=profile.muhatap_firma)
+            elif profile.role == 'Danisman' and profile.danisman_profil:
+                self.fields['ticketno'].queryset = self.fields['ticketno'].queryset.filter(danisman=profile.danisman_profil)
+                
         for field_name, field in self.fields.items():
             if field_name != 'onay':
                 field.widget.attrs['class'] = (
@@ -60,7 +83,16 @@ class AktiviteForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        if self.user and hasattr(self.user, 'userprofile') and not self.user.is_superuser:
+            profile = self.user.userprofile
+            if profile.role == 'Firma' and profile.muhatap_firma:
+                self.fields['ticketno'].queryset = self.fields['ticketno'].queryset.filter(unvan=profile.muhatap_firma)
+            elif profile.role == 'Danisman' and profile.danisman_profil:
+                self.fields['ticketno'].queryset = self.fields['ticketno'].queryset.filter(danisman=profile.danisman_profil)
+                
         for field in self.fields.values():
             field.widget.attrs["class"] = (
                 "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm "

@@ -3,8 +3,10 @@ from django.db.models import Q
 
 from .forms import DestekTurForm
 from .models import destektur
+from uyelik.decorators import admin_only
 
 
+@admin_only
 def destekturu_listesi(request):
     destek_turleri = destektur.objects.all().order_by("kod")
     arama = request.GET.get("arama", "").strip()
@@ -17,6 +19,7 @@ def destekturu_listesi(request):
     return render(request, "destekturu_listesi.html", {"destek_turleri": destek_turleri, "arama": arama})
 
 
+@admin_only
 def destekturu_ekle(request):
     if request.method == "POST":
         form = DestekTurForm(request.POST)
@@ -29,6 +32,7 @@ def destekturu_ekle(request):
     return render(request, "destekturu_ekle.html", {"form": form})
 
 
+@admin_only
 def destekturu_duzenle(request, pk):
     kayit = get_object_or_404(destektur, pk=pk)
     if request.method == "POST":
@@ -42,6 +46,7 @@ def destekturu_duzenle(request, pk):
     return render(request, "destekturu_duzenle.html", {"form": form, "kayit": kayit})
 
 
+@admin_only
 def destekturu_sil(request, pk):
     from django.db.models import ProtectedError
     kayit = get_object_or_404(destektur, pk=pk)

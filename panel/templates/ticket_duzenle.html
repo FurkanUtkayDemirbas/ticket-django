@@ -47,22 +47,183 @@
     <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden mb-10">
         <!-- Tab Başlıkları -->
         <div class="flex border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
-            <button type="button" onclick="switchTab('aktiviteler')" id="tab-btn-aktiviteler"
-                class="tab-btn flex-1 flex items-center justify-center space-x-2.5 py-4 px-6 text-sm font-bold transition-all duration-300 border-b-[3px] border-blue-600 text-blue-600 bg-blue-50/40">
-                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-                <span>Aktiviteler</span>
-                <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-700">{{ aktiviteler|length }}</span>
-            </button>
             <button type="button" onclick="switchTab('eforlar')" id="tab-btn-eforlar"
-                class="tab-btn flex-1 flex items-center justify-center space-x-2.5 py-4 px-6 text-sm font-bold transition-all duration-300 border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/60">
+                class="tab-btn flex-1 flex items-center justify-center space-x-2.5 py-4 px-6 text-sm font-bold transition-all duration-300 border-b-[3px] border-violet-600 text-violet-600 bg-violet-50/40">
                 <i class="fa-solid fa-gauge-high text-xs"></i>
                 <span>Atamalar</span>
                 <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500">{{ eforlar|length }}</span>
             </button>
+            <button type="button" onclick="switchTab('aktiviteler')" id="tab-btn-aktiviteler"
+                class="tab-btn flex-1 flex items-center justify-center space-x-2.5 py-4 px-6 text-sm font-bold transition-all duration-300 border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/60">
+                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                <span>Aktiviteler</span>
+                <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-700">{{ aktiviteler|length }}</span>
+            </button>
         </div>
 
+        <!-- ═══════════ EFORLAR SEKMESİ ═══════════ -->
+        <div id="tab-eforlar" class="tab-content">
+            <!-- Yeni Efor Ekleme Formu -->
+            <div class="px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-violet-50/60 to-purple-50/40">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                        <i class="fa-solid fa-plus text-white text-xs"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Yeni Atama Ekle</h3>
+                        <p class="text-[10px] text-slate-400">Bu ticket'a yeni bir efor/atama kaydı ekleyin.</p>
+                    </div>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        {% for field in efor_form %}
+                        <div class="group">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 px-1 transition-colors group-focus-within:text-violet-600">
+                                {{ field.label }}
+                            </label>
+                            <div class="relative">
+                                {% if field.name == 'onay' %}
+                                    <label class="inline-flex items-center cursor-pointer mt-2">
+                                        {{ field }}
+                                        <span class="ml-2 text-sm text-slate-600">Onaylı</span>
+                                    </label>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.errors %}
+                                    <p class="text-red-500 text-[10px] mt-1 font-semibold px-1">
+                                        <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ field.errors.0 }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="flex justify-end mt-4">
+                        <button type="submit" name="efor_ekle" class="bg-violet-500 hover:bg-violet-600 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-violet-500/20 transition-all active:scale-95 flex items-center">
+                            <i class="fa-solid fa-plus mr-2"></i> Atama Ekle
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Efor Listesi -->
+            <div class="px-8 py-4 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                        <i class="fa-solid fa-gauge-high text-white text-xs"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-800">Atama Kayıtları</h3>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Toplam Efor</span>
+                        <span class="text-lg font-black text-violet-600">{{ toplam_atama_efor }} <span class="text-xs font-bold text-slate-400">Saat</span></span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Kayıt</span>
+                        <span class="text-lg font-black text-slate-700">{{ eforlar|length }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
+                            <th class="px-4 py-3.5">Danışman</th>
+                            <th class="px-3 py-3.5">Modül</th>
+                            <th class="px-3 py-3.5 text-center">Atama (Saat)</th>
+                            <th class="px-3 py-3.5 text-center">Onay</th>
+                            <th class="px-3 py-3.5 text-right pr-4">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for e in eforlar %}
+                        <tr class="hover:bg-slate-50 transition group">
+                            <td class="px-4 py-3.5 text-sm font-bold text-slate-700">
+                                <div class="flex items-center">
+                                    {% if e.danisman %}
+                                        <div class="w-7 h-7 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-xs mr-2.5">
+                                            {{ e.danisman.isim|default:e.danisman.username|make_list|first|upper }}
+                                        </div>
+                                        {{ e.danisman.isim|default:e.danisman.username }}
+                                    {% else %}
+                                        <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs mr-2.5">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <span class="text-slate-400">-</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-3 py-3.5 text-sm text-slate-500">{{ e.modul.isim|default:"-" }}</td>
+                            <td class="px-3 py-3.5 text-sm text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-violet-50 text-violet-700 font-bold text-xs">
+                                    {{ e.efor|default:"0" }} Sa
+                                </span>
+                            </td>
+                            <td class="px-3 py-3.5 text-center">
+                                {% if e.onay %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                        <i class="fa-solid fa-circle-check mr-1"></i> Onaylı
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-100">
+                                        <i class="fa-solid fa-clock mr-1"></i> Bekliyor
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-3.5 text-right pr-4">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{% url 'efor_duzenle' e.pk %}"
+                                       class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white inline-flex items-center justify-center transition shadow-sm"
+                                       title="Düzenle">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </a>
+                                    <a href="{% url 'ticket_efor_sil' ticket_pk=kayit.pk efor_pk=e.pk %}"
+                                       onclick="return confirm('Bu efor kaydını silmek istediğinize emin misiniz?')"
+                                       class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm"
+                                       title="Sil">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-10 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
+                                        <i class="fa-solid fa-gauge-high text-slate-300 text-lg"></i>
+                                    </div>
+                                    <p class="text-sm text-slate-400 font-medium">Henüz efor kaydı eklenmemiş.</p>
+                                    <p class="text-[11px] text-slate-300 mt-1">Yukarıdaki formu kullanarak yeni bir efor ekleyebilirsiniz.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if eforlar %}
+                    <tfoot>
+                        <tr class="border-t-2 border-slate-200 bg-slate-50/50">
+                            <td class="px-4 py-3.5 text-sm font-bold text-slate-500" colspan="2">Toplam</td>
+                            <td class="px-3 py-3.5 text-center">
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-lg bg-violet-50 text-violet-700 font-black text-sm">
+                                    {{ toplam_atama_efor }} Sa
+                                </span>
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
         <!-- ═══════════ AKTİVİTELER SEKMESİ ═══════════ -->
-        <div id="tab-aktiviteler" class="tab-content">
+        <div id="tab-aktiviteler" class="tab-content hidden">
             <!-- Yeni Aktivite Ekleme Formu -->
             <div class="px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-emerald-50/60 to-teal-50/40">
                 <div class="flex items-center space-x-3 mb-4">
@@ -160,7 +321,7 @@
                                        title="Düzenle">
                                         <i class="fa-solid fa-pen text-xs"></i>
                                     </a>
-                                    <a href="{% url 'ticket_aktivite_sil' ticket_pk=kayit.ticketno aktivite_pk=a.pk %}"
+                                    <a href="{% url 'ticket_aktivite_sil' ticket_pk=kayit.pk aktivite_pk=a.pk %}"
                                        onclick="return confirm('Bu aktiviteyi silmek istediğinize emin misiniz?')"
                                        class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm"
                                        title="Sil">
@@ -199,160 +360,6 @@
                 </table>
             </div>
         </div>
-
-        <!-- ═══════════ EFORLAR SEKMESİ ═══════════ -->
-        <div id="tab-eforlar" class="tab-content hidden">
-            <!-- Yeni Efor Ekleme Formu -->
-            <div class="px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-violet-50/60 to-purple-50/40">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                        <i class="fa-solid fa-plus text-white text-xs"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800">Yeni Atama Ekle</h3>
-                        <p class="text-[10px] text-slate-400">Bu ticket'a yeni bir efor/atama kaydı ekleyin.</p>
-                    </div>
-                </div>
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                        {% for field in efor_form %}
-                        <div class="group">
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 px-1 transition-colors group-focus-within:text-violet-600">
-                                {{ field.label }}
-                            </label>
-                            <div class="relative">
-                                {% if field.name == 'onay' %}
-                                    <label class="inline-flex items-center cursor-pointer mt-2">
-                                        {{ field }}
-                                        <span class="ml-2 text-sm text-slate-600">Onaylı</span>
-                                    </label>
-                                {% else %}
-                                    {{ field }}
-                                {% endif %}
-                                {% if field.errors %}
-                                    <p class="text-red-500 text-[10px] mt-1 font-semibold px-1">
-                                        <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ field.errors.0 }}
-                                    </p>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="flex justify-end mt-4">
-                        <button type="submit" name="efor_ekle" class="bg-violet-500 hover:bg-violet-600 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-violet-500/20 transition-all active:scale-95 flex items-center">
-                            <i class="fa-solid fa-plus mr-2"></i> Atama Ekle
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Efor Listesi -->
-            <div class="px-8 py-4 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                        <i class="fa-solid fa-gauge-high text-white text-xs"></i>
-                    </div>
-                    <h3 class="text-sm font-bold text-slate-800">Atama Kayıtları</h3>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Toplam Efor</span>
-                        <span class="text-lg font-black text-violet-600">{{ toplam_atama_efor }} <span class="text-xs font-bold text-slate-400">Saat</span></span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Kayıt</span>
-                        <span class="text-lg font-black text-slate-700">{{ eforlar|length }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
-                            <th class="px-4 py-3.5">Danışman</th>
-                            <th class="px-3 py-3.5">Modül</th>
-                            <th class="px-3 py-3.5 text-center">Atama (Saat)</th>
-                            <th class="px-3 py-3.5 text-center">Onay</th>
-                            <th class="px-3 py-3.5 text-right pr-4">İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        {% for e in eforlar %}
-                        <tr class="hover:bg-slate-50 transition group">
-                            <td class="px-4 py-3.5 text-sm font-bold text-slate-700">
-                                <div class="flex items-center">
-                                    <div class="w-7 h-7 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-xs mr-2.5">
-                                        {{ e.danisman.isim|default:e.danisman.username|make_list|first|upper }}
-                                    </div>
-                                    {{ e.danisman.isim|default:e.danisman.username }}
-                                </div>
-                            </td>
-                            <td class="px-3 py-3.5 text-sm text-slate-500">{{ e.modul.isim|default:"-" }}</td>
-                            <td class="px-3 py-3.5 text-sm text-center">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-violet-50 text-violet-700 font-bold text-xs">
-                                    {{ e.efor|default:"0" }} Sa
-                                </span>
-                            </td>
-                            <td class="px-3 py-3.5 text-center">
-                                {% if e.onay %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                        <i class="fa-solid fa-circle-check mr-1"></i> Onaylı
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-100">
-                                        <i class="fa-solid fa-clock mr-1"></i> Bekliyor
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="px-3 py-3.5 text-right pr-4">
-                                <div class="flex items-center justify-end space-x-2">
-                                    <a href="{% url 'efor_duzenle' e.pk %}"
-                                       class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white inline-flex items-center justify-center transition shadow-sm"
-                                       title="Düzenle">
-                                        <i class="fa-solid fa-pen text-xs"></i>
-                                    </a>
-                                    <a href="{% url 'ticket_efor_sil' ticket_pk=kayit.ticketno efor_pk=e.pk %}"
-                                       onclick="return confirm('Bu efor kaydını silmek istediğinize emin misiniz?')"
-                                       class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition shadow-sm"
-                                       title="Sil">
-                                        <i class="fa-solid fa-trash-can text-xs"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="px-4 py-10 text-center">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
-                                        <i class="fa-solid fa-gauge-high text-slate-300 text-lg"></i>
-                                    </div>
-                                    <p class="text-sm text-slate-400 font-medium">Henüz efor kaydı eklenmemiş.</p>
-                                    <p class="text-[11px] text-slate-300 mt-1">Yukarıdaki formu kullanarak yeni bir efor ekleyebilirsiniz.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    {% if eforlar %}
-                    <tfoot>
-                        <tr class="border-t-2 border-slate-200 bg-slate-50/50">
-                            <td class="px-4 py-3.5 text-sm font-bold text-slate-500" colspan="2">Toplam</td>
-                            <td class="px-3 py-3.5 text-center">
-                                <span class="inline-flex items-center px-3 py-1.5 rounded-lg bg-violet-50 text-violet-700 font-black text-sm">
-                                    {{ toplam_atama_efor }} Sa
-                                </span>
-                            </td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
-                    {% endif %}
-                </table>
-            </div>
-        </div>
-    </div>
 
     <!-- Sayfa Sonu Kaydet Butonu -->
     <div class="flex justify-between items-center pb-8">

@@ -35,6 +35,11 @@
                 <h3 class="font-bold text-slate-900">Ticket Raporu</h3>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">Durum, danışman ve tarih aralığına göre destek talepleri.</p>
             </a>
+            <a href="{% url 'ticket_ozet_raporu' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-violet-200 hover:bg-violet-50/30 transition">
+                <i class="fa-solid fa-table-list text-violet-600 mb-4"></i>
+                <h3 class="font-bold text-slate-900">Ticket Özet Raporu</h3>
+                <p class="mt-2 text-xs leading-relaxed text-slate-500">Seçilen ticket için yazılım, modül, fatura ve aktivite toplamları.</p>
+            </a>
             <a href="{% url 'aktivite_rapor_detay' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-emerald-200 hover:bg-emerald-50/30 transition">
                 <i class="fa-solid fa-clock-rotate-left text-emerald-600 mb-4"></i>
                 <h3 class="font-bold text-slate-900">Aktivite Raporu</h3>

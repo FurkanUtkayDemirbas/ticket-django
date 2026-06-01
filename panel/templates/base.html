@@ -6,7 +6,7 @@
     <title>MYKEEP | {% block title %}Yönetim{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Tom Select -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
@@ -52,7 +52,7 @@
             background: #334155;
         }
 
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Nunito', sans-serif; }
 
         /* ============================================
            TOM SELECT — Geliştirilmiş Combobox Tasarımı
@@ -75,7 +75,7 @@
             padding: 0.7rem 1rem !important;
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
             font-size: 0.875rem !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Nunito', sans-serif !important;
             color: #334155 !important;
             box-shadow: 0 1px 3px rgba(0,0,0,0.04), inset 0 1px 2px rgba(255,255,255,0.8) !important;
             transition: all 0.2s ease !important;
@@ -83,7 +83,7 @@
         }
 
         .ts-control input {
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Nunito', sans-serif !important;
             font-size: 0.875rem !important;
             color: #334155 !important;
         }
@@ -117,7 +117,7 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.06) !important;
             margin-top: 6px !important;
             overflow: hidden !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Nunito', sans-serif !important;
             backdrop-filter: blur(8px) !important;
         }
 
@@ -175,7 +175,7 @@
             border-radius: 1rem !important;
             border: 1.5px solid #e2e8f0 !important;
             box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06) !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Nunito', sans-serif !important;
             overflow: hidden !important;
         }
 
@@ -193,7 +193,7 @@
         .flatpickr-current-month input.cur-year {
             color: white !important;
             font-weight: 700 !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Nunito', sans-serif !important;
         }
 
         .flatpickr-weekday {
@@ -205,7 +205,7 @@
 
         .flatpickr-day {
             border-radius: 0.6rem !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Nunito', sans-serif !important;
             font-size: 0.825rem !important;
             color: #334155 !important;
         }
@@ -236,7 +236,7 @@
         }
 
         .flatpickr-time input {
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Nunito', sans-serif !important;
             font-weight: 600 !important;
             color: #334155 !important;
         }
@@ -263,7 +263,7 @@
             padding: 10px 0;
             background: linear-gradient(135deg, #2563eb, #3b82f6);
             color: white;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Nunito', sans-serif;
             font-size: 0.82rem;
             font-weight: 700;
             border: none;
@@ -280,47 +280,49 @@
         }
     </style>
 </head>
-<body class="bg-[#f8fafc] text-slate-800 overflow-hidden">
+<body class="bg-[#f8f9fa] text-slate-800 overflow-hidden">
     <div class="flex h-screen">
-        <aside class="w-64 bg-[#0c1524] border-r-[3px] border-[#3b82f6] flex flex-col shadow-xl">
+        <aside class="w-[260px] bg-[#0b1221] flex flex-col shadow-2xl z-20">
             <div class="p-6">
-                <h1 class="text-xl font-black tracking-wider text-[#3b82f6] uppercase">MYKEEP</h1>
+                <h1 class="text-2xl font-extrabold tracking-wide text-blue-500 uppercase">MYKEEP</h1>
             </div>
-            <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
-                <a href="{% url 'index' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'index' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+            <nav class="flex-1 space-y-1 overflow-y-auto mt-4">
+                <a href="{% url 'index' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if request.resolver_match.url_name == 'index' %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-house-chimney text-sm"></i>
                     <span class="text-sm">Genel Bakış</span>
                 </a>
-                <a href="{% url 'ticket_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'ticket_listesi' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                <a href="{% url 'ticket_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if request.resolver_match.url_name == 'ticket_listesi' %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-envelope-open-text text-sm"></i>
                     <span class="text-sm">Ticketlar</span>
                 </a>
-                <a href="{% url 'aktivite_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'aktivite' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                <a href="{% url 'aktivite_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'aktivite' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                     <span class="text-sm">Aktiviteler</span>
                 </a>
-                <a href="{% url 'efor_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'efor' in request.resolver_match.url_name and 'rapor' not in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                <a href="{% url 'efor_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'efor' in request.resolver_match.url_name and 'rapor' not in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-gauge-high text-sm"></i>
                     <span class="text-sm">Atamalar</span>
                 </a>
-                {% if request.user.userprofile.role != 'Firma' %}
-                <a href="{% url 'muhatap_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'muhatap_listesi' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                {% if request.user.is_superuser or request.user.userprofile.role == 'Admin' %}
+                <a href="{% url 'muhatap_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if request.resolver_match.url_name == 'muhatap_listesi' %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-address-book text-sm"></i>
                     <span class="text-sm">Muhataplar</span>
                 </a>
                 {% endif %}
-                <a href="{% url 'sozlesme_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'sozlesme_listesi' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
+                <a href="{% url 'sozlesme_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if request.resolver_match.url_name == 'sozlesme_listesi' %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-file-contract text-sm"></i>
                     <span class="text-sm">Sözleşmeler</span>
                 </a>
-                <a href="{% url 'proje_listesi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if request.resolver_match.url_name == 'proje_listesi' %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                {% endif %}
+                <a href="{% url 'proje_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if request.resolver_match.url_name == 'proje_listesi' %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-diagram-project text-sm"></i>
                     <span class="text-sm">Projeler</span>
                 </a>
-                {% if request.user.userprofile.role != 'Firma' %}
+                {% if request.user.is_superuser or request.user.userprofile.role == 'Admin' %}
                 <!-- Tanimlar Acilir Menu -->
                 <details class="group" {% if 'departman' in request.resolver_match.url_name or 'modul' in request.resolver_match.url_name or 'danisman' in request.resolver_match.url_name or 'destekturu' in request.resolver_match.url_name %}open{% endif %}>
-                    <summary class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition text-slate-400 hover:text-white hover:bg-[#1e293b]/50 select-none">
+                    <summary class="flex items-center justify-between py-3 px-8 cursor-pointer transition-all duration-200 text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent select-none">
                         <div class="flex items-center space-x-3">
                             <i class="fa-solid fa-layer-group text-sm"></i>
                             <span class="text-sm">Tanımlar</span>
@@ -330,26 +332,26 @@
                         </span>
                     </summary>
                     <div class="mt-1 pl-8 space-y-1">
-                        <a href="{% url 'departman_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'departman' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                        <a href="{% url 'departman_listesi' %}" class="flex items-center space-x-3 py-2 px-8 transition-all duration-200 border-l-[5px] border-transparent {% if 'departman' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                             <i class="fa-solid fa-building text-xs"></i>
                             <span class="text-xs">Departmanlar</span>
                         </a>
-                        <a href="{% url 'modul_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'modul' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                        <a href="{% url 'modul_listesi' %}" class="flex items-center space-x-3 py-2 px-8 transition-all duration-200 border-l-[5px] border-transparent {% if 'modul' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                             <i class="fa-solid fa-cubes text-xs"></i>
                             <span class="text-xs">Modüller</span>
                         </a>
-                        <a href="{% url 'danisman_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'danisman' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                        <a href="{% url 'danisman_listesi' %}" class="flex items-center space-x-3 py-2 px-8 transition-all duration-200 border-l-[5px] border-transparent {% if 'danisman' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                             <i class="fa-solid fa-user-tie text-xs"></i>
                             <span class="text-xs">Danışmanlar</span>
                         </a>
-                        <a href="{% url 'destekturu_listesi' %}" class="flex items-center space-x-3 p-2 rounded-lg transition {% if 'destekturu' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                        <a href="{% url 'destekturu_listesi' %}" class="flex items-center space-x-3 py-2 px-8 transition-all duration-200 border-l-[5px] border-transparent {% if 'destekturu' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                             <i class="fa-solid fa-life-ring text-xs"></i>
                             <span class="text-xs">Destek Türleri</span>
                         </a>
                     </div>
                 </details>
                 {% endif %}
-                <a href="{% url 'raporlar_sayfasi' %}" class="flex items-center space-x-3 p-3 rounded-lg transition {% if 'rapor' in request.resolver_match.url_name or 'efor' in request.resolver_match.url_name or 'atanmamis' in request.resolver_match.url_name %}bg-[#1e293b] text-white font-semibold{% else %}text-slate-400 hover:text-white hover:bg-[#1e293b]/50{% endif %}">
+                <a href="{% url 'raporlar_sayfasi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'rapor' in request.resolver_match.url_name or 'efor' in request.resolver_match.url_name or 'atanmamis' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-chart-pie text-sm"></i>
                     <span class="text-sm">Raporlar</span>
                 </a>
@@ -363,6 +365,13 @@
         </aside>
 
         <main class="flex-1 flex flex-col overflow-y-auto">
+            <header class="bg-white px-8 py-4 flex items-center justify-between sticky top-0 z-10 border-b border-gray-100 shadow-sm">
+                <div class="text-slate-800 font-bold text-lg tracking-wide">Hoş Geldin</div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-semibold text-slate-500">{{ request.user.username|default:"admin" }}</span>
+                </div>
+            </header>
+
 
             
             <div class="p-8">

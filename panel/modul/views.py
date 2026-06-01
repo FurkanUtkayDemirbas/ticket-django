@@ -3,8 +3,10 @@ from django.db.models import Q
 
 from .models import bolum, danisman
 from .forms import BolumForm, DanismanForm
+from uyelik.decorators import admin_only
 
 
+@admin_only
 def bolum_listesi(request):
     veriler = bolum.objects.all().order_by("kod")
     arama = request.GET.get("arama", "").strip()
@@ -32,6 +34,7 @@ def bolum_listesi(request):
     })
 
 
+@admin_only
 def bolum_ekle(request):
     if request.method == "POST":
         form = BolumForm(request.POST, request.FILES)
@@ -44,6 +47,7 @@ def bolum_ekle(request):
     return render(request, "modul_ekle.html", {"form": form})
 
 
+@admin_only
 def bolum_duzenle(request, pk):
     kayit = get_object_or_404(bolum, pk=pk)
     if request.method == "POST":
@@ -57,12 +61,14 @@ def bolum_duzenle(request, pk):
     return render(request, "modul_duzenle.html", {"form": form, "kayit": kayit})
 
 
+@admin_only
 def bolum_sil(request, pk):
     kayit = get_object_or_404(bolum, pk=pk)
     kayit.delete()
     return redirect("modul_listesi")
 
 
+@admin_only
 def danisman_listesi(request):
     veriler = danisman.objects.prefetch_related("yetkinlik").all().order_by("username")
     arama = request.GET.get("arama", "").strip()
@@ -88,6 +94,7 @@ def danisman_listesi(request):
     })
 
 
+@admin_only
 def danisman_ekle(request):
     if request.method == "POST":
         form = DanismanForm(request.POST)
@@ -100,6 +107,7 @@ def danisman_ekle(request):
     return render(request, "danisman_ekle.html", {"form": form})
 
 
+@admin_only
 def danisman_duzenle(request, pk):
     kayit = get_object_or_404(danisman, pk=pk)
     if request.method == "POST":
@@ -113,6 +121,7 @@ def danisman_duzenle(request, pk):
     return render(request, "danisman_duzenle.html", {"form": form, "kayit": kayit})
 
 
+@admin_only
 def danisman_sil(request, pk):
     kayit = get_object_or_404(danisman, pk=pk)
     kayit.delete()

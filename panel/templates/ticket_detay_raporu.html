@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ rapor_baslik }}{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden mb-10">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'raporlar_sayfasi' %}" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition">
+                <i class="fa-solid fa-arrow-left text-base"></i>
+            </a>
+            <div>
+                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ rapor_baslik }}</h2>
+                <p class="text-sm text-slate-500 font-medium mt-1">{{ rapor_aciklama }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            {% if export_excel_url %}
+                <a href="{{ export_excel_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition inline-flex items-center shadow-lg shadow-emerald-500/20 active:scale-95">
+                    <i class="fa-solid fa-file-excel mr-2"></i> Excel
+                </a>
+            {% endif %}
+            {% if export_pdf_url %}
+                <a href="{{ export_pdf_url }}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold py-3 px-6 rounded-xl transition inline-flex items-center shadow-lg shadow-rose-500/20 active:scale-95">
+                    <i class="fa-solid fa-file-pdf mr-2"></i> PDF
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="px-6 py-5 border-b border-slate-100 bg-white">
+        <div class="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto_auto] xl:items-end">
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Ticket</label>
+                <select name="ticket" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Ticket seçin</option>
+                    {% for t in ticketlar %}
+                        <option value="{{ t.ticketno }}" {% if ticket_secimi == t.ticketno|stringformat:"s" %}selected{% endif %}>{{ t.ticketno }} - {{ t.konu }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="h-11 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Raporla</button>
+            {% if ticket_secimi %}
+                <a href="{{ request.path }}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[1180px] text-left border-collapse">
+            <thead>
+                <tr class="text-[11px] uppercase tracking-wider text-slate-400 font-bold border-b border-slate-100 bg-slate-50/30">
+                    <th class="px-5 py-4">Ticket No</th>
+                    <th class="px-5 py-4">Ticket Tanımı</th>
+                    <th class="px-5 py-4">Müşteri Adı</th>
+                    <th class="px-5 py-4">Termin Tarihi</th>
+                    <th class="px-5 py-4">Ticket Durumu</th>
+                    <th class="px-5 py-4">Faturalama Durumu</th>
+                    <th class="px-5 py-4">Yazılım Eforu</th>
+                    <th class="px-5 py-4">Modül Eforu</th>
+                    <th class="px-5 py-4">Yazılım Aktivite Toplamı</th>
+                    <th class="px-5 py-4">Modül Aktivite Toplamı</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for row in rows %}
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-5 py-4 text-sm font-bold text-blue-600">
+                        <a href="{% url 'ticket_duzenle' row.ticket_no %}" class="hover:underline hover:text-blue-800 transition">{{ row.ticket_no }}</a>
+                    </td>
+                    <td class="px-5 py-4 text-sm font-semibold text-slate-700">{{ row.ticket_tanimi }}</td>
+                    <td class="px-5 py-4 text-sm text-slate-600">{{ row.musteri_adi }}</td>
+                    <td class="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">{{ row.termin_tarihi|date:"d.m.Y H:i"|default:"-" }}</td>
+                    <td class="px-5 py-4 text-sm text-slate-600">{{ row.ticket_durumu }}</td>
+                    <td class="px-5 py-4 text-sm text-slate-600">{{ row.faturalama_durumu }}</td>
+                    <td class="px-5 py-4 text-sm font-extrabold text-violet-600 whitespace-nowrap">{{ row.yazilim_eforu|floatformat:"-1" }} sa</td>
+                    <td class="px-5 py-4 text-sm font-extrabold text-cyan-700 whitespace-nowrap">{{ row.modul_eforu|floatformat:"-1" }} sa</td>
+                    <td class="px-5 py-4 text-sm font-extrabold text-violet-600 whitespace-nowrap">{{ row.yazilim_aktivite_toplami|floatformat:"-1" }} sa</td>
+                    <td class="px-5 py-4 text-sm font-extrabold text-cyan-700 whitespace-nowrap">{{ row.modul_aktivite_toplami|floatformat:"-1" }} sa</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="px-6 py-10 text-center text-slate-400 text-sm italic">
+                        {% if ticket_secimi %}Seçilen ticket için kayıt bulunamadı.{% else %}Raporu görüntülemek için bir ticket seçin.{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

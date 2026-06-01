@@ -40,6 +40,7 @@
                 <th class="px-8 py-4">Kod</th>
                 <th class="px-8 py-4">Program</th>
                 <th class="px-8 py-4">Modül</th>
+                <th class="px-8 py-4">Efor Tipi</th>
                 <th class="px-8 py-4 text-right">İşlemler</th>
             </tr>
         </thead>
@@ -53,6 +54,13 @@
                 <td class="px-8 py-4 text-sm text-slate-600">
                     <a href="{% url 'modul_duzenle' m.pk %}" class="hover:text-blue-700 hover:underline">{{ m.isim }}</a>
                 </td>
+                <td class="px-8 py-4">
+                    {% if m.yazilim_eforuna_dahil %}
+                        <span class="inline-flex rounded-lg bg-violet-50 px-3 py-1 text-[11px] font-extrabold text-violet-600 ring-1 ring-violet-100">YAZILIM</span>
+                    {% else %}
+                        <span class="inline-flex rounded-lg bg-cyan-50 px-3 py-1 text-[11px] font-extrabold text-cyan-700 ring-1 ring-cyan-100">MODÜL</span>
+                    {% endif %}
+                </td>
                 <td class="px-8 py-4 text-right space-x-2">
                     <a href="{% url 'modul_duzenle' m.pk %}" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white inline-flex items-center justify-center transition shadow-sm">
                         <i class="fa-solid fa-pen-to-square text-xs"></i>
@@ -64,7 +72,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4" class="px-8 py-10 text-center text-sm text-slate-400">Henüz modül eklenmemiş.</td>
+                <td colspan="5" class="px-8 py-10 text-center text-sm text-slate-400">Henüz modül eklenmemiş.</td>
             </tr>
             {% endfor %}
         </tbody>
