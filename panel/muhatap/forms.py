@@ -9,6 +9,8 @@ class MuhatapForm(forms.ModelForm):
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields['aktif'].initial = True
         for field_name, field in self.fields.items():
             if field_name != 'aktif':
                 field.widget.attrs['class'] = (
@@ -18,3 +20,8 @@ class MuhatapForm(forms.ModelForm):
                 )
             if field_name == 'adres':
                 field.widget.attrs['rows'] = '4'
+            if field_name == 'aktif':
+                field.widget.attrs['class'] = (
+                    'h-5 w-5 rounded border-slate-300 text-blue-600 '
+                    'focus:ring-blue-500'
+                )

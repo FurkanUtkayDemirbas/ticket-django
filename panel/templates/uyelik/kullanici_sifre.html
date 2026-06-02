@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Şifre Sıfırla — {{ kullanici.username }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="mb-6">
+        <nav class="flex text-[10px] text-slate-400 uppercase tracking-widest mb-2 space-x-2">
+            <a href="{% url 'uyelik:kullanici_listesi' %}" class="hover:text-blue-600">Kullanıcılar</a>
+            <span>/</span>
+            <span class="text-slate-600">Şifre Sıfırla</span>
+        </nav>
+        <h1 class="text-2xl font-extrabold text-slate-800">Şifre Sıfırla</h1>
+        <p class="text-sm text-slate-500 mt-1">
+            <span class="font-semibold text-blue-600">{{ kullanici.username }}</span> kullanıcısının şifresini güncelleyin.
+        </p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <div class="group">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    {{ form.new_password1.label }}
+                </label>
+                {{ form.new_password1 }}
+                {% if form.new_password1.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.new_password1.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="group">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    {{ form.new_password2.label }}
+                </label>
+                {{ form.new_password2 }}
+                {% if form.new_password2.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.new_password2.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                <a href="{% url 'uyelik:kullanici_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Geri Dön
+                </a>
+                <button type="submit"
+                    class="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-md transition-all active:scale-95 flex items-center">
+                    <i class="fa-solid fa-key mr-2"></i>Şifreyi Güncelle
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

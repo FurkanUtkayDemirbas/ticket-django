@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div>
+        <h1 class="text-2xl font-extrabold text-slate-800">{{ title }}</h1>
+        <p class="text-sm text-slate-500 mt-1">Masraf türü tanımını ve kapsamını aşağıdan girebilirsiniz.</p>
+    </div>
+    <a href="{% url 'masraf_turu_listesi' %}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-6 py-2.5 rounded-xl font-semibold shadow-sm transition-all flex items-center space-x-2">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Geri Dön</span>
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-xl mx-auto">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Masraf Türü Tanımı</label>
+            {{ form.tanim }}
+            {{ form.tanim.errors }}
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">Firmaya Özel Mi?</label>
+            <p class="text-xs text-slate-400 mb-2">
+                <i class="fa-solid fa-circle-info mr-1"></i>
+                Boş bırakırsanız <span class="font-semibold text-green-700">Genel</span> türdür (tüm firmalarda görünür).
+                Bir firma seçerseniz sadece o firmada görünür.
+            </p>
+            {{ form.muhatap }}
+            {{ form.muhatap.errors }}
+        </div>
+        
+        <div class="flex justify-end pt-4">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
+                <i class="fa-solid fa-save"></i>
+                <span>Kaydet</span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

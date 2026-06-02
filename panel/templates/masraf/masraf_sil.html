@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Masraf Sil{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div>
+        <h1 class="text-2xl font-extrabold text-red-600">Masraf Sil</h1>
+        <p class="text-sm text-slate-500 mt-1">Bu masraf kaydını silmek istediğinize emin misiniz?</p>
+    </div>
+    <a href="{% url 'masraf_listesi' %}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-6 py-2.5 rounded-xl font-semibold shadow-sm transition-all flex items-center space-x-2">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Geri Dön</span>
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-2xl mx-auto">
+    <div class="bg-red-50 text-red-800 p-6 rounded-xl border border-red-100 mb-6">
+        <h3 class="text-lg font-bold mb-2">Silinecek Kayıt Bilgileri:</h3>
+        <ul class="list-disc list-inside space-y-1">
+            <li><strong>Fiş No:</strong> {{ masraf.fis_no }}</li>
+            <li><strong>Sözleşme:</strong> {{ masraf.sozlesme.sozlesmeno }}</li>
+            <li><strong>Tutar:</strong> {{ masraf.tutar }} {{ masraf.para_birimi }}</li>
+            <li><strong>Açıklama:</strong> {{ masraf.aciklama }}</li>
+        </ul>
+        <p class="mt-4 font-semibold">Bu işlem geri alınamaz!</p>
+    </div>
+
+    <form method="post" class="flex items-center space-x-4">
+        {% csrf_token %}
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
+            <i class="fa-solid fa-trash"></i>
+            <span>Evet, Sil</span>
+        </button>
+        <a href="{% url 'masraf_listesi' %}" class="text-slate-600 font-semibold hover:underline">Vazgeç</a>
+    </form>
+</div>
+{% endblock %}

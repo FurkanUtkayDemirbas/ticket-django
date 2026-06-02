@@ -319,9 +319,18 @@
                     <i class="fa-solid fa-diagram-project text-sm"></i>
                     <span class="text-sm">Projeler</span>
                 </a>
+
+                {% if not request.user.userprofile.role == 'Firma' or request.user.is_superuser %}
+                <a href="{% url 'masraf_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'masraf' in request.resolver_match.url_name and 'turu' not in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
+                    <i class="fa-solid fa-money-bill-wave text-sm"></i>
+                    <span class="text-sm">Masraflar</span>
+                </a>
+                {% endif %}
+
                 {% if request.user.is_superuser or request.user.userprofile.role == 'Admin' %}
                 <!-- Tanimlar Acilir Menu -->
-                <details class="group" {% if 'departman' in request.resolver_match.url_name or 'modul' in request.resolver_match.url_name or 'danisman' in request.resolver_match.url_name or 'destekturu' in request.resolver_match.url_name %}open{% endif %}>
+                <!-- Tanimlar Acilir Menu -->
+                <details class="group" {% if 'departman' in request.resolver_match.url_name or 'modul' in request.resolver_match.url_name or 'danisman' in request.resolver_match.url_name or 'destekturu' in request.resolver_match.url_name or 'masraf_turu' in request.resolver_match.url_name %}open{% endif %}>
                     <summary class="flex items-center justify-between py-3 px-8 cursor-pointer transition-all duration-200 text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent select-none">
                         <div class="flex items-center space-x-3">
                             <i class="fa-solid fa-layer-group text-sm"></i>
@@ -348,6 +357,10 @@
                             <i class="fa-solid fa-life-ring text-xs"></i>
                             <span class="text-xs">Destek Türleri</span>
                         </a>
+                        <a href="{% url 'masraf_turu_listesi' %}" class="flex items-center space-x-3 py-2 px-8 transition-all duration-200 border-l-[5px] border-transparent {% if 'masraf_turu' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
+                            <i class="fa-solid fa-tags text-xs"></i>
+                            <span class="text-xs">Masraf Türleri</span>
+                        </a>
                     </div>
                 </details>
                 {% endif %}
@@ -368,7 +381,35 @@
             <header class="bg-white px-8 py-4 flex items-center justify-between sticky top-0 z-10 border-b border-gray-100 shadow-sm">
                 <div class="text-slate-800 font-bold text-lg tracking-wide">Hoş Geldin</div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm font-semibold text-slate-500">{{ request.user.username|default:"admin" }}</span>
+                    {% if request.user.is_superuser or request.user.userprofile.role == 'Admin' %}
+                    <!-- Kullanıcı Yönetimi Butonu -->
+                    <div class="relative" id="kullanici-menu-wrapper">
+                        <button onclick="document.getElementById('kullanici-dropdown').classList.toggle('hidden')" 
+                                class="flex items-center space-x-2 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-semibold text-sm transition-all border border-blue-200 hover:border-blue-300">
+                            <i class="fa-solid fa-users text-xs"></i>
+                            <span>Kullanıcılar</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+                        </button>
+                        <div id="kullanici-dropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
+                            <a href="{% url 'uyelik:kullanici_listesi' %}" 
+                               class="flex items-center space-x-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                <i class="fa-solid fa-list text-blue-500 w-4"></i>
+                                <span>Tüm Kullanıcılar</span>
+                            </a>
+                            <a href="{% url 'uyelik:kullanici_ekle' %}" 
+                               class="flex items-center space-x-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                <i class="fa-solid fa-user-plus text-green-500 w-4"></i>
+                                <span>Yeni Kullanıcı Ekle</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold">
+                            {{ request.user.username|first|upper }}
+                        </div>
+                        <span class="text-sm font-semibold text-slate-500">{{ request.user.username|default:"admin" }}</span>
+                    </div>
                 </div>
             </header>
 
@@ -384,8 +425,8 @@
     <!-- Ortak UI Başlatıcı Kodları (Tüm Sayfalar İçin) -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Tom Select (Gelişmiş Seçim Kutusu)
-            document.querySelectorAll('select').forEach((el) => {
+            // Tom Select (Gelişmiş Seçim Kutusu) — data-no-ts attribute'u olanlar atlanır
+            document.querySelectorAll('select:not([data-no-ts])').forEach((el) => {
                 new TomSelect(el, {
                     create: false,
                     placeholder: 'Seçim yapınız...',
@@ -431,6 +472,14 @@
                         e.preventDefault();
                         form.submit();
                     }
+                }
+            });
+        // Kullanıcı dropdown dışına tıklayınca kapat
+            document.addEventListener('click', function(e) {
+                const wrapper = document.getElementById('kullanici-menu-wrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    const dd = document.getElementById('kullanici-dropdown');
+                    if (dd) dd.classList.add('hidden');
                 }
             });
         });

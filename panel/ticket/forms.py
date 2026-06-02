@@ -11,8 +11,12 @@ class TicketForm(forms.ModelForm):
         self.is_creation = kwargs.pop('is_creation', False)
         super().__init__(*args, **kwargs)
         
-        if self.is_creation:
-            self.fields.pop('durumtanim', None)
+        # Yeni kayıt eklerken "Yeni Kayıt" durumunu default seç
+        if self.is_creation and not self.instance.pk:
+            from .models import statu
+            yeni_kayit = statu.objects.filter(durumtanim="Yeni Kayıt").first()
+            if yeni_kayit:
+                self.fields['durumtanim'].initial = yeni_kayit
             
         for field_name, field in self.fields.items():
             # Modern ve sade sınıflar

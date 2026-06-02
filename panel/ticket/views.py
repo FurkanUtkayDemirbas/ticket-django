@@ -89,10 +89,12 @@ def ticket_ekle(request):
 
         if form.is_valid():
             yeni_ticket = form.save(commit=False)
-            from .models import statu
-            statu_obj = statu.objects.filter(durumtanim="Yeni Talep").first()
-            if statu_obj:
-                yeni_ticket.durumtanim = statu_obj
+            # Durum seçilmemişse "Yeni Kayıt" olarak ata (fallback)
+            if not yeni_ticket.durumtanim:
+                from .models import statu
+                statu_obj = statu.objects.filter(durumtanim="Yeni Kayıt").first()
+                if statu_obj:
+                    yeni_ticket.durumtanim = statu_obj
             yeni_ticket.save()
             form.save_m2m()
             

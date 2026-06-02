@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% block title %}Yeni Kullanıcı Ekle{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Başlık -->
+    <div class="mb-8">
+        <nav class="flex text-[10px] text-slate-400 uppercase tracking-widest mb-2 space-x-2">
+            <a href="{% url 'uyelik:kullanici_listesi' %}" class="hover:text-blue-600">Kullanıcılar</a>
+            <span>/</span>
+            <span class="text-slate-600">Yeni Ekle</span>
+        </nav>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Yeni Kullanıcı Ekle</h1>
+        <p class="text-sm text-slate-500 mt-1">Sisteme firma, danışman veya admin hesabı oluşturun.</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <form method="post" class="p-10 space-y-6">
+            {% csrf_token %}
+
+            <!-- Hata mesajları -->
+            {% if form.non_field_errors %}
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Kullanıcı Bilgileri -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">
+                    <i class="fa-solid fa-user mr-2 text-blue-400"></i>Hesap Bilgileri
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                            {{ form.username.label }} <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ form.email.label }}</label>
+                        {{ form.email }}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                            {{ form.password1.label }} <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                            {{ form.password2.label }} <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Rol Seçimi -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">
+                    <i class="fa-solid fa-shield-halved mr-2 text-violet-400"></i>Rol & Yetki
+                </h3>
+                <!-- Görsel Rol Kartları -->
+                <div class="grid grid-cols-3 gap-3 mb-4" id="rol-kartlari">
+                    <label class="rol-kart cursor-pointer" data-rol="Admin">
+                        <input type="radio" name="_rol_secim" value="Admin" class="sr-only">
+                        <div class="rol-kart-ic border-2 border-slate-200 rounded-2xl p-4 text-center transition-all hover:border-purple-400">
+                            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="fa-solid fa-shield-halved text-purple-600"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-700">Admin</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Tam yetki</p>
+                        </div>
+                    </label>
+                    <label class="rol-kart cursor-pointer" data-rol="Danisman">
+                        <input type="radio" name="_rol_secim" value="Danisman" class="sr-only">
+                        <div class="rol-kart-ic border-2 border-slate-200 rounded-2xl p-4 text-center transition-all hover:border-blue-400">
+                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="fa-solid fa-user-tie text-blue-600"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-700">Danışman</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Teknik erişim</p>
+                        </div>
+                    </label>
+                    <label class="rol-kart cursor-pointer" data-rol="Firma">
+                        <input type="radio" name="_rol_secim" value="Firma" class="sr-only">
+                        <div class="rol-kart-ic border-2 border-slate-200 rounded-2xl p-4 text-center transition-all hover:border-emerald-400">
+                            <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="fa-solid fa-building text-emerald-600"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-700">Firma</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Kısıtlı erişim</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Gizli asıl role select (TomSelect'ten muaf) -->
+                <div class="hidden">{{ form.role }}</div>
+                {% if form.role.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.role.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Firmaya Özel Alan -->
+            <div id="firma-alani" class="hidden">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+                    <label class="block text-[11px] font-bold text-emerald-700 uppercase tracking-widest mb-2">
+                        <i class="fa-solid fa-building mr-1"></i>{{ form.muhatap_firma.label }} <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.muhatap_firma }}
+                    {% if form.muhatap_firma.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.muhatap_firma.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-emerald-600 mt-2">Bu kullanıcı sadece seçili firmanın verilerini görebilir.</p>
+                </div>
+            </div>
+
+            <!-- Danışmana Özel Alan -->
+            <div id="danisman-alani" class="hidden">
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+                    <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-widest mb-2">
+                        <i class="fa-solid fa-user-tie mr-1"></i>{{ form.danisman_profil.label }} <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.danisman_profil }}
+                    {% if form.danisman_profil.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.danisman_profil.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-blue-600 mt-2">Bu kullanıcı sadece atanmış ticketlara erişebilir.</p>
+                </div>
+            </div>
+
+            <!-- Butonlar -->
+            <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                <a href="{% url 'uyelik:kullanici_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Geri Dön
+                </a>
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center">
+                    <i class="fa-solid fa-user-plus mr-2"></i>Kullanıcı Oluştur
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.rol-kart-ic.aktif {
+    border-color: #6366f1 !important;
+    background: #eef2ff;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rolSelect = document.getElementById('id_role');
+    const rolKartlar = document.querySelectorAll('.rol-kart');
+    const firmaAlani = document.getElementById('firma-alani');
+    const danismanAlani = document.getElementById('danisman-alani');
+    const firmaSelect = document.getElementById('id_muhatap_firma');
+    const danismanSelect = document.getElementById('id_danisman_profil');
+
+    // TomSelect instance'larını sakla
+    let tsMap = {};
+
+    function initTomSelect(el, key) {
+        if (tsMap[key]) return; // zaten başlatılmış
+        tsMap[key] = new TomSelect(el, {
+            create: false,
+            placeholder: 'Seçim yapınız...',
+            sortField: { field: "text", direction: "asc" },
+            dropdownParent: "body"
+        });
+    }
+
+    function destroyTomSelect(key) {
+        if (tsMap[key]) {
+            tsMap[key].destroy();
+            delete tsMap[key];
+        }
+    }
+
+    function guncelleSahneler(rol) {
+        // Tüm alanları gizle ve TomSelect'i temizle
+        firmaAlani.classList.add('hidden');
+        danismanAlani.classList.add('hidden');
+        destroyTomSelect('firma');
+        destroyTomSelect('danisman');
+
+        if (rol === 'Firma') {
+            firmaAlani.classList.remove('hidden');
+            setTimeout(() => initTomSelect(firmaSelect, 'firma'), 50);
+        }
+        if (rol === 'Danisman') {
+            danismanAlani.classList.remove('hidden');
+            setTimeout(() => initTomSelect(danismanSelect, 'danisman'), 50);
+        }
+
+        // Gizli select değerini güncelle
+        if (rolSelect) rolSelect.value = rol;
+
+        // Kart görselini güncelle
+        rolKartlar.forEach(kart => {
+            const ic = kart.querySelector('.rol-kart-ic');
+            if (kart.dataset.rol === rol) {
+                ic.classList.add('aktif');
+                kart.querySelector('input[type="radio"]').checked = true;
+            } else {
+                ic.classList.remove('aktif');
+            }
+        });
+    }
+
+    // Kart tıklamaları
+    rolKartlar.forEach(kart => {
+        kart.addEventListener('click', function() {
+            guncelleSahneler(this.dataset.rol);
+        });
+    });
+
+    // İlk yükleme
+    const baslangicRol = (rolSelect && rolSelect.value) ? rolSelect.value : 'Admin';
+    guncelleSahneler(baslangicRol);
+
+    // Form hatası durumunda seçili rol koru ve gerekli alanı aç
+    {% if form.role.value %}
+    guncelleSahneler('{{ form.role.value }}');
+    {% endif %}
+});
+</script>
+{% endblock %}

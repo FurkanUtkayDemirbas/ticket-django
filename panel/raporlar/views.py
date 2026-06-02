@@ -53,13 +53,19 @@ def _filter_context(request):
         "arama": request.GET.get("arama", "").strip(),
         "ticket_secimi": request.GET.get("ticket", "").strip(),
         "secili_durum": request.GET.get("durum", "").strip(),
+        "secili_faturalama": request.GET.get("faturalama", "").strip(),
+        "secili_oncelik": request.GET.get("oncelik", "").strip(),
         "secili_danisman": request.GET.get("danisman", "").strip(),
         "secili_modul": request.GET.get("modul", "").strip(),
         "secili_muhatap": request.GET.get("muhatap", "").strip(),
         "secili_proje": request.GET.get("proje", "").strip(),
+        "secili_aktivite": request.GET.get("aktivite", "").strip(),
+        "ticket_no": request.GET.get("ticket_no", "").strip(),
         "baslangic": request.GET.get("baslangic", "").strip(),
         "bitis": request.GET.get("bitis", "").strip(),
         "durumlar": ticket._meta.get_field("durumtanim").remote_field.model.objects.order_by("durumtanim"),
+        "faturalamalar": ticket._meta.get_field("faturadurum").remote_field.model.objects.order_by("faturadurum"),
+        "oncelikler": ticket._meta.get_field("oncelikkod").remote_field.model.objects.order_by("kod"),
         "danismanlar": ticket._meta.get_field("danisman").related_model.objects.order_by("isim"),
         "moduller": aktivite._meta.get_field("modul").remote_field.model.objects.order_by("program", "isim"),
         "ticketlar": t_qs,
@@ -121,8 +127,8 @@ def _ticket_queryset(request, base_queryset=None):
 
 def _ticket_detay_base_queryset(request):
     queryset = ticket.objects.select_related(
-        "unvan", "durumtanim", "faturadurum"
-    ).order_by("-ticketno")
+        "unvan", "durumtanim", "faturadurum", "oncelikkod"
+    ).prefetch_related("danisman").order_by("-ticketno")
 
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
@@ -135,11 +141,34 @@ def _ticket_detay_base_queryset(request):
 
 
 def _ticket_detay_rows(request):
-    ticket_no = request.GET.get("ticket", "").strip()
-    if not ticket_no:
-        return []
+    ticket_no = request.GET.get("ticket_no", "").strip() or request.GET.get("ticket", "").strip()
+    muhatap = request.GET.get("muhatap", "").strip()
+    danisman = request.GET.get("danisman", "").strip()
+    oncelik = request.GET.get("oncelik", "").strip()
+    durum = request.GET.get("durum", "").strip()
+    faturalama_durum = request.GET.get("faturalama", "").strip()
+    baslangic = request.GET.get("baslangic", "").strip()
+    bitis = request.GET.get("bitis", "").strip()
 
-    ticketlar = _ticket_detay_base_queryset(request).filter(ticketno=ticket_no)
+    ticketlar = _ticket_detay_base_queryset(request)
+    if ticket_no:
+        ticketlar = ticketlar.filter(ticketno__icontains=ticket_no)
+    if muhatap:
+        ticketlar = ticketlar.filter(unvan_id=muhatap)
+    if danisman:
+        ticketlar = ticketlar.filter(danisman__username=danisman)
+    if oncelik:
+        ticketlar = ticketlar.filter(oncelikkod_id=oncelik)
+    if durum:
+        ticketlar = ticketlar.filter(durumtanim_id=durum)
+    if faturalama_durum:
+        ticketlar = ticketlar.filter(faturadurum_id=faturalama_durum)
+    if baslangic:
+        ticketlar = ticketlar.filter(termintarih__date__gte=baslangic)
+    if bitis:
+        ticketlar = ticketlar.filter(termintarih__date__lte=bitis)
+
+    ticketlar = ticketlar.distinct()
     rows = []
     for t in ticketlar:
         eforlar = atama.objects.filter(ticketno=t).select_related("modul")
@@ -182,9 +211,12 @@ def _aktivite_queryset(request):
     modul = request.GET.get("modul", "").strip()
     muhatap = request.GET.get("muhatap", "").strip()
     proje = request.GET.get("proje", "").strip()
+    aktivite_no = request.GET.get("aktivite", "").strip()
     baslangic = request.GET.get("baslangic", "").strip()
     bitis = request.GET.get("bitis", "").strip()
 
+    if aktivite_no:
+        queryset = queryset.filter(number=aktivite_no)
     if ticket_no:
         queryset = queryset.filter(ticketno_id=ticket_no)
     if danisman:
@@ -201,6 +233,27 @@ def _aktivite_queryset(request):
         queryset = queryset.filter(date__date__lte=bitis)
 
     return queryset
+
+
+def _aktivite_secim_queryset(request):
+    queryset = aktivite.objects.select_related("ticketno", "ticketno__unvan").order_by("-date")
+
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firma:
+            queryset = queryset.filter(ticketno__unvan=profile.muhatap_firma)
+        elif profile.role == 'Danisman' and profile.danisman_profil:
+            queryset = queryset.filter(danisman=profile.danisman_profil)
+
+    muhatap = request.GET.get("muhatap", "").strip()
+    proje = request.GET.get("proje", "").strip()
+
+    if muhatap:
+        queryset = queryset.filter(ticketno__unvan__unvan=muhatap)
+    if proje:
+        queryset = queryset.filter(ticketno__sozlesmeno__projeler__projeno=proje)
+
+    return queryset.distinct()
 
 
 def ticket_rapor_detay(request):
@@ -229,15 +282,15 @@ def ticket_rapor_pdf(request):
 
 
 def ticket_detay_raporu(request):
-    context = {
-        "ticketlar": _ticket_detay_base_queryset(request),
-        "ticket_secimi": request.GET.get("ticket", "").strip(),
+    context = _filter_context(request)
+    context.update({
         "rows": _ticket_detay_rows(request),
         "rapor_baslik": "Ticket Özet Raporu",
         "rapor_aciklama": "Seçilen ticket için durum, fatura, yazılım ve modül efor özetleri.",
+        "rapor_aciklama": "Filtrelere g\u00f6re ticket durum, fatura, yaz\u0131l\u0131m ve mod\u00fcl efor \u00f6zetleri.",
         "export_excel_url": reverse("ticket_ozet_raporu_excel"),
         "export_pdf_url": reverse("ticket_ozet_raporu_pdf"),
-    }
+    })
     return render(request, "ticket_detay_raporu.html", context)
 
 
@@ -265,6 +318,7 @@ def aktivite_rapor_detay(request):
             
     context.update({
         "aktiviteler": aktiviteler,
+        "aktivite_secimleri": _aktivite_secim_queryset(request),
         "ticketlar": ticket.objects.filter(aktivite__in=a_qs).distinct().order_by("-ticketno"),
         "toplam_sure": aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0,
         "rapor_baslik": "Genel Aktivite Raporu",

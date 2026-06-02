@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} | MYKEEP{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-end justify-between mb-8">
+        <div>
+            <nav class="flex text-[10px] text-slate-400 uppercase tracking-widest mb-2 space-x-2">
+                <a href="{% url 'masraf_listesi' %}" class="hover:text-blue-600">Masraflar</a>
+                <span>/</span>
+                <span class="text-slate-600">{% if form.instance.pk %}Düzenle{% else %}Yeni Ekle{% endif %}</span>
+            </nav>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ title }}</h1>
+            <p class="text-sm text-slate-500 mt-2">Sisteme yeni bir masraf kaydı ekleyin</p>
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <form method="post" class="p-10 space-y-7">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 gap-y-7">
+                {% for field in form %}
+                <div class="group">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-blue-600">
+                        {{ field.label }}
+                    </label>
+                    <div class="relative flex items-center">
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="text-red-500 text-[10px] mt-1.5 font-semibold px-1 absolute -bottom-5">
+                                <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ field.errors.0 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    {% if field.name == 'muhatap_adi' %}
+                    <p class="text-[10px] text-slate-400 mt-1.5 px-1 font-semibold">Sözleşme seçildiğinde otomatik dolar.</p>
+                    {% endif %}
+                    {% if field.name == 'masraf_turu' %}
+                    <p class="text-[10px] text-slate-400 mt-1.5 px-1 font-semibold" id="masraf_turu_hint" style="display:none;">
+                        <i class="fa-solid fa-circle-info mr-1 text-blue-400"></i>Sözleşme seçilince firmaya özel türler de listelenir.
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-between pt-10 border-t border-slate-100 mt-4">
+                <a href="{% url 'masraf_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> İptal ve Listeye Dön
+                </a>
+                
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center">
+                    <i class="fa-solid fa-plus mr-2"></i> Masrafı Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sozlesmeSelect = document.getElementById('id_sozlesme');
+    const muhatapInput = document.getElementById('id_muhatap_adi');
+    const masrafTuruSelect = document.getElementById('id_masraf_turu');
+    const masrafTuruHint = document.getElementById('masraf_turu_hint');
+
+    function guncelleFormu(sozlesmeId) {
+        if (!sozlesmeId) {
+            if (muhatapInput) muhatapInput.value = '';
+            return;
+        }
+        fetch(`/masraflar/api/get-sozlesme-muhatap/?sozlesme_id=${sozlesmeId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Muhatap adını doldur
+                if (muhatapInput) {
+                    muhatapInput.value = data.muhatap_adi || '';
+                }
+
+                // Masraf türlerini dinamik güncelle
+                if (masrafTuruSelect && data.masraf_turleri) {
+                    const mevcutDeger = masrafTuruSelect.value;
+                    masrafTuruSelect.innerHTML = '<option value="">---------</option>';
+                    data.masraf_turleri.forEach(function(tur) {
+                        const opt = document.createElement('option');
+                        opt.value = tur.id;
+                        opt.textContent = tur.tanim;
+                        if (String(tur.id) === String(mevcutDeger)) {
+                            opt.selected = true;
+                        }
+                        masrafTuruSelect.appendChild(opt);
+                    });
+
+                    if (masrafTuruHint) {
+                        masrafTuruHint.style.display = data.masraf_turleri.length > 0 ? 'block' : 'none';
+                    }
+                }
+            })
+            .catch(error => console.error('Hata:', error));
+    }
+
+    if (sozlesmeSelect) {
+        sozlesmeSelect.addEventListener('change', function() {
+            guncelleFormu(this.value);
+        });
+
+        // Sayfa açılışında sözleşme seçiliyse türleri yükle
+        if (sozlesmeSelect.value) {
+            guncelleFormu(sozlesmeSelect.value);
+        }
+    }
+});
+</script>
+{% endblock %}
+

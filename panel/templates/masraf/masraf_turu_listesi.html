@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Masraf Türleri{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div>
+        <h1 class="text-2xl font-extrabold text-slate-800">Masraf Türleri</h1>
+        <p class="text-sm text-slate-500 mt-1">Sistemdeki masraf türlerini buradan yönetebilirsiniz.</p>
+    </div>
+    <a href="{% url 'masraf_turu_ekle' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
+        <i class="fa-solid fa-plus"></i>
+        <span>Yeni Tür Ekle</span>
+    </a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="mb-4 p-4 rounded-xl {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50/50 text-slate-500 text-sm border-b border-slate-100">
+                <th class="px-6 py-4 font-semibold">Tanım</th>
+                <th class="px-6 py-4 font-semibold">Kapsam</th>
+                <th class="px-6 py-4 font-semibold text-right">İşlem</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for tur in turler %}
+            <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-6 py-4 font-medium text-slate-700">{{ tur.tanim }}</td>
+                <td class="px-6 py-4">
+                    {% if tur.muhatap %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-800">
+                            <i class="fa-solid fa-building mr-1.5"></i>{{ tur.muhatap.unvan }}
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                            <i class="fa-solid fa-globe mr-1.5"></i>Genel
+                        </span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 text-right space-x-2">
+                    <a href="{% url 'masraf_turu_duzenle' tur.pk %}" class="text-blue-500 hover:text-blue-700 transition" title="Düzenle">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </a>
+                    <a href="{% url 'masraf_turu_sil' tur.pk %}" class="text-red-500 hover:text-red-700 transition" title="Sil">
+                        <i class="fa-solid fa-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="px-6 py-8 text-center text-slate-500">
+                    Henüz masraf türü tanımlanmamıştır.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

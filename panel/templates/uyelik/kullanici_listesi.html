@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Kullanıcı Yönetimi{% endblock %}
+
+{% block content %}
+<!-- Başlık -->
+<div class="mb-8 flex flex-wrap gap-4 items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div>
+        <h1 class="text-2xl font-extrabold text-slate-800">Kullanıcı Yönetimi</h1>
+        <p class="text-sm text-slate-500 mt-1">Sisteme kayıtlı tüm kullanıcıları buradan yönetin.</p>
+    </div>
+    <a href="{% url 'uyelik:kullanici_ekle' %}"
+       class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Yeni Kullanıcı Ekle</span>
+    </a>
+</div>
+
+<!-- Mesajlar -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="mb-4 p-4 rounded-xl {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+            <i class="fa-solid fa-{% if message.tags == 'success' %}circle-check{% elif message.tags == 'error' %}circle-exclamation{% else %}circle-info{% endif %} mr-2"></i>
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- İstatistik Kartları -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    {% for label, count, icon, color in stat_cards %}
+    <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center space-x-4">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center {{ color }}">
+            <i class="{{ icon }} text-white text-sm"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-extrabold text-slate-800">{{ count }}</p>
+            <p class="text-xs text-slate-400 font-medium">{{ label }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Kullanıcı Tablosu -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50/70 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
+                    <th class="px-6 py-4 font-semibold">Kullanıcı</th>
+                    <th class="px-6 py-4 font-semibold">Rol</th>
+                    <th class="px-6 py-4 font-semibold">Bağlantı</th>
+                    <th class="px-6 py-4 font-semibold text-center">Durum</th>
+                    <th class="px-6 py-4 font-semibold text-right">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for u in kullanicilar %}
+                <tr class="hover:bg-slate-50/60 transition-colors group">
+                    <!-- Kullanıcı -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br 
+                                {% if u.is_superuser %}from-yellow-400 to-orange-500
+                                {% elif u.userprofile.role == 'Admin' %}from-purple-500 to-indigo-600
+                                {% elif u.userprofile.role == 'Danisman' %}from-blue-500 to-cyan-600
+                                {% else %}from-emerald-400 to-teal-600{% endif %}
+                                flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                                {{ u.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">{{ u.username }}</p>
+                                <p class="text-xs text-slate-400">
+                                    {% if u.get_full_name %}{{ u.get_full_name }}{% else %}{{ u.email|default:"—" }}{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Rol -->
+                    <td class="px-6 py-4">
+                        {% if u.is_superuser %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                <i class="fa-solid fa-crown mr-1.5 text-amber-500"></i>Süper Admin
+                            </span>
+                        {% elif u.userprofile.role == 'Admin' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                                <i class="fa-solid fa-shield-halved mr-1.5"></i>Admin
+                            </span>
+                        {% elif u.userprofile.role == 'Danisman' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                <i class="fa-solid fa-user-tie mr-1.5"></i>Danışman
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                <i class="fa-solid fa-building mr-1.5"></i>Firma
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Bağlantı -->
+                    <td class="px-6 py-4 text-sm text-slate-500">
+                        {% if u.userprofile.muhatap_firma %}
+                            <span class="flex items-center space-x-1.5">
+                                <i class="fa-solid fa-building text-slate-400 text-xs"></i>
+                                <span>{{ u.userprofile.muhatap_firma.unvan }}</span>
+                            </span>
+                        {% elif u.userprofile.danisman_profil %}
+                            <span class="flex items-center space-x-1.5">
+                                <i class="fa-solid fa-user-tie text-slate-400 text-xs"></i>
+                                <span>{{ u.userprofile.danisman_profil.isim }}</span>
+                            </span>
+                        {% else %}
+                            <span class="text-slate-300">—</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Durum -->
+                    <td class="px-6 py-4 text-center">
+                        {% if u.userprofile.is_approved %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>Aktif
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>Onay Bekliyor
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- İşlemler -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-end space-x-1">
+                            <!-- Onay Aç/Kapat -->
+                            {% if not u.is_superuser and u != request.user %}
+                            <form method="post" action="{% url 'uyelik:kullanici_onay' u.pk %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    title="{% if u.userprofile.is_approved %}Onayı Kaldır{% else %}Onayla{% endif %}"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg transition
+                                        {% if u.userprofile.is_approved %}bg-green-50 text-green-600 hover:bg-green-100{% else %}bg-slate-100 text-slate-400 hover:bg-green-50 hover:text-green-600{% endif %}">
+                                    <i class="fa-solid fa-circle-check text-xs"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Şifre Sıfırla -->
+                            <a href="{% url 'uyelik:kullanici_sifre' u.pk %}"
+                               title="Şifre Sıfırla"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition">
+                                <i class="fa-solid fa-key text-xs"></i>
+                            </a>
+
+                            <!-- Sil -->
+                            {% if u != request.user %}
+                            <a href="{% url 'uyelik:kullanici_sil' u.pk %}"
+                               title="Sil"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                        <i class="fa-solid fa-users-slash text-3xl mb-3 block"></i>
+                        Henüz kullanıcı bulunmuyor.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -105,4 +105,12 @@ urlpatterns = [
     path('raporlar/modul-efor-ozeti/', raporlar_views.modul_efor_ozeti, name='modul_efor_ozeti'),
     path('raporlar/modul-efor-ozeti/indir/', raporlar_views.modul_efor_excel, name='modul_efor_excel'),
     path('raporlar/modul-efor-ozeti/pdf/', raporlar_views.modul_efor_pdf, name='modul_efor_pdf'),
+
+
+# ... Üstteki mevcut raporlar modülü yolları aynen kalacak ...
+    path('raporlar/modul-efor-ozeti/pdf/', raporlar_views.modul_efor_pdf, name='modul_efor_pdf'),
+
+    # ====== BURAYI EKLEYİN ======
+    # Masraf Modülü
+    path('masraflar/', include('masraf.urls')),
 ]

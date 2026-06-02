@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     "departman",
     "uyelik",
     "raporlar",
+    'masraf',
 )
 
 MIDDLEWARE = [

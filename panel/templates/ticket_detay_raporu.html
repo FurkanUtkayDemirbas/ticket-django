@@ -28,20 +28,73 @@
         </div>
     </div>
 
-    <form method="get" class="px-6 py-5 border-b border-slate-100 bg-white">
-        <div class="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto_auto] xl:items-end">
+    <form method="get" class="px-8 py-7 border-b border-slate-100 bg-white">
+        <div class="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2 xl:grid-cols-3">
             <div>
-                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Ticket</label>
-                <select name="ticket" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
-                    <option value="">Ticket seçin</option>
-                    {% for t in ticketlar %}
-                        <option value="{{ t.ticketno }}" {% if ticket_secimi == t.ticketno|stringformat:"s" %}selected{% endif %}>{{ t.ticketno }} - {{ t.konu }}</option>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">MUHATAP</label>
+                <select name="muhatap" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Se&ccedil;im yap&#305;n&#305;z...</option>
+                    {% for m in muhataplar %}
+                        <option value="{{ m.unvan }}" {% if secili_muhatap == m.unvan %}selected{% endif %}>{{ m.unvan }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit" class="h-11 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Raporla</button>
-            {% if ticket_secimi %}
-                <a href="{{ request.path }}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">TICKET NO</label>
+                <input type="search" name="ticket_no" value="{{ ticket_no|default:ticket_secimi }}" placeholder="Ticket no" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">DANI&#350;MAN</label>
+                <select name="danisman" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Se&ccedil;im yap&#305;n&#305;z...</option>
+                    {% for d in danismanlar %}
+                        <option value="{{ d.username }}" {% if secili_danisman == d.username %}selected{% endif %}>{{ d.isim }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_140px_auto] xl:items-end">
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">&Ouml;NCEL&#304;K</label>
+                <select name="oncelik" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Se&ccedil;im yap&#305;n&#305;z...</option>
+                    {% for o in oncelikler %}
+                        <option value="{{ o.kod }}" {% if secili_oncelik == o.kod %}selected{% endif %}>{{ o.tanim }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">DURUM</label>
+                <select name="durum" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Se&ccedil;im yap&#305;n&#305;z...</option>
+                    {% for d in durumlar %}
+                        <option value="{{ d.durumtanim }}" {% if secili_durum == d.durumtanim %}selected{% endif %}>{{ d.durumtanim }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">FATURALAMA</label>
+                <select name="faturalama" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Se&ccedil;im yap&#305;n&#305;z...</option>
+                    {% for f in faturalamalar %}
+                        <option value="{{ f.faturadurum }}" {% if secili_faturalama == f.faturadurum %}selected{% endif %}>{{ f.faturadurum }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">BA&#350;LANGI&Ccedil;</label>
+                <input type="date" name="baslangic" value="{{ baslangic }}" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">B&#304;T&#304;&#350;</label>
+                <input type="date" name="bitis" value="{{ bitis }}" class="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <button type="submit" class="h-12 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Raporla</button>
+            {% if secili_muhatap or ticket_no or ticket_secimi or secili_danisman or secili_oncelik or secili_durum or secili_faturalama or baslangic or bitis %}
+                <a href="{{ request.path }}" class="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
             {% endif %}
         </div>
     </form>
@@ -51,15 +104,15 @@
             <thead>
                 <tr class="text-[11px] uppercase tracking-wider text-slate-400 font-bold border-b border-slate-100 bg-slate-50/30">
                     <th class="px-5 py-4">Ticket No</th>
-                    <th class="px-5 py-4">Ticket Tanımı</th>
-                    <th class="px-5 py-4">Müşteri Adı</th>
+                    <th class="px-5 py-4">Ticket Tan&#305;m&#305;</th>
+                    <th class="px-5 py-4">M&uuml;&#351;teri Ad&#305;</th>
                     <th class="px-5 py-4">Termin Tarihi</th>
                     <th class="px-5 py-4">Ticket Durumu</th>
                     <th class="px-5 py-4">Faturalama Durumu</th>
-                    <th class="px-5 py-4">Yazılım Eforu</th>
-                    <th class="px-5 py-4">Modül Eforu</th>
-                    <th class="px-5 py-4">Yazılım Aktivite Toplamı</th>
-                    <th class="px-5 py-4">Modül Aktivite Toplamı</th>
+                    <th class="px-5 py-4">Yaz&#305;l&#305;m Eforu</th>
+                    <th class="px-5 py-4">Mod&uuml;l Eforu</th>
+                    <th class="px-5 py-4">Yaz&#305;l&#305;m Aktivite Toplam&#305;</th>
+                    <th class="px-5 py-4">Mod&uuml;l Aktivite Toplam&#305;</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -80,9 +133,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="10" class="px-6 py-10 text-center text-slate-400 text-sm italic">
-                        {% if ticket_secimi %}Seçilen ticket için kayıt bulunamadı.{% else %}Raporu görüntülemek için bir ticket seçin.{% endif %}
-                    </td>
+                    <td colspan="10" class="px-6 py-10 text-center text-slate-400 text-sm italic">Kriterlere uygun ticket bulunamad&#305;.</td>
                 </tr>
                 {% endfor %}
             </tbody>
