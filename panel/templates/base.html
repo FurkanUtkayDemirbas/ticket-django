@@ -364,7 +364,7 @@
                     </div>
                 </details>
                 {% endif %}
-                <a href="{% url 'raporlar_sayfasi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'rapor' in request.resolver_match.url_name or 'efor' in request.resolver_match.url_name or 'atanmamis' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
+                <a href="{% url 'raporlar_sayfasi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'rapor' in request.resolver_match.url_name or 'atanmamis' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-chart-pie text-sm"></i>
                     <span class="text-sm">Raporlar</span>
                 </a>
