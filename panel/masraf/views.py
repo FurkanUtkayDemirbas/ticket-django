@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from .models import Masraf, MasrafTuru
 from .forms import MasrafForm, MasrafTuruForm
 from sozlesme.models import sozlesmeler
+from proje.models import projeler
 from uyelik.decorators import admin_veya_danisman_only, admin_only
 
 @admin_veya_danisman_only
@@ -89,15 +90,16 @@ def masraf_turu_sil(request, pk):
     return render(request, 'masraf/masraf_turu_sil.html', {'tur': tur})
 
 @login_required
-def get_sozlesme_muhatap(request):
-    sozlesme_id = request.GET.get('sozlesme_id')
-    if sozlesme_id:
+def get_proje_muhatap(request):
+    proje_id = request.GET.get('proje_id')
+    if proje_id:
         try:
-            sozlesme = sozlesmeler.objects.get(pk=sozlesme_id)
+            proje = projeler.objects.get(pk=proje_id)
+            sozlesme = proje.sozlesme_baglantisi
             muhatap_adi = ''
             masraf_turleri = []
 
-            if sozlesme.muhatap:
+            if sozlesme and sozlesme.muhatap:
                 muhatap_adi = str(sozlesme.muhatap).strip()
                 muhatap_obj = sozlesme.muhatap
                 # Genel türler (muhatap=NULL) + firmaya özel türler
@@ -112,7 +114,16 @@ def get_sozlesme_muhatap(request):
                 masraf_turleri = [{'id': t.pk, 'tanim': t.tanim} for t in turler]
 
             return JsonResponse({'muhatap_adi': muhatap_adi, 'masraf_turleri': masraf_turleri})
-        except (sozlesmeler.DoesNotExist, ValueError):
+        except (projeler.DoesNotExist, ValueError):
             pass
     return JsonResponse({'muhatap_adi': '', 'masraf_turleri': []})
+
+@admin_veya_danisman_only
+def masraf_odeme_durumu_degistir(request, pk):
+    masraf = get_object_or_404(Masraf, pk=pk)
+    if request.method == 'POST':
+        masraf.odendi_mi = not masraf.odendi_mi
+        masraf.save()
+        messages.success(request, f'Masraf ödeme durumu "{"Ödendi" if masraf.odendi_mi else "Ödenmedi"}" olarak güncellendi.')
+    return redirect('masraf_listesi')
 

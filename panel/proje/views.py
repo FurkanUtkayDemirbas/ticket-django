@@ -8,8 +8,8 @@ def proje_listesi(request):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            veriler = veriler.filter(sozlesme_baglantisi__muhatap=profile.muhatap_firma)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            veriler = veriler.filter(sozlesme_baglantisi__muhatap__in=profile.muhatap_firmalar.all())
         # Danışmanlar tüm projeleri (salt-okunur) görebilir, o yüzden ekstra filtre yok.
 
     arama = request.GET.get("arama", "").strip()
@@ -42,8 +42,8 @@ def proje_duzenle(request, pk):
     # YETKİ KONTROLÜ
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.sozlesme_baglantisi.muhatap != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.sozlesme_baglantisi.muhatap not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
         elif profile.role == 'Danisman':
             return render(request, '403.html', status=403)
@@ -63,8 +63,8 @@ def proje_sil(request, pk):
     # YETKİ KONTROLÜ
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.sozlesme_baglantisi.muhatap != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.sozlesme_baglantisi.muhatap not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
         elif profile.role == 'Danisman':
             return render(request, '403.html', status=403)

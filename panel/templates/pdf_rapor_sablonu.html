@@ -25,10 +25,25 @@
                 height: 1cm;
             }
         }
+        @page compact {
+            size: a4 landscape;
+            margin: 0.75cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 0.55cm;
+                margin-left: 0.75cm;
+                margin-right: 0.75cm;
+                height: 0.8cm;
+            }
+        }
         body {
             font-family: roboto, Helvetica, Arial, sans-serif;
             font-size: 9pt;
             color: #1e293b;
+        }
+        body.compact-page {
+            font-size: 8pt;
+            page: compact;
         }
         .header-table {
             width: 100%;
@@ -72,7 +87,7 @@
         }
         .summary-value {
             color: #1e40af;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
             margin-top: 5px;
         }
@@ -80,6 +95,10 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            table-layout: fixed;
+        }
+        .data-table.compact {
+            width: 100%;
         }
         .data-table th {
             background-color: #1e293b;
@@ -91,6 +110,7 @@
             text-transform: uppercase;
             border: 1px solid #1e293b;
             word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .data-table td {
             padding: 6px 4px;
@@ -100,9 +120,21 @@
             color: #334155;
             font-size: 8pt;
             word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .data-table.compact th {
+            padding: 4px 3px;
+            font-size: 6.2pt;
+            line-height: 1.15;
+        }
+        .data-table.compact td {
+            padding: 4px 3px;
+            font-size: 6.2pt;
+            line-height: 1.2;
+            white-space: normal;
         }
         .data-table tr {
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .data-table tr:nth-child(even) {
             background-color: #f8fafc;
@@ -124,12 +156,12 @@
         }
     </style>
 </head>
-<body>
+<body class="{% if compact_table %}compact-page{% endif %}">
     <div id="footerContent">
         <div class="footer-line"></div>
         <div class="footer-text">
             Bu belge <span class="brand-text">MYKEEP Sistemleri</span> tarafından otomatik olarak oluşturulmuştur.<br>
-            Elektronik ortamda üretildiği için imza gerektirmez. | © {% now "Y" %} MYKEEP
+            Elektronik ortamda üretildiği için imza gerektirmez. | Sayfa <pdf:pagenumber /> / <pdf:pagecount /> | © {% now "Y" %} MYKEEP
         </div>
     </div>
 
@@ -155,11 +187,11 @@
     </div>
     {% endif %}
 
-    <table class="data-table" repeat="1">
+    <table class="data-table{% if compact_table %} compact{% endif %}" repeat="1" style="-pdf-widths: {{ pdf_widths }};">
         <thead>
             <tr>
                 {% for header, width in headers %}
-                <th style="width: {{ width }};">{{ header }}</th>
+                <th>{{ header }}</th>
                 {% endfor %}
             </tr>
         </thead>

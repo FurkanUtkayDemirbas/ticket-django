@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
-from .forms import KayitForm, AdminKullaniciForm, AdminSifreSifirlaForm
+from .forms import KayitForm, AdminKullaniciForm, AdminKullaniciDuzenleForm, AdminSifreSifirlaForm
 from .models import UserProfile
 from .decorators import admin_only
 
@@ -86,19 +86,79 @@ def kullanici_ekle(request):
                 email=cd.get('email', ''),
             )
             role = cd['role']
-            UserProfile.objects.create(
+            profile = UserProfile.objects.create(
                 user=user,
                 role=role,
-                muhatap_firma=cd.get('muhatap_firma') if role == 'Firma' else None,
-                danisman_profil=cd.get('danisman_profil') if role == 'Danisman' else None,
                 is_approved=True,
             )
+            if role == 'Firma' and cd.get('muhatap_firmalar'):
+                profile.muhatap_firmalar.set(cd.get('muhatap_firmalar'))
+            if role == 'Danisman' and cd.get('danisman_profiller'):
+                profile.danisman_profiller.set(cd.get('danisman_profiller'))
             messages.success(request, f'"{user.username}" kullanıcısı başarıyla oluşturuldu.')
             return redirect('uyelik:kullanici_listesi')
     else:
         form = AdminKullaniciForm()
 
     return render(request, 'uyelik/kullanici_ekle.html', {'form': form})
+
+
+@admin_only
+def kullanici_duzenle(request, user_id):
+    """Mevcut kullanıcıyı düzenler (ad, soyad, e-posta, rol, bağlı firma/danışman)."""
+    kullanici = get_object_or_404(User, pk=user_id)
+
+    # Kendi superuser hesabını düzenlemeye çalışanı engelle (isteğe bağlı koruma)
+    if kullanici.is_superuser and not request.user.is_superuser:
+        return render(request, '403.html', status=403)
+
+    # Mevcut değerler
+    profile = getattr(kullanici, 'userprofile', None)
+    mevcut_firmalar = list(profile.muhatap_firmalar.all()) if profile else []
+    mevcut_danismanlar = list(profile.danisman_profiller.all()) if profile else []
+
+    if request.method == 'POST':
+        form = AdminKullaniciDuzenleForm(request.POST, kullanici=kullanici)
+        if form.is_valid():
+            cd = form.cleaned_data
+            kullanici.username = cd['username']
+            kullanici.first_name = cd.get('first_name', '')
+            kullanici.last_name = cd.get('last_name', '')
+            kullanici.email = cd.get('email', '')
+            kullanici.save()
+
+            role = cd['role']
+            if profile is None:
+                profile = UserProfile.objects.create(user=kullanici, role=role, is_approved=True)
+            else:
+                profile.role = role
+                profile.save()
+
+            # M2M güncelle
+            profile.muhatap_firmalar.set(cd.get('muhatap_firmalar') or [])
+            profile.danisman_profiller.set(cd.get('danisman_profiller') or [])
+
+            messages.success(request, f'"{kullanici.username}" kullanıcısı başarıyla güncellendi.')
+            return redirect('uyelik:kullanici_listesi')
+    else:
+        # Formu mevcut değerlerle doldur
+        initial = {
+            'username': kullanici.username,
+            'first_name': kullanici.first_name,
+            'last_name': kullanici.last_name,
+            'email': kullanici.email,
+            'role': profile.role if profile else 'Admin',
+            'muhatap_firmalar': mevcut_firmalar,
+            'danisman_profiller': mevcut_danismanlar,
+        }
+        form = AdminKullaniciDuzenleForm(initial=initial, kullanici=kullanici)
+
+    return render(request, 'uyelik/kullanici_duzenle.html', {
+        'form': form,
+        'kullanici': kullanici,
+        'mevcut_firmalar': mevcut_firmalar,
+        'mevcut_danismanlar': mevcut_danismanlar,
+    })
 
 
 @admin_only

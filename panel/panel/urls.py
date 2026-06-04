@@ -22,6 +22,7 @@ urlpatterns = [
     path('ticketlar/sil/<int:pk>/', ticket_views.ticket_sil, name='ticket_sil'),
     path('ticketlar/tamamla/<int:pk>/', ticket_views.ticket_tamamla, name='ticket_tamamla'),
     path('ticketlar/fatura-tamamla/<int:pk>/', ticket_views.ticket_faturalama_tamamla, name='ticket_faturalama_tamamla'),
+    path('ticketlar/yazisma-sil/<int:yazisma_pk>/', ticket_views.yazisma_sil, name='yazisma_sil'),
     path('ticketlar/duzenle/<int:ticket_pk>/aktivite-sil/<int:aktivite_pk>/', ticket_views.ticket_aktivite_sil, name='ticket_aktivite_sil'),
     path('ticketlar/duzenle/<int:ticket_pk>/efor-sil/<int:efor_pk>/', ticket_views.ticket_efor_sil, name='ticket_efor_sil'),
     path('aktiviteler/', ticket_views.aktivite_listesi, name='aktivite_listesi'),

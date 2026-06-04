@@ -99,15 +99,23 @@
 
                     <!-- Bağlantı -->
                     <td class="px-6 py-4 text-sm text-slate-500">
-                        {% if u.userprofile.muhatap_firma %}
-                            <span class="flex items-center space-x-1.5">
-                                <i class="fa-solid fa-building text-slate-400 text-xs"></i>
-                                <span>{{ u.userprofile.muhatap_firma.unvan }}</span>
+                        {% if u.userprofile.muhatap_firmalar.exists %}
+                            <span class="flex flex-col space-y-1">
+                                {% for f in u.userprofile.muhatap_firmalar.all %}
+                                <span class="flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-building text-slate-400 text-xs"></i>
+                                    <span>{{ f.unvan }}</span>
+                                </span>
+                                {% endfor %}
                             </span>
-                        {% elif u.userprofile.danisman_profil %}
-                            <span class="flex items-center space-x-1.5">
-                                <i class="fa-solid fa-user-tie text-slate-400 text-xs"></i>
-                                <span>{{ u.userprofile.danisman_profil.isim }}</span>
+                        {% elif u.userprofile.danisman_profiller.exists %}
+                            <span class="flex flex-col space-y-1">
+                                {% for d in u.userprofile.danisman_profiller.all %}
+                                <span class="flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-user-tie text-slate-400 text-xs"></i>
+                                    <span>{{ d.isim }}</span>
+                                </span>
+                                {% endfor %}
                             </span>
                         {% else %}
                             <span class="text-slate-300">—</span>
@@ -126,10 +134,17 @@
                             </span>
                         {% endif %}
                     </td>
-
                     <!-- İşlemler -->
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end space-x-1">
+
+                            <!-- Düzenle -->
+                            <a href="{% url 'uyelik:kullanici_duzenle' u.pk %}"
+                               title="Düzenle"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </a>
+
                             <!-- Onay Aç/Kapat -->
                             {% if not u.is_superuser and u != request.user %}
                             <form method="post" action="{% url 'uyelik:kullanici_onay' u.pk %}">
@@ -158,8 +173,10 @@
                                 <i class="fa-solid fa-trash text-xs"></i>
                             </a>
                             {% endif %}
+
                         </div>
                     </td>
+
                 </tr>
                 {% empty %}
                 <tr>

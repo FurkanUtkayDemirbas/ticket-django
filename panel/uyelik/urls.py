@@ -11,6 +11,7 @@ urlpatterns = [
     # Kullanıcı Yönetimi (Admin Only)
     path('kullanicilar/', views.kullanici_listesi, name='kullanici_listesi'),
     path('kullanicilar/ekle/', views.kullanici_ekle, name='kullanici_ekle'),
+    path('kullanicilar/<int:user_id>/duzenle/', views.kullanici_duzenle, name='kullanici_duzenle'),
     path('kullanicilar/<int:user_id>/sil/', views.kullanici_sil, name='kullanici_sil'),
     path('kullanicilar/<int:user_id>/onay/', views.kullanici_onay, name='kullanici_onay'),
     path('kullanicilar/<int:user_id>/sifre/', views.kullanici_sifre_sifirla, name='kullanici_sifre'),

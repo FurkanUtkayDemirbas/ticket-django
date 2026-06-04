@@ -75,7 +75,7 @@
                 </select>
             </div>
             <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
-            {% if arama or secili_durum or secili_danisman or tarih or secili_bolum or secili_faturalama or secili_oncelik %}
+            {% if arama or secili_durum or secili_durum_grubu or secili_danisman or tarih or secili_bolum or secili_faturalama or secili_oncelik %}
                 <a href="{% url 'ticket_listesi' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
             {% endif %}
         </div>

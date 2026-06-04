@@ -14,13 +14,22 @@
     </div>
 
     <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_160px_auto_auto] xl:items-end">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_160px_auto_auto] xl:items-end">
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">No</label>
                 <select name="aktivite_no" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
                     {% for no in aktivite_nolari %}
                         <option value="{{ no }}" {% if secili_aktivite_no == no|stringformat:"s" %}selected{% endif %}>{{ no }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Muhatap</label>
+                <select name="muhatap" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    {% for m in filtre_muhataplari %}
+                        <option value="{{ m.pk }}" {% if secili_muhatap == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.unvan }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -61,17 +70,19 @@
                 <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
             </div>
             <div>
-                {% if secili_aktivite_no or secili_ticket or secili_danisman or secili_modul or tarih %}
+                {% if secili_aktivite_no or secili_muhatap or secili_ticket or secili_danisman or secili_modul or tarih %}
                     <a href="{% url 'aktivite_listesi' %}" class="inline-flex h-11 items-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
                 {% endif %}
             </div>
         </div>
     </form>
 
-    <table class="w-full text-left border-collapse">
+    <div class="overflow-x-auto">
+    <table class="w-full min-w-[1360px] text-left border-collapse">
         <thead>
             <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
                 <th class="px-8 py-4">Aktivite No</th>
+                <th class="px-8 py-4">Muhatap</th>
                 <th class="px-8 py-4">Ticket No</th>
                 <th class="px-8 py-4">Ticket</th>
                 <th class="px-8 py-4">Tarih</th>
@@ -79,7 +90,7 @@
                 <th class="px-8 py-4">Danışman</th>
                 <th class="px-8 py-4">Modül</th>
                 <th class="px-8 py-4">Açıklama</th>
-                <th class="px-8 py-4 text-right">İşlemler</th>
+                <th class="sticky right-0 bg-white px-8 py-4 text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">İşlemler</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -89,6 +100,15 @@
                     <a href="{% url 'aktivite_duzenle' a.pk %}" class="text-blue-600 hover:text-blue-800 hover:underline">
                         {{ a.number|stringformat:"08d" }}
                     </a>
+                </td>
+                <td class="px-8 py-4 text-sm">
+                    {% if a.ticketno and a.ticketno.unvan %}
+                        <a href="{% url 'muhatap_duzenle' a.ticketno.unvan.pk %}" class="font-semibold text-slate-700 hover:text-blue-700 hover:underline">
+                            {{ a.ticketno.unvan.unvan }}
+                        </a>
+                    {% else %}
+                        <span class="text-slate-400">-</span>
+                    {% endif %}
                 </td>
                 <td class="px-8 py-4 text-sm font-bold">
                     {% if a.ticketno %}
@@ -107,7 +127,7 @@
                 <td class="px-8 py-4 text-sm text-slate-600">{{ a.danisman|default:"-" }}</td>
                 <td class="px-8 py-4 text-sm text-slate-600">{{ a.modul|default:"-" }}</td>
                 <td class="px-8 py-4 text-sm text-slate-500">{{ a.aciklama|default:"-"|truncatechars:90 }}</td>
-                <td class="px-8 py-4 text-right space-x-2 whitespace-nowrap">
+                <td class="sticky right-0 bg-white px-8 py-4 text-right space-x-2 whitespace-nowrap shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
                     <a href="{% url 'aktivite_duzenle' a.pk %}" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white inline-flex items-center justify-center transition shadow-sm">
                         <i class="fa-solid fa-pen-to-square text-xs"></i>
                     </a>
@@ -118,10 +138,11 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="9" class="px-8 py-10 text-center text-sm text-slate-400">Henüz aktivite eklenmemiş.</td>
+                <td colspan="10" class="px-8 py-10 text-center text-sm text-slate-400">Henüz aktivite eklenmemiş.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}

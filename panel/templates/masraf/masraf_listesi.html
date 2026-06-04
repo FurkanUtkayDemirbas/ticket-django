@@ -28,7 +28,7 @@
                 <tr class="bg-slate-50/50 text-slate-500 text-sm border-b border-slate-100">
                     <th class="px-6 py-4 font-semibold">Tarih</th>
                     <th class="px-6 py-4 font-semibold">Fiş No</th>
-                    <th class="px-6 py-4 font-semibold">Sözleşme / Muhatap</th>
+                    <th class="px-6 py-4 font-semibold">Proje / Danışman</th>
                     <th class="px-6 py-4 font-semibold">Tür</th>
                     <th class="px-6 py-4 font-semibold">Açıklama</th>
                     <th class="px-6 py-4 font-semibold text-right">Tutar</th>
@@ -42,8 +42,9 @@
                     <td class="px-6 py-4 text-sm font-medium text-slate-700">{{ masraf.tarih|date:"d.m.Y" }}</td>
                     <td class="px-6 py-4 text-sm text-slate-600">{{ masraf.fis_no }}</td>
                     <td class="px-6 py-4">
-                        <div class="text-sm font-semibold text-blue-600">{{ masraf.sozlesme.sozlesmeno }}</div>
-                        <div class="text-xs text-slate-500">{{ masraf.muhatap_adi }}</div>
+                        <div class="text-sm font-semibold text-blue-600">Proje: {{ masraf.proje.projeno|default:"-" }}</div>
+                        <div class="text-xs text-slate-500">{{ masraf.muhatap_adi|default:"-" }}</div>
+                        <div class="text-xs text-slate-500 font-medium">Danışman: {{ masraf.danisman|default:"-" }}</div>
                     </td>
                     <td class="px-6 py-4 text-sm text-slate-600">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
@@ -66,6 +67,12 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-right space-x-2">
+                        <form action="{% url 'masraf_odeme_durumu_degistir' masraf.pk %}" method="post" class="inline-block">
+                            {% csrf_token %}
+                            <button type="submit" class="{% if masraf.odendi_mi %}text-green-500 hover:text-green-700{% else %}text-slate-400 hover:text-slate-600{% endif %} transition" title="{% if masraf.odendi_mi %}Ödenmedi İşaretle{% else %}Ödendi İşaretle{% endif %}">
+                                <i class="fa-solid fa-flag"></i>
+                            </button>
+                        </form>
                         <a href="{% url 'masraf_duzenle' masraf.pk %}" class="text-blue-500 hover:text-blue-700 transition" title="Düzenle">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>

@@ -18,6 +18,14 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'role', 'muhatap_firma', 'danisman_profil', 'is_approved')
+    list_display = ('user', 'role', 'get_muhatap_firmalar', 'get_danisman_profiller', 'is_approved')
     list_filter = ('role', 'is_approved')
-    search_fields = ('user__username', 'muhatap_firma__unvan')
+    search_fields = ('user__username',)
+
+    def get_muhatap_firmalar(self, obj):
+        return ", ".join([f.unvan for f in obj.muhatap_firmalar.all()])
+    get_muhatap_firmalar.short_description = 'Firmalar'
+
+    def get_danisman_profiller(self, obj):
+        return ", ".join([d.username for d in obj.danisman_profiller.all()])
+    get_danisman_profiller.short_description = 'Danışman Profilleri'

@@ -119,6 +119,7 @@
                     <th class="px-6 py-4">Süre</th>
                     <th class="px-6 py-4">Danışman</th>
                     <th class="px-6 py-4">Modül</th>
+                    <th class="px-6 py-4">Açıklama</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -162,10 +163,11 @@
                             -
                         {% endif %}
                     </td>
+                    <td class="px-6 py-4 text-sm text-slate-500">{{ a.aciklama|default:"-" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="px-6 py-10 text-center text-slate-400 text-sm italic">Raporda gösterilecek aktivite kaydı bulunamadı.</td>
+                    <td colspan="9" class="px-6 py-10 text-center text-slate-400 text-sm italic">Raporda gösterilecek aktivite kaydı bulunamadı.</td>
                 </tr>
                 {% endfor %}
             </tbody>

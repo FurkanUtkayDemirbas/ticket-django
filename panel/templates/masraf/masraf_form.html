@@ -34,11 +34,11 @@
                         {% endif %}
                     </div>
                     {% if field.name == 'muhatap_adi' %}
-                    <p class="text-[10px] text-slate-400 mt-1.5 px-1 font-semibold">Sözleşme seçildiğinde otomatik dolar.</p>
+                    <p class="text-[10px] text-slate-400 mt-1.5 px-1 font-semibold">Proje seçildiğinde otomatik dolar.</p>
                     {% endif %}
                     {% if field.name == 'masraf_turu' %}
                     <p class="text-[10px] text-slate-400 mt-1.5 px-1 font-semibold" id="masraf_turu_hint" style="display:none;">
-                        <i class="fa-solid fa-circle-info mr-1 text-blue-400"></i>Sözleşme seçilince firmaya özel türler de listelenir.
+                        <i class="fa-solid fa-circle-info mr-1 text-blue-400"></i>Proje seçilince firmaya özel türler de listelenir.
                     </p>
                     {% endif %}
                 </div>
@@ -60,17 +60,17 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const sozlesmeSelect = document.getElementById('id_sozlesme');
+    const projeSelect = document.getElementById('id_proje');
     const muhatapInput = document.getElementById('id_muhatap_adi');
     const masrafTuruSelect = document.getElementById('id_masraf_turu');
     const masrafTuruHint = document.getElementById('masraf_turu_hint');
 
-    function guncelleFormu(sozlesmeId) {
-        if (!sozlesmeId) {
+    function guncelleFormu(projeId) {
+        if (!projeId) {
             if (muhatapInput) muhatapInput.value = '';
             return;
         }
-        fetch(`/masraflar/api/get-sozlesme-muhatap/?sozlesme_id=${sozlesmeId}`)
+        fetch(`/masraflar/api/get-proje-muhatap/?proje_id=${projeId}`)
             .then(response => response.json())
             .then(data => {
                 // Muhatap adını doldur
@@ -100,14 +100,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Hata:', error));
     }
 
-    if (sozlesmeSelect) {
-        sozlesmeSelect.addEventListener('change', function() {
+    if (projeSelect) {
+        projeSelect.addEventListener('change', function() {
             guncelleFormu(this.value);
         });
 
-        // Sayfa açılışında sözleşme seçiliyse türleri yükle
-        if (sozlesmeSelect.value) {
-            guncelleFormu(sozlesmeSelect.value);
+        // Sayfa açılışında proje seçiliyse türleri yükle
+        if (projeSelect.value) {
+            guncelleFormu(projeSelect.value);
         }
     }
 });

@@ -18,7 +18,7 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     <!-- Müşteri (Blue Card - Vollcar Style) -->
-    <div class="bg-[#f0f7ff] p-6 rounded-xl border border-blue-100/50 shadow-sm flex items-center justify-between relative overflow-hidden">
+    <a href="{% url 'muhatap_listesi' %}" class="bg-[#f0f7ff] p-6 rounded-xl border border-blue-100/50 shadow-sm flex items-center justify-between relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
         <div>
             <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-3">TOPLAM MUHATAP</h4>
             <span class="text-3xl font-extrabold text-[#1e3a8a]">{{ toplam_muhatap }}</span>
@@ -26,10 +26,10 @@
         <div class="w-12 h-12 bg-[#dbeafe] rounded-full flex items-center justify-center shadow-inner">
             <i class="fa-solid fa-user-group text-blue-600 text-lg"></i>
         </div>
-    </div>
+    </a>
 
     <!-- Bekleyen (Yellow Card - Vollcar Style) -->
-    <div class="bg-[#fffbf0] p-6 rounded-xl border border-amber-100/50 shadow-sm flex items-center justify-between relative overflow-hidden">
+    <a href="{% url 'ticket_listesi' %}?durum_grubu=bekleyen" class="bg-[#fffbf0] p-6 rounded-xl border border-amber-100/50 shadow-sm flex items-center justify-between relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
         <div>
             <h4 class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-3">BEKLEYEN İŞLER</h4>
             <span class="text-3xl font-extrabold text-amber-600">{{ acik_ticketlar }}</span>
@@ -37,10 +37,10 @@
         <div class="w-12 h-12 bg-[#fef3c7] rounded-full flex items-center justify-center shadow-inner">
             <i class="fa-solid fa-clock text-amber-600 text-lg"></i>
         </div>
-    </div>
+    </a>
 
     <!-- Çözüldü (Green Card - Vollcar Style) -->
-    <div class="bg-[#f0fdf4] p-6 rounded-xl border border-emerald-100/50 shadow-sm flex items-center justify-between relative overflow-hidden">
+    <a href="{% url 'ticket_listesi' %}?durum_grubu=cozulen" class="bg-[#f0fdf4] p-6 rounded-xl border border-emerald-100/50 shadow-sm flex items-center justify-between relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
         <div>
             <h4 class="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-3">ÇÖZÜLENLER</h4>
             <span class="text-3xl font-extrabold text-emerald-600">{{ tamamlanan_count }}</span>
@@ -48,10 +48,10 @@
         <div class="w-12 h-12 bg-[#dcfce7] rounded-full flex items-center justify-center shadow-inner">
             <i class="fa-solid fa-check-circle text-emerald-600 text-lg"></i>
         </div>
-    </div>
+    </a>
 
     <!-- Sözleşme (White Card - Vollcar Style) -->
-    <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between relative overflow-hidden">
+    <a href="{% url 'sozlesme_listesi' %}" class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
         <div>
             <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">TOPLAM SÖZLEŞME</h4>
             <span class="text-3xl font-extrabold text-slate-800">{{ toplam_sozlesme }}</span>
@@ -59,7 +59,7 @@
         <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center shadow-inner">
             <i class="fa-solid fa-file-contract text-slate-600 text-lg"></i>
         </div>
-    </div>
+    </a>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">

@@ -26,9 +26,9 @@ class SozlesmeForm(forms.ModelForm):
         # Firmalar sözleşme eklerken veya düzenlerken sadece kendi firmalarını seçebilir
         if self.user and hasattr(self.user, 'userprofile') and not self.user.is_superuser:
             profile = self.user.userprofile
-            if profile.role == 'Firma' and profile.muhatap_firma:
-                self.fields['muhatap'].queryset = self.fields['muhatap'].queryset.filter(unvan=profile.muhatap_firma.unvan)
-                self.fields['muhatap'].initial = profile.muhatap_firma
+            if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+                self.fields['muhatap'].queryset = self.fields['muhatap'].queryset.filter(unvan__in=profile.muhatap_firmalar.all())
+                self.fields['muhatap'].initial = profile.muhatap_firmalar.first() if profile.muhatap_firmalar.exists() else None
                 
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = (

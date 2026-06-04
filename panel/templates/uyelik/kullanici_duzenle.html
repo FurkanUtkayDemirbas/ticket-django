@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% block title %}Kullanıcıyı Düzenle — {{ kullanici.username }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Breadcrumb + Başlık -->
+    <div class="mb-8">
+        <nav class="flex text-[10px] text-slate-400 uppercase tracking-widest mb-2 space-x-2">
+            <a href="{% url 'uyelik:kullanici_listesi' %}" class="hover:text-blue-600">Kullanıcılar</a>
+            <span>/</span>
+            <span class="text-slate-600">Düzenle</span>
+        </nav>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Kullanıcıyı Düzenle</h1>
+        <p class="text-sm text-slate-500 mt-1">
+            <span class="font-semibold text-blue-600">{{ kullanici.username }}</span> kullanıcısının bilgilerini güncelleyin.
+        </p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        <form method="post" class="p-10 space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Hesap Bilgileri -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">
+                    <i class="fa-solid fa-user mr-2 text-blue-400"></i>Hesap Bilgileri
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                            {{ form.username.label }} <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ form.email.label }}</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Rol Seçimi -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">
+                    <i class="fa-solid fa-shield-halved mr-2 text-violet-400"></i>Rol & Yetki
+                </h3>
+                <div class="grid grid-cols-3 gap-3 mb-4" id="rol-kartlari">
+                    <label class="rol-kart cursor-pointer" data-rol="Admin">
+                        <input type="radio" name="_rol_secim" value="Admin" class="sr-only">
+                        <div class="rol-kart-ic border-2 border-slate-200 rounded-2xl p-4 text-center transition-all hover:border-purple-400">
+                            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="fa-solid fa-shield-halved text-purple-600"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-700">Admin</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Tam yetki</p>
+                        </div>
+                    </label>
+                    <label class="rol-kart cursor-pointer" data-rol="Danisman">
+                        <input type="radio" name="_rol_secim" value="Danisman" class="sr-only">
+                        <div class="rol-kart-ic border-2 border-slate-200 rounded-2xl p-4 text-center transition-all hover:border-blue-400">
+                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="fa-solid fa-user-tie text-blue-600"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-700">Danışman</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Teknik erişim</p>
+                        </div>
+                    </label>
+                    <label class="rol-kart cursor-pointer" data-rol="Firma">
+                        <input type="radio" name="_rol_secim" value="Firma" class="sr-only">
+                        <div class="rol-kart-ic border-2 border-slate-200 rounded-2xl p-4 text-center transition-all hover:border-emerald-400">
+                            <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="fa-solid fa-building text-emerald-600"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-700">Firma</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Kısıtlı erişim</p>
+                        </div>
+                    </label>
+                </div>
+                <div class="hidden">{{ form.role }}</div>
+                {% if form.role.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.role.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Firmaya Özel Alan -->
+            <div id="firma-alani" class="hidden">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+                    <label class="block text-[11px] font-bold text-emerald-700 uppercase tracking-widest mb-3">
+                        <i class="fa-solid fa-building mr-1"></i>{{ form.muhatap_firmalar.label }} <span class="text-red-400">*</span>
+                    </label>
+                    <div id="firma-etiketler" class="flex flex-wrap gap-2 mb-3 min-h-0"></div>
+                    <div class="relative">
+                        <div class="flex items-center border-2 border-emerald-300 rounded-xl bg-white px-3 py-2 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-200 transition-all">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 mr-2 text-sm"></i>
+                            <input type="text" id="firma-arama" placeholder="Firma ara veya seçin..." autocomplete="off"
+                                class="flex-1 outline-none text-sm text-slate-700 bg-transparent font-medium placeholder:text-slate-400">
+                        </div>
+                        <div id="firma-dropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                            <div id="firma-secenekler" class="max-h-48 overflow-y-auto p-1"></div>
+                            <div class="border-t border-slate-100 p-2">
+                                <button type="button" id="firma-kapat" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">
+                                    ✓ Seçimi Tamamla
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden">{{ form.muhatap_firmalar }}</div>
+                    {% if form.muhatap_firmalar.errors %}
+                        <p class="text-red-500 text-xs mt-2">{{ form.muhatap_firmalar.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-emerald-600 mt-2">Bu kullanıcı sadece seçili firmanın verilerini görebilir.</p>
+                </div>
+            </div>
+
+            <!-- Danışmana Özel Alan -->
+            <div id="danisman-alani" class="hidden">
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+                    <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-widest mb-3">
+                        <i class="fa-solid fa-user-tie mr-1"></i>{{ form.danisman_profiller.label }} <span class="text-red-400">*</span>
+                    </label>
+                    <div id="danisman-etiketler" class="flex flex-wrap gap-2 mb-3 min-h-0"></div>
+                    <div class="relative">
+                        <div class="flex items-center border-2 border-blue-300 rounded-xl bg-white px-3 py-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 mr-2 text-sm"></i>
+                            <input type="text" id="danisman-arama" placeholder="Danışman ara veya seçin..." autocomplete="off"
+                                class="flex-1 outline-none text-sm text-slate-700 bg-transparent font-medium placeholder:text-slate-400">
+                        </div>
+                        <div id="danisman-dropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                            <div id="danisman-secenekler" class="max-h-48 overflow-y-auto p-1"></div>
+                            <div class="border-t border-slate-100 p-2">
+                                <button type="button" id="danisman-kapat" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition">
+                                    ✓ Seçimi Tamamla
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden">{{ form.danisman_profiller }}</div>
+                    {% if form.danisman_profiller.errors %}
+                        <p class="text-red-500 text-xs mt-2">{{ form.danisman_profiller.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-blue-600 mt-2">Bu kullanıcı sadece atanmış ticketlara erişebilir.</p>
+                </div>
+            </div>
+
+            <!-- Butonlar -->
+            <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                <a href="{% url 'uyelik:kullanici_listesi' %}" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Geri Dön
+                </a>
+                <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i>Değişiklikleri Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.rol-kart-ic.aktif {
+    border-color: #6366f1 !important;
+    background: #eef2ff;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+.secim-etiketi {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    animation: etiket-gir 0.15s ease;
+}
+.secim-etiketi.firma-renk { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.secim-etiketi.danisman-renk { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.secim-etiketi .kaldir-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: rgba(0,0,0,0.12); color: inherit;
+    font-size: 10px; font-weight: 900;
+    cursor: pointer; border: none; padding: 0; line-height: 1;
+    transition: background 0.15s, transform 0.1s; flex-shrink: 0;
+}
+.secim-etiketi .kaldir-btn:hover { background: rgba(220,38,38,0.25); color: #dc2626; transform: scale(1.15); }
+.dropdown-secenek {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: #475569;
+    transition: background 0.1s; user-select: none;
+}
+.dropdown-secenek:hover { background: #f1f5f9; }
+.dropdown-secenek.secili { background: #eff6ff; color: #1d4ed8; }
+.dropdown-secenek.secili:hover { background: #dbeafe; }
+.dropdown-secenek .check-ikon { margin-left: auto; color: #2563eb; font-size: 11px; opacity: 0; }
+.dropdown-secenek.secili .check-ikon { opacity: 1; }
+@keyframes etiket-gir { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+</style>
+
+<script>
+// Mevcut seçimler (sunucudan geliyor)
+const mevcutFirmalar = [{% for f in mevcut_firmalar %}{ value: "{{ f.pk }}", text: "{{ f.unvan }}" },{% endfor %}];
+const mevcutDanismanlar = [{% for d in mevcut_danismanlar %}{ value: "{{ d.pk }}", text: "{{ d.isim }}" },{% endfor %}];
+
+document.addEventListener('DOMContentLoaded', function() {
+    const rolSelect = document.getElementById('id_role');
+    const rolKartlar = document.querySelectorAll('.rol-kart');
+    const firmaAlani = document.getElementById('firma-alani');
+    const danismanAlani = document.getElementById('danisman-alani');
+    const firmaSelect = document.getElementById('id_muhatap_firmalar');
+    const danismanSelect = document.getElementById('id_danisman_profiller');
+
+    if (firmaSelect) firmaSelect.setAttribute('data-no-ts', '1');
+    if (danismanSelect) danismanSelect.setAttribute('data-no-ts', '1');
+
+    function cokSecimWidget({ aramaId, dropdownId, seceneklerContainerId, etiketlerContainerId, kapatBtnId, nativeSelect, renk, baslangicSecimler }) {
+        const aramaEl = document.getElementById(aramaId);
+        const dropdownEl = document.getElementById(dropdownId);
+        const seceneklerEl = document.getElementById(seceneklerContainerId);
+        const etiketlerEl = document.getElementById(etiketlerContainerId);
+        const kapatBtn = document.getElementById(kapatBtnId);
+        if (!aramaEl || !dropdownEl || !nativeSelect) return;
+
+        const tumSecenekler = Array.from(nativeSelect.options)
+            .filter(o => o.value !== '')
+            .map(o => ({ value: o.value, text: o.text }));
+
+        // Başlangıç seçimlerini mevcut değerlerden al
+        let seciliDegerler = new Set(baslangicSecimler.map(s => String(s.value)));
+
+        function etiketleriGuncelle() {
+            etiketlerEl.innerHTML = '';
+            seciliDegerler.forEach(val => {
+                const sec = tumSecenekler.find(s => s.value === val);
+                if (!sec) return;
+                const etiket = document.createElement('span');
+                etiket.className = 'secim-etiketi ' + (renk === 'firma' ? 'firma-renk' : 'danisman-renk');
+                etiket.innerHTML = `<span>${sec.text}</span><button type="button" class="kaldir-btn" data-val="${val}" title="Kaldır">✕</button>`;
+                etiket.querySelector('.kaldir-btn').addEventListener('click', function() {
+                    seciliDegerler.delete(this.dataset.val);
+                    nativeSelectGuncelle(); etiketleriGuncelle(); secenekleriRender(aramaEl.value);
+                });
+                etiketlerEl.appendChild(etiket);
+            });
+        }
+
+        function nativeSelectGuncelle() {
+            Array.from(nativeSelect.options).forEach(o => { o.selected = seciliDegerler.has(o.value); });
+        }
+
+        function secenekleriRender(filtre) {
+            const aramaMetni = (filtre || '').toLowerCase().trim();
+            seceneklerEl.innerHTML = '';
+            const filtrelenmis = tumSecenekler.filter(s => !aramaMetni || s.text.toLowerCase().includes(aramaMetni));
+            if (filtrelenmis.length === 0) {
+                seceneklerEl.innerHTML = '<p class="text-center text-slate-400 text-xs py-4">Sonuç bulunamadı</p>';
+                return;
+            }
+            filtrelenmis.forEach(sec => {
+                const secili = seciliDegerler.has(sec.value);
+                const div = document.createElement('div');
+                div.className = 'dropdown-secenek' + (secili ? ' secili' : '');
+                div.dataset.val = sec.value;
+                div.innerHTML = `<span>${sec.text}</span><i class="fa-solid fa-check check-ikon"></i>`;
+                div.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    if (seciliDegerler.has(sec.value)) seciliDegerler.delete(sec.value);
+                    else seciliDegerler.add(sec.value);
+                    nativeSelectGuncelle(); etiketleriGuncelle(); secenekleriRender(aramaEl.value);
+                });
+                seceneklerEl.appendChild(div);
+            });
+        }
+
+        aramaEl.addEventListener('focus', function() { dropdownEl.classList.remove('hidden'); secenekleriRender(this.value); });
+        aramaEl.addEventListener('input', function() { dropdownEl.classList.remove('hidden'); secenekleriRender(this.value); });
+        document.addEventListener('mousedown', function(e) {
+            if (!dropdownEl.contains(e.target) && e.target !== aramaEl) { dropdownEl.classList.add('hidden'); aramaEl.value = ''; }
+        });
+        kapatBtn.addEventListener('mousedown', function(e) { e.preventDefault(); dropdownEl.classList.add('hidden'); aramaEl.value = ''; aramaEl.blur(); });
+
+        nativeSelectGuncelle();
+        etiketleriGuncelle();
+    }
+
+    let firmaWidget = null, danismanWidget = null;
+    function widgetlariBaslat() {
+        if (!firmaWidget && firmaSelect) {
+            firmaWidget = cokSecimWidget({ aramaId: 'firma-arama', dropdownId: 'firma-dropdown', seceneklerContainerId: 'firma-secenekler', etiketlerContainerId: 'firma-etiketler', kapatBtnId: 'firma-kapat', nativeSelect: firmaSelect, renk: 'firma', baslangicSecimler: mevcutFirmalar });
+        }
+        if (!danismanWidget && danismanSelect) {
+            danismanWidget = cokSecimWidget({ aramaId: 'danisman-arama', dropdownId: 'danisman-dropdown', seceneklerContainerId: 'danisman-secenekler', etiketlerContainerId: 'danisman-etiketler', kapatBtnId: 'danisman-kapat', nativeSelect: danismanSelect, renk: 'danisman', baslangicSecimler: mevcutDanismanlar });
+        }
+    }
+
+    function guncelleSahneler(rol) {
+        firmaAlani.classList.add('hidden');
+        danismanAlani.classList.add('hidden');
+        if (rol === 'Firma') firmaAlani.classList.remove('hidden');
+        if (rol === 'Danisman') danismanAlani.classList.remove('hidden');
+        widgetlariBaslat();
+        if (rolSelect) rolSelect.value = rol;
+        rolKartlar.forEach(function(kart) {
+            var ic = kart.querySelector('.rol-kart-ic');
+            if (kart.dataset.rol === rol) { ic.classList.add('aktif'); kart.querySelector('input[type="radio"]').checked = true; }
+            else ic.classList.remove('aktif');
+        });
+    }
+
+    rolKartlar.forEach(function(kart) { kart.addEventListener('click', function() { guncelleSahneler(this.dataset.rol); }); });
+
+    var baslangicRol = (rolSelect && rolSelect.value) ? rolSelect.value : 'Admin';
+    guncelleSahneler(baslangicRol);
+});
+</script>
+{% endblock %}

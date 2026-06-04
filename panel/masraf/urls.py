@@ -12,5 +12,6 @@ urlpatterns = [
     path('turler/<int:pk>/duzenle/', views.masraf_turu_duzenle, name='masraf_turu_duzenle'),
     path('turler/<int:pk>/sil/', views.masraf_turu_sil, name='masraf_turu_sil'),
     
-    path('api/get-sozlesme-muhatap/', views.get_sozlesme_muhatap, name='get_sozlesme_muhatap'),
+    path('api/get-proje-muhatap/', views.get_proje_muhatap, name='get_proje_muhatap'),
+    path('<int:pk>/odeme-durumu/', views.masraf_odeme_durumu_degistir, name='masraf_odeme_durumu_degistir'),
 ]

@@ -19,8 +19,8 @@ class ProjeForm(forms.ModelForm):
         # Firmalar sadece kendi firmalarına ait sözleşmeleri seçebilir
         if self.user and hasattr(self.user, 'userprofile') and not self.user.is_superuser:
             profile = self.user.userprofile
-            if profile.role == 'Firma' and profile.muhatap_firma:
-                self.fields['sozlesme_baglantisi'].queryset = self.fields['sozlesme_baglantisi'].queryset.filter(muhatap=profile.muhatap_firma)
+            if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+                self.fields['sozlesme_baglantisi'].queryset = self.fields['sozlesme_baglantisi'].queryset.filter(muhatap__in=profile.muhatap_firmalar.all())
                 
         for field_name, field in self.fields.items():
             if field_name == 'aciklama':

@@ -295,7 +295,7 @@
                     <i class="fa-solid fa-envelope-open-text text-sm"></i>
                     <span class="text-sm">Ticketlar</span>
                 </a>
-                <a href="{% url 'aktivite_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'aktivite' in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
+                <a href="{% url 'aktivite_listesi' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if 'aktivite' in request.resolver_match.url_name and 'rapor' not in request.resolver_match.url_name %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                     <span class="text-sm">Aktiviteler</span>
                 </a>
@@ -419,6 +419,13 @@
                 {% block content %}
                 {% endblock %}
             </div>
+
+            <!-- Footer -->
+            <footer class="mt-auto py-4 text-center border-t border-slate-200 bg-white">
+                <p class="text-sm text-slate-500 font-medium">
+                    Tüm hakları saklıdır <a href="https://www.volltr.com/" target="_blank" class="text-blue-600 hover:text-blue-800 font-bold transition">@VOLL</a>
+                </p>
+            </footer>
         </main>
     </div>
 

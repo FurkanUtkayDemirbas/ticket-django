@@ -8,8 +8,8 @@ def sozlesme_listesi(request):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            veriler = veriler.filter(muhatap=profile.muhatap_firma)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            veriler = veriler.filter(muhatap__in=profile.muhatap_firmalar.all())
         elif profile.role == 'Danisman':
             veriler = veriler.none() # Danışmanlar sözleşmeleri göremez
 
@@ -47,7 +47,7 @@ def sozlesme_listesi(request):
         'baslangic': baslangic,
         'bitis': bitis,
         'sozlesme_tipleri': sozlesmeler._meta.get_field("tip").remote_field.model.objects.order_by("tanim"),
-        'muhataplar': sozlesmeler._meta.get_field("muhatap").remote_field.model.objects.filter(unvan=request.user.userprofile.muhatap_firma) if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'Firma' else sozlesmeler._meta.get_field("muhatap").remote_field.model.objects.order_by("unvan"),
+        'muhataplar': sozlesmeler._meta.get_field("muhatap").remote_field.model.objects.filter(pk__in=request.user.userprofile.muhatap_firmalar.all()) if hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'Firma' else sozlesmeler._meta.get_field('muhatap').remote_field.model.objects.order_by('unvan'),
     })
 
 def sozlesme_ekle(request):
@@ -69,8 +69,8 @@ def sozlesme_duzenle(request, pk):
     # YETKİ KONTROLÜ
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.muhatap != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.muhatap not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
         elif profile.role == 'Danisman':
             return render(request, '403.html', status=403)
@@ -90,8 +90,8 @@ def sozlesme_sil(request, pk):
     # YETKİ KONTROLÜ
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.muhatap != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.muhatap not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
         elif profile.role == 'Danisman':
             return render(request, '403.html', status=403)

@@ -1,26 +1,37 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
-from .models import aktivite, ticket, atama
-from .forms import AktiviteForm, TicketForm, TicketIciAktiviteForm, AtamaForm, TicketIciEforForm
+from muhatap.models import muhatap
+from sozlesme.models import sozlesmeler
+from .models import TicketYazisma, aktivite, ticket, atama
+from .forms import AktiviteForm, TicketForm, TicketIciAktiviteForm, AtamaForm, TicketIciEforForm, TicketYazismaForm
 
 # 1. DASHBOARD (ANA SAYFA)
 def ana_sayfa(request):
     """Sistem özetini ve istatistikleri gösteren ana ekran."""
     ticket_qs = ticket.objects.all()
+    muhatap_qs = muhatap.objects.all()
+    sozlesme_qs = sozlesmeler.objects.all()
+
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            ticket_qs = ticket_qs.filter(unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            ticket_qs = ticket_qs.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            ticket_qs = ticket_qs.filter(unvan__in=profile.muhatap_firmalar.all())
+            muhatap_qs = muhatap_qs.filter(pk__in=profile.muhatap_firmalar.all())
+            sozlesme_qs = sozlesme_qs.filter(muhatap__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            ticket_qs = ticket_qs.filter(danisman__in=profile.danisman_profiller.all())
 
     toplam = ticket_qs.count()
+    toplam_muhatap = muhatap_qs.count()
+    toplam_sozlesme = sozlesme_qs.count()
     acik = ticket_qs.exclude(durumtanim__durumtanim="Tamamlandı").count()
     tamamlanan = ticket_qs.filter(durumtanim__durumtanim="Tamamlandı").count()
     son_eklenenler = ticket_qs.order_by('-taleptarih')[:5]
 
     context = {
         'toplam_kayit': toplam,
+        'toplam_muhatap': toplam_muhatap,
+        'toplam_sozlesme': toplam_sozlesme,
         'acik_ticketlar': acik,
         'tamamlanan_count': tamamlanan,
         'son_ticketlar': son_eklenenler,
@@ -30,19 +41,25 @@ def ana_sayfa(request):
 # 2. LİSTELEME
 def ticket_listesi(request):
     """Tüm ticket kayıtlarını tablo halinde listeler."""
-    tum_ticketlar = ticket.objects.select_related("unvan", "durumtanim").prefetch_related("danisman").all().order_by('-ticketno')
+    tum_ticketlar = ticket.objects.select_related(
+        "unvan", "durumtanim", "faturadurum", "bolumkod", "oncelikkod"
+    ).prefetch_related("danisman").all().order_by('-ticketno')
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            tum_ticketlar = tum_ticketlar.filter(unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            tum_ticketlar = tum_ticketlar.filter(danisman=profile.danisman_profil).distinct()
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            tum_ticketlar = tum_ticketlar.filter(unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            tum_ticketlar = tum_ticketlar.filter(danisman__in=profile.danisman_profiller.all()).distinct()
 
     arama = request.GET.get("arama", "").strip()
     durum = request.GET.get("durum", "").strip()
+    durum_grubu = request.GET.get("durum_grubu", "").strip()
     danisman = request.GET.get("danisman", "").strip()
     tarih = request.GET.get("tarih", "").strip()
+    bolum = request.GET.get("bolum", "").strip()
+    faturalama = request.GET.get("faturalama", "").strip()
+    oncelik = request.GET.get("oncelik", "").strip()
 
     if arama:
         tum_ticketlar = tum_ticketlar.filter(
@@ -53,10 +70,20 @@ def ticket_listesi(request):
         )
     if durum:
         tum_ticketlar = tum_ticketlar.filter(durumtanim_id=durum)
+    elif durum_grubu == "bekleyen":
+        tum_ticketlar = tum_ticketlar.exclude(durumtanim__durumtanim="Tamamlandı")
+    elif durum_grubu == "cozulen":
+        tum_ticketlar = tum_ticketlar.filter(durumtanim__durumtanim="Tamamlandı")
     if danisman:
         tum_ticketlar = tum_ticketlar.filter(danisman__username=danisman)
     if tarih:
         tum_ticketlar = tum_ticketlar.filter(taleptarih__date=tarih)
+    if bolum:
+        tum_ticketlar = tum_ticketlar.filter(bolumkod_id=bolum)
+    if faturalama:
+        tum_ticketlar = tum_ticketlar.filter(faturadurum_id=faturalama)
+    if oncelik:
+        tum_ticketlar = tum_ticketlar.filter(oncelikkod_id=oncelik)
 
     # Her ticket için danışman eforlarını hesapla
     tum_ticketlar_list = list(tum_ticketlar)
@@ -72,9 +99,16 @@ def ticket_listesi(request):
         'ticketlar': tum_ticketlar_list,
         'arama': arama,
         'secili_durum': durum,
+        'secili_durum_grubu': durum_grubu,
         'secili_danisman': danisman,
         'tarih': tarih,
+        'secili_bolum': bolum,
+        'secili_faturalama': faturalama,
+        'secili_oncelik': oncelik,
         'durumlar': ticket._meta.get_field("durumtanim").remote_field.model.objects.order_by("durumtanim"),
+        'faturalamalar': ticket._meta.get_field("faturadurum").remote_field.model.objects.order_by("faturadurum"),
+        'bolumler': ticket._meta.get_field("bolumkod").remote_field.model.objects.order_by("kod"),
+        'oncelikler': ticket._meta.get_field("oncelikkod").remote_field.model.objects.order_by("kod"),
         'danismanlar': ticket._meta.get_field("danisman").related_model.objects.order_by("isim"),
     }
     return render(request, 'ticket_listesi.html', context)
@@ -134,20 +168,19 @@ def ticket_duzenle(request, pk):
     # YETKİ KONTROLÜ: Firma başka firmanın ticket'ına URL'den erişmeye çalışıyorsa engelle
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if profile.danisman_profil not in kayit.danisman.all():
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if not profile.danisman_profiller.filter(pk__in=kayit.danisman.all()).exists():
                 return render(request, '403.html', status=403)
-
-    # Ticket'a ait aktiviteler
     aktiviteler = aktivite.objects.filter(ticketno=kayit).select_related("danisman", "modul").order_by('-date')
     toplam_efor = sum(a.time or 0 for a in aktiviteler)
 
     # Ticket'a ait eforlar (atamalar)
     eforlar = atama.objects.filter(ticketno=kayit).select_related("danisman", "modul").order_by('-pk')
     toplam_atama_efor = sum(e.efor or 0 for e in eforlar)
+    yazismalar = TicketYazisma.objects.filter(ticketno=kayit).select_related("kullanici")
 
     if request.method == "POST":
         if 'aktivite_ekle' in request.POST:
@@ -163,6 +196,7 @@ def ticket_duzenle(request, pk):
             # Aktivite form hatalıysa ticket formunu boş oluştur
             form = TicketForm(instance=kayit, user=request.user)
             efor_form = TicketIciEforForm()
+            yazisma_form = TicketYazismaForm()
         elif 'efor_ekle' in request.POST:
             # Efor ekleme işlemi
             efor_form = TicketIciEforForm(request.POST)
@@ -175,6 +209,19 @@ def ticket_duzenle(request, pk):
                 return redirect('ticket_duzenle', pk=pk)
             form = TicketForm(instance=kayit, user=request.user)
             aktivite_form = TicketIciAktiviteForm()
+            yazisma_form = TicketYazismaForm()
+        elif 'yazisma_ekle' in request.POST:
+            yazisma_form = TicketYazismaForm(request.POST)
+            if yazisma_form.is_valid():
+                yeni_yazisma = yazisma_form.save(commit=False)
+                yeni_yazisma.ticketno = kayit
+                if request.user.is_authenticated:
+                    yeni_yazisma.kullanici = request.user
+                yeni_yazisma.save()
+                return redirect('ticket_duzenle', pk=pk)
+            form = TicketForm(instance=kayit, user=request.user)
+            aktivite_form = TicketIciAktiviteForm()
+            efor_form = TicketIciEforForm()
         else:
             # Ticket güncelleme işlemi
             form = TicketForm(request.POST, instance=kayit, user=request.user)
@@ -183,10 +230,12 @@ def ticket_duzenle(request, pk):
                 return redirect('ticket_listesi')
             aktivite_form = TicketIciAktiviteForm()
             efor_form = TicketIciEforForm()
+            yazisma_form = TicketYazismaForm()
     else:
         form = TicketForm(instance=kayit, user=request.user)
         aktivite_form = TicketIciAktiviteForm()
         efor_form = TicketIciEforForm()
+        yazisma_form = TicketYazismaForm()
 
     return render(request, 'ticket_duzenle.html', {
         'form': form,
@@ -197,6 +246,8 @@ def ticket_duzenle(request, pk):
         'eforlar': eforlar,
         'efor_form': efor_form,
         'toplam_atama_efor': toplam_atama_efor,
+        'yazismalar': yazismalar,
+        'yazisma_form': yazisma_form,
     })
 
 # 5. SİLME
@@ -207,13 +258,12 @@ def ticket_sil(request, pk):
     # YETKİ KONTROLÜ: Firma başka firmanın ticket'ını URL'den silmeye çalışıyorsa engelle
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if profile.danisman_profil not in kayit.danisman.all():
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if not profile.danisman_profiller.filter(pk__in=kayit.danisman.all()).exists():
                 return render(request, '403.html', status=403)
-                
     kayit.delete()
     return redirect('ticket_listesi')
 
@@ -226,11 +276,11 @@ def ticket_tamamla(request, pk):
         # YETKİ KONTROLÜ
         if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
             profile = request.user.userprofile
-            if profile.role == 'Firma' and profile.muhatap_firma:
-                if kayit.unvan != profile.muhatap_firma:
+            if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+                if kayit.unvan not in profile.muhatap_firmalar.all():
                     return render(request, '403.html', status=403)
-            elif profile.role == 'Danisman' and profile.danisman_profil:
-                if profile.danisman_profil not in kayit.danisman.all():
+            elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+                if not profile.danisman_profiller.filter(pk__in=kayit.danisman.all()).exists():
                     return render(request, '403.html', status=403)
                     
         from .models import statu
@@ -249,11 +299,11 @@ def ticket_faturalama_tamamla(request, pk):
         # YETKİ KONTROLÜ
         if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
             profile = request.user.userprofile
-            if profile.role == 'Firma' and profile.muhatap_firma:
-                if kayit.unvan != profile.muhatap_firma:
+            if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+                if kayit.unvan not in profile.muhatap_firmalar.all():
                     return render(request, '403.html', status=403)
-            elif profile.role == 'Danisman' and profile.danisman_profil:
-                if profile.danisman_profil not in kayit.danisman.all():
+            elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+                if not profile.danisman_profiller.filter(pk__in=kayit.danisman.all()).exists():
                     return render(request, '403.html', status=403)
                     
         from .models import faturalama
@@ -272,11 +322,11 @@ def ticket_aktivite_sil(request, ticket_pk, aktivite_pk):
     # YETKİ KONTROLÜ
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.ticketno and kayit.ticketno.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if kayit.danisman != profile.danisman_profil:
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if kayit.danisman not in profile.danisman_profiller.all():
                 return render(request, '403.html', status=403)
                 
     kayit.delete()
@@ -291,15 +341,30 @@ def ticket_efor_sil(request, ticket_pk, efor_pk):
     # YETKİ KONTROLÜ
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.ticketno and kayit.ticketno.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if kayit.danisman != profile.danisman_profil:
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if kayit.danisman not in profile.danisman_profiller.all():
                 return render(request, '403.html', status=403)
                 
     kayit.delete()
     return redirect('ticket_duzenle', pk=ticket_pk)
+
+
+def yazisma_sil(request, yazisma_pk):
+    from .models import TicketYazisma
+    yazisma = get_object_or_404(TicketYazisma, pk=yazisma_pk)
+    ticket_id = yazisma.ticket.pk
+    
+    # Sadece kendi yazdığı mesajı veya superuser silebilir
+    if request.user.is_superuser or yazisma.kullanici == request.user:
+        yazisma.delete()
+    else:
+        return render(request, '403.html', status=403)
+        
+    return redirect('ticket_duzenle', pk=ticket_id)
+
 
 
 # ═══════════════════════════════════════════════════════
@@ -307,16 +372,17 @@ def ticket_efor_sil(request, ticket_pk, efor_pk):
 # ═══════════════════════════════════════════════════════
 
 def aktivite_listesi(request):
-    aktiviteler = aktivite.objects.select_related("ticketno", "danisman", "modul").all().order_by("-date")
+    aktiviteler = aktivite.objects.select_related("ticketno", "ticketno__unvan", "danisman", "modul").all().order_by("-date")
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            aktiviteler = aktiviteler.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            aktiviteler = aktiviteler.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            aktiviteler = aktiviteler.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            aktiviteler = aktiviteler.filter(danisman__in=profile.danisman_profiller.all())
 
     aktivite_no = request.GET.get("aktivite_no", "").strip()
+    muhatap = request.GET.get("muhatap", "").strip()
     ticket_secimi = request.GET.get("ticket", "").strip()
     danisman = request.GET.get("danisman", "").strip()
     modul = request.GET.get("modul", "").strip()
@@ -324,6 +390,8 @@ def aktivite_listesi(request):
 
     if aktivite_no:
         aktiviteler = aktiviteler.filter(number=aktivite_no)
+    if muhatap:
+        aktiviteler = aktiviteler.filter(ticketno__unvan__pk=muhatap)
     if ticket_secimi:
         aktiviteler = aktiviteler.filter(ticketno_id=ticket_secimi)
     if danisman:
@@ -333,19 +401,21 @@ def aktivite_listesi(request):
     if tarih:
         aktiviteler = aktiviteler.filter(date__date=tarih)
 
-    a_qs = aktivite.objects.order_by("number")
+    a_qs = aktivite.objects.select_related("ticketno", "ticketno__unvan").order_by("number")
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            a_qs = a_qs.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            a_qs = a_qs.filter(danisman__in=profile.danisman_profiller.all())
             
     context = {
         "aktiviteler": aktiviteler,
         "aktivite_nolari": a_qs.values_list("number", flat=True),
         "filtre_ticketlari": ticket.objects.filter(aktivite__in=a_qs).distinct().order_by("-ticketno"),
+        "filtre_muhataplari": ticket._meta.get_field("unvan").remote_field.model.objects.filter(ticket__aktivite__in=a_qs).distinct().order_by("unvan"),
         "secili_aktivite_no": aktivite_no,
+        "secili_muhatap": muhatap,
         "secili_ticket": ticket_secimi,
         "secili_danisman": danisman,
         "secili_modul": modul,
@@ -372,11 +442,11 @@ def aktivite_duzenle(request, pk):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.ticketno and kayit.ticketno.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if kayit.danisman != profile.danisman_profil:
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if kayit.danisman not in profile.danisman_profiller.all():
                 return render(request, '403.html', status=403)
 
     if request.method == "POST":
@@ -395,11 +465,11 @@ def aktivite_sil(request, pk):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.ticketno and kayit.ticketno.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if kayit.danisman != profile.danisman_profil:
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if kayit.danisman not in profile.danisman_profiller.all():
                 return render(request, '403.html', status=403)
                 
     kayit.delete()
@@ -416,10 +486,10 @@ def efor_listesi(request):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            atamalar = atamalar.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            atamalar = atamalar.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            atamalar = atamalar.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            atamalar = atamalar.filter(danisman__in=profile.danisman_profiller.all())
 
     arama = request.GET.get("arama", "").strip()
     danisman = request.GET.get("danisman", "").strip()
@@ -448,10 +518,10 @@ def efor_listesi(request):
     a_qs = atama.objects.all()
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            a_qs = a_qs.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            a_qs = a_qs.filter(danisman__in=profile.danisman_profiller.all())
 
     context = {
         "atamalar": atamalar,
@@ -484,11 +554,11 @@ def efor_duzenle(request, pk):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.ticketno and kayit.ticketno.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if kayit.danisman != profile.danisman_profil:
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if kayit.danisman not in profile.danisman_profiller.all():
                 return render(request, '403.html', status=403)
 
     if request.method == "POST":
@@ -507,11 +577,11 @@ def efor_sil(request, pk):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.ticketno and kayit.ticketno.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            if kayit.danisman != profile.danisman_profil:
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            if kayit.danisman not in profile.danisman_profiller.all():
                 return render(request, '403.html', status=403)
                 
     kayit.delete()
@@ -523,8 +593,8 @@ def efor_onayla(request, pk):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            if kayit.ticketno and kayit.ticketno.unvan != profile.muhatap_firma:
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            if kayit.ticketno and kayit.ticketno.unvan not in profile.muhatap_firmalar.all():
                 return render(request, '403.html', status=403)
         elif profile.role == 'Danisman':
             return render(request, '403.html', status=403)

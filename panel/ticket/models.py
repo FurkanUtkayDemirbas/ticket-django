@@ -81,6 +81,19 @@ class aktivite ( models.Model):
         return f"{self.number} - {self.ticketno}"
 
 
+class TicketYazisma(models.Model):
+    ticketno = models.ForeignKey("ticket", to_field="ticketno", on_delete=models.CASCADE, related_name="yazismalar")
+    kullanici = models.ForeignKey("auth.User", on_delete=models.SET_NULL, null=True, blank=True)
+    mesaj = models.TextField()
+    olusturma_tarihi = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-olusturma_tarihi"]
+
+    def __str__(self):
+        return f"{self.ticketno} - {self.olusturma_tarihi:%d.%m.%Y %H:%M}"
+
+
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Sum

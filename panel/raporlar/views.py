@@ -4,8 +4,17 @@ from django.db.models import Count, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from xhtml2pdf import pisa
 from django.template.loader import render_to_string
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from ticket.models import aktivite, atama, ticket
 from proje.models import projeler
@@ -17,12 +26,12 @@ def raporlar_merkezi(request):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            t_qs = t_qs.filter(unvan=profile.muhatap_firma)
-            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            t_qs = t_qs.filter(danisman=profile.danisman_profil)
-            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            t_qs = t_qs.filter(unvan__in=profile.muhatap_firmalar.all())
+            a_qs = a_qs.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            t_qs = t_qs.filter(danisman__in=profile.danisman_profiller.all())
+            a_qs = a_qs.filter(danisman__in=profile.danisman_profiller.all())
 
     context = {
         "toplam_ticket": t_qs.count(),
@@ -40,14 +49,14 @@ def _filter_context(request):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            t_qs = t_qs.filter(unvan=profile.muhatap_firma)
-            m_qs = m_qs.filter(unvan=profile.muhatap_firma.unvan)
-            p_qs = p_qs.filter(sozlesme_baglantisi__muhatap=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            t_qs = t_qs.filter(danisman=profile.danisman_profil)
-            m_qs = m_qs.filter(ticket__danisman=profile.danisman_profil).distinct()
-            p_qs = p_qs.filter(sozlesme_baglantisi__ticket__danisman=profile.danisman_profil).distinct()
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            t_qs = t_qs.filter(unvan__in=profile.muhatap_firmalar.all())
+            m_qs = m_qs.filter(unvan__in=profile.muhatap_firmalar.all())
+            p_qs = p_qs.filter(sozlesme_baglantisi__muhatap__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            t_qs = t_qs.filter(danisman__in=profile.danisman_profiller.all())
+            m_qs = m_qs.filter(ticket__danisman__in=profile.danisman_profiller.all()).distinct()
+            p_qs = p_qs.filter(sozlesme_baglantisi__ticket__danisman__in=profile.danisman_profiller.all()).distinct()
 
     return {
         "arama": request.GET.get("arama", "").strip(),
@@ -79,10 +88,10 @@ def _ticket_queryset(request, base_queryset=None):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            queryset = queryset.filter(unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            queryset = queryset.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            queryset = queryset.filter(unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            queryset = queryset.filter(danisman__in=profile.danisman_profiller.all())
 
     queryset = queryset.select_related(
         "unvan", "sozlesmeno", "bolumkod", "destekturu", "oncelikkod",
@@ -132,10 +141,10 @@ def _ticket_detay_base_queryset(request):
 
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            queryset = queryset.filter(unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            queryset = queryset.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            queryset = queryset.filter(unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            queryset = queryset.filter(danisman__in=profile.danisman_profiller.all())
 
     return queryset
 
@@ -199,10 +208,10 @@ def _aktivite_queryset(request):
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            queryset = queryset.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            queryset = queryset.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            queryset = queryset.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            queryset = queryset.filter(danisman__in=profile.danisman_profiller.all())
 
     queryset = queryset.select_related("ticketno", "danisman", "modul").order_by("-date")
 
@@ -240,10 +249,10 @@ def _aktivite_secim_queryset(request):
 
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            queryset = queryset.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            queryset = queryset.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            queryset = queryset.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            queryset = queryset.filter(danisman__in=profile.danisman_profiller.all())
 
     muhatap = request.GET.get("muhatap", "").strip()
     proje = request.GET.get("proje", "").strip()
@@ -311,10 +320,10 @@ def aktivite_rapor_detay(request):
     a_qs = aktivite.objects.all()
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
-        if profile.role == 'Firma' and profile.muhatap_firma:
-            a_qs = a_qs.filter(ticketno__unvan=profile.muhatap_firma)
-        elif profile.role == 'Danisman' and profile.danisman_profil:
-            a_qs = a_qs.filter(danisman=profile.danisman_profil)
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            a_qs = a_qs.filter(ticketno__unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            a_qs = a_qs.filter(danisman__in=profile.danisman_profiller.all())
             
     context.update({
         "aktiviteler": aktiviteler,
@@ -332,15 +341,15 @@ def aktivite_rapor_detay(request):
 def aktivite_rapor_indir_excel(request):
     aktiviteler = _aktivite_queryset(request)
     rows = _aktivite_rows(aktiviteler)
-    rows.append(["", "", "", "", "Toplam Süre", aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0, "", ""])
+    rows.append(["", "", "", "", "Toplam Süre", aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0, "", "", ""])
     return _excel_response("Aktivite Raporu", _aktivite_headers(), rows, "aktivite_raporu.xlsx")
 
 
 def aktivite_rapor_pdf(request):
     aktiviteler = _aktivite_queryset(request)
-    rows = _aktivite_rows(aktiviteler)
+    rows = _aktivite_pdf_table_rows(aktiviteler)
     toplam_sure = aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0
-    return _pdf_response(request, "AKTIVITE RAPORU", _aktivite_headers(), rows, "aktivite_raporu.pdf", "Tum danisman ve efor sureleri", "Toplam Kayitli Sure", f"{toplam_sure} Saat")
+    return _aktivite_reportlab_pdf_response(request, _aktivite_headers(), rows, toplam_sure)
 
 
 def atanmamis_ticket_raporu(request):
@@ -482,11 +491,17 @@ def _ticket_detay_export_rows(rows):
         row["termin_tarihi"].strftime("%Y-%m-%d %H:%M") if row["termin_tarihi"] else "-",
         row["ticket_durumu"],
         row["faturalama_durumu"],
-        row["yazilim_eforu"],
-        row["modul_eforu"],
-        row["yazilim_aktivite_toplami"],
-        row["modul_aktivite_toplami"],
+        _format_number(row["yazilim_eforu"]),
+        _format_number(row["modul_eforu"]),
+        _format_number(row["yazilim_aktivite_toplami"]),
+        _format_number(row["modul_aktivite_toplami"]),
     ] for row in rows]
+
+
+def _format_number(value):
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
 
 
 def _ticket_rows(ticketlar):
@@ -502,21 +517,222 @@ def _ticket_rows(ticketlar):
     ] for t in ticketlar]
 
 
-def _aktivite_headers():
-    return ["Muhatap Kodu", "Muhatap Adı", "Ticket No", "Ticket Adı", "Tarih", "Süre", "Danışman", "Modül"]
+def _aktivite_headers(include_aciklama=True):
+    headers = ["Muhatap Kodu", "Muhatap Adı", "Ticket No", "Ticket Adı", "Tarih", "Süre", "Danışman", "Modül"]
+    if include_aciklama:
+        headers.append("Açıklama")
+    return headers
 
 
-def _aktivite_rows(aktiviteler):
-    return [[
-        a.ticketno.unvan.vkn if a.ticketno and a.ticketno.unvan else "",
-        a.ticketno.unvan.unvan if a.ticketno and a.ticketno.unvan else "",
-        a.ticketno.ticketno if a.ticketno else "",
-        a.ticketno.konu if a.ticketno else "",
-        a.date.strftime("%Y-%m-%d %H:%M") if a.date else "",
-        a.time or 0,
-        str(a.danisman) if a.danisman else "",
-        str(a.modul) if a.modul else "",
-    ] for a in aktiviteler]
+def _aktivite_rows(aktiviteler, include_aciklama=True, aciklama_in_ticket=False):
+    rows = []
+    for a in aktiviteler:
+        ticket_adi = a.ticketno.konu if a.ticketno else ""
+        if aciklama_in_ticket and a.aciklama:
+            ticket_adi = f"{ticket_adi}\nAçıklama: {a.aciklama}" if ticket_adi else f"Açıklama: {a.aciklama}"
+
+        row = [
+            a.ticketno.unvan.vkn if a.ticketno and a.ticketno.unvan else "",
+            a.ticketno.unvan.unvan if a.ticketno and a.ticketno.unvan else "",
+            a.ticketno.ticketno if a.ticketno else "",
+            ticket_adi,
+            a.date.strftime("%Y-%m-%d %H:%M") if a.date else "",
+            a.time or 0,
+            str(a.danisman) if a.danisman else "",
+            str(a.modul) if a.modul else "",
+        ]
+        if include_aciklama:
+            row.append(a.aciklama or "")
+        rows.append(row)
+    return rows
+
+
+def _pdf_wrap_text(value, width=18):
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    wrapped_lines = []
+    for line in text.replace("-", "- ").splitlines():
+        wrapped_lines.extend(textwrap.wrap(line, width=width, break_long_words=True, break_on_hyphens=True) or [""])
+    return "\n".join(wrapped_lines)
+
+
+def _aktivite_pdf_table_rows(aktiviteler):
+    rows = []
+    for a in aktiviteler:
+        rows.append([
+            a.ticketno.unvan.vkn if a.ticketno and a.ticketno.unvan else "",
+            _pdf_wrap_text(a.ticketno.unvan.unvan if a.ticketno and a.ticketno.unvan else "", width=16),
+            a.ticketno.ticketno if a.ticketno else "",
+            _pdf_wrap_text(a.ticketno.konu if a.ticketno else "", width=24),
+            a.date.strftime("%d.%m.%Y\n%H:%M") if a.date else "",
+            a.time or 0,
+            _pdf_wrap_text(str(a.danisman) if a.danisman else "", width=16),
+            _pdf_wrap_text(str(a.modul) if a.modul else "", width=14),
+            _pdf_wrap_text(a.aciklama or "", width=28),
+        ])
+    return rows
+
+
+def _register_pdf_fonts():
+    regular_path = os.path.join(settings.BASE_DIR, "static", "fonts", "Roboto-Regular.ttf")
+    bold_path = os.path.join(settings.BASE_DIR, "static", "fonts", "Roboto-Bold.ttf")
+    if "Roboto" not in pdfmetrics.getRegisteredFontNames() and os.path.exists(regular_path):
+        pdfmetrics.registerFont(TTFont("Roboto", regular_path))
+    if "Roboto-Bold" not in pdfmetrics.getRegisteredFontNames() and os.path.exists(bold_path):
+        pdfmetrics.registerFont(TTFont("Roboto-Bold", bold_path))
+    return (
+        "Roboto" if "Roboto" in pdfmetrics.getRegisteredFontNames() else "Helvetica",
+        "Roboto-Bold" if "Roboto-Bold" in pdfmetrics.getRegisteredFontNames() else "Helvetica-Bold",
+    )
+
+
+def _rl_text(value, style):
+    text = str(value or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return Paragraph(text.replace("\n", "<br/>"), style)
+
+
+def _aktivite_reportlab_pdf_response(request, headers, rows, toplam_sure):
+    font_name, bold_font_name = _register_pdf_fonts()
+    now = timezone.localtime()
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="aktivite_raporu.pdf"'
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=landscape(A4),
+        leftMargin=0.65 * cm,
+        rightMargin=0.65 * cm,
+        topMargin=0.7 * cm,
+        bottomMargin=0.7 * cm,
+    )
+
+    title_style = ParagraphStyle(
+        "ReportTitle",
+        fontName=bold_font_name,
+        fontSize=17,
+        leading=20,
+        textColor=colors.HexColor("#1e3a8a"),
+        spaceAfter=3,
+    )
+    subtitle_style = ParagraphStyle(
+        "ReportSubtitle",
+        fontName=font_name,
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#475569"),
+    )
+    meta_style = ParagraphStyle(
+        "ReportMeta",
+        fontName=font_name,
+        fontSize=7,
+        leading=10,
+        alignment=TA_RIGHT,
+        textColor=colors.HexColor("#475569"),
+    )
+    summary_label_style = ParagraphStyle(
+        "SummaryLabel",
+        fontName=bold_font_name,
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#1d4ed8"),
+    )
+    summary_value_style = ParagraphStyle(
+        "SummaryValue",
+        fontName=bold_font_name,
+        fontSize=13,
+        leading=15,
+        textColor=colors.HexColor("#1e40af"),
+        alignment=TA_RIGHT,
+    )
+    header_style = ParagraphStyle(
+        "TableHeader",
+        fontName=bold_font_name,
+        fontSize=6.4,
+        leading=7.4,
+        textColor=colors.white,
+        alignment=TA_LEFT,
+    )
+    cell_style = ParagraphStyle(
+        "TableCell",
+        fontName=font_name,
+        fontSize=6.2,
+        leading=7.4,
+        textColor=colors.HexColor("#334155"),
+        wordWrap="CJK",
+    )
+    center_cell_style = ParagraphStyle(
+        "TableCellCenter",
+        parent=cell_style,
+        alignment=TA_CENTER,
+    )
+
+    story = [
+        Table(
+            [[
+                Paragraph("AKTIVITE RAPORU", title_style),
+                Paragraph(f"<b>Tarih:</b> {now:%d.%m.%Y %H:%M}<br/><b>Belge No:</b> RPR-{now:%Y%m%d%H%M}", meta_style),
+            ]],
+            colWidths=[doc.width * 0.68, doc.width * 0.32],
+            style=TableStyle([
+                ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
+                ("LINEBELOW", (0, 0), (-1, -1), 1.5, colors.HexColor("#2F5BEA")),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]),
+        ),
+        Paragraph("Tum danisman ve efor sureleri", subtitle_style),
+        Spacer(1, 8),
+        Table(
+            [[Paragraph("Toplam Kayitli Sure", summary_label_style), Paragraph(f"{toplam_sure} Saat", summary_value_style)]],
+            colWidths=[doc.width * 0.5, doc.width * 0.5],
+            style=TableStyle([
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#eff6ff")),
+                ("LINEBEFORE", (0, 0), (0, 0), 3, colors.HexColor("#3b82f6")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#dbeafe")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]),
+        ),
+        Spacer(1, 10),
+    ]
+
+    table_data = [[_rl_text(header, header_style) for header in headers]]
+    center_columns = {2, 4, 5}
+    for row in rows:
+        table_data.append([
+            _rl_text(cell, center_cell_style if index in center_columns else cell_style)
+            for index, cell in enumerate(row)
+        ])
+
+    col_widths = [1.9 * cm, 3.2 * cm, 1.7 * cm, 5.0 * cm, 2.2 * cm, 1.1 * cm, 2.6 * cm, 2.7 * cm, 6.9 * cm]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+        ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#cbd5e1")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+    ]))
+    story.append(table)
+
+    def draw_footer(canvas, document):
+        canvas.saveState()
+        canvas.setFont(font_name, 7)
+        canvas.setFillColor(colors.HexColor("#94a3b8"))
+        canvas.drawCentredString(
+            landscape(A4)[0] / 2,
+            0.35 * cm,
+            f"Bu belge MYKEEP Sistemleri tarafindan otomatik olarak olusturulmustur. | Sayfa {document.page}",
+        )
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
+    return response
 
 
 def _ozet_headers():
@@ -620,19 +836,24 @@ def _pdf_response(request, title, headers, rows, filename, description="", summa
         widths = ["10%", "25%", "20%", "15%", "15%", "5%", "10%"]
     elif len(headers) == 7 and headers[0] == "Aktivite No":
         widths = ["10%", "12%", "20%", "15%", "8%", "20%", "15%"]
+    elif len(headers) == 8 and headers[0] == "Muhatap Kodu":
+        widths = ["9%", "13%", "8%", "28%", "11%", "6%", "12%", "13%"]
+    elif len(headers) == 9 and headers[0] == "Muhatap Kodu":
+        widths = ["7%", "10%", "7%", "17%", "9%", "5%", "10%", "10%", "25%"]
     elif len(headers) == 4 and headers[0] == "Grup":
         widths = ["40%", "20%", "20%", "20%"]
     else:
         widths = [f"{100.0/len(headers)}%"] * len(headers)
         
-    pdf_widths_str = ", ".join(widths)
-
     context = {
         "rapor_baslik": title,
         "rapor_aciklama": description,
-        "headers": zip(headers, widths),
-        "pdf_widths": pdf_widths_str,
+        "headers": list(zip(headers, widths)),
+        "col_count": len(headers),
+        "widths": widths,
+        "pdf_widths": " ".join(width.rstrip("%") for width in widths),
         "rows": rows,
+        "compact_table": headers and headers[0] == "Muhatap Kodu",
         "summary_title": summary_title,
         "summary_value": summary_value,
         "request": request,

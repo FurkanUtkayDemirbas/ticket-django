@@ -1,7 +1,7 @@
 from doctest import set_unittest_reportflags
 
 from django.contrib import admin
-from .models import ticket, statu, atama, aktivite
+from .models import TicketYazisma, ticket, statu, atama, aktivite
 
 admin.site.register(statu)
 
@@ -32,3 +32,12 @@ class AktiviteAdmin(admin.ModelAdmin):
 
 
 admin.site.register(aktivite, AktiviteAdmin)
+
+
+class TicketYazismaAdmin(admin.ModelAdmin):
+    list_display = ['ticketno', 'kullanici', 'olusturma_tarihi', 'mesaj']
+    list_filter = ['ticketno', 'kullanici', 'olusturma_tarihi']
+    search_fields = ['ticketno__ticketno', 'ticketno__konu', 'kullanici__username', 'mesaj']
+
+
+admin.site.register(TicketYazisma, TicketYazismaAdmin)

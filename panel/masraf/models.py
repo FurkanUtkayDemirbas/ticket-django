@@ -30,7 +30,8 @@ class Masraf(models.Model):
         ('USD', 'USD'),
     ]
 
-    sozlesme = models.ForeignKey(sozlesmeler, on_delete=models.CASCADE, verbose_name="Sözleşme")
+    proje = models.ForeignKey('proje.projeler', on_delete=models.CASCADE, verbose_name="Proje", null=True)
+    danisman = models.ForeignKey('modul.danisman', on_delete=models.SET_NULL, verbose_name="Danışman", null=True, blank=True)
     muhatap_adi = models.CharField(max_length=200, verbose_name="Muhatap Adı", blank=True, null=True)
     tarih = models.DateField(verbose_name="Tarih")
     masraf_turu = models.ForeignKey(MasrafTuru, on_delete=models.PROTECT, verbose_name="Masraf Türü")
