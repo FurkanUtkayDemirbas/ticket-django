@@ -1,9 +1,17 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
+from django.urls import reverse
 from muhatap.models import muhatap
 from sozlesme.models import sozlesmeler
 from .models import TicketYazisma, aktivite, ticket, atama
 from .forms import AktiviteForm, TicketForm, TicketIciAktiviteForm, AtamaForm, TicketIciEforForm, TicketYazismaForm
+
+
+def _ticket_listesi_redirect(request):
+    query_string = request.GET.urlencode()
+    if query_string:
+        return redirect(f"{reverse('ticket_listesi')}?{query_string}")
+    return _ticket_listesi_redirect(request)
 
 # 1. DASHBOARD (ANA SAYFA)
 def ana_sayfa(request):
@@ -53,6 +61,7 @@ def ticket_listesi(request):
             tum_ticketlar = tum_ticketlar.filter(danisman__in=profile.danisman_profiller.all()).distinct()
 
     arama = request.GET.get("arama", "").strip()
+    muhatap_secimi = request.GET.get("muhatap", "").strip() or request.GET.get("unvan", "").strip()
     durum = request.GET.get("durum", "").strip()
     durum_grubu = request.GET.get("durum_grubu", "").strip()
     danisman = request.GET.get("danisman", "").strip()
@@ -66,8 +75,9 @@ def ticket_listesi(request):
             Q(ticketno__icontains=arama)
             | Q(konu__icontains=arama)
             | Q(musteri_ticket_no__icontains=arama)
-            | Q(unvan__unvan__icontains=arama)
         )
+    if muhatap_secimi:
+        tum_ticketlar = tum_ticketlar.filter(unvan_id=muhatap_secimi)
     if durum:
         tum_ticketlar = tum_ticketlar.filter(durumtanim_id=durum)
     elif durum_grubu == "bekleyen":
@@ -95,9 +105,18 @@ def ticket_listesi(request):
                 danisman_eforlari[isim] = danisman_eforlari.get(isim, 0) + (a.efor or 0)
         t.danisman_efor_list = [f"{isim} — {efor} Saat" for isim, efor in danisman_eforlari.items()]
 
+    filtre_ticketlar = ticket.objects.select_related("unvan").all()
+    if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
+        profile = request.user.userprofile
+        if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
+            filtre_ticketlar = filtre_ticketlar.filter(unvan__in=profile.muhatap_firmalar.all())
+        elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
+            filtre_ticketlar = filtre_ticketlar.filter(danisman__in=profile.danisman_profiller.all()).distinct()
+
     context = {
         'ticketlar': tum_ticketlar_list,
         'arama': arama,
+        'secili_muhatap': muhatap_secimi,
         'secili_durum': durum,
         'secili_durum_grubu': durum_grubu,
         'secili_danisman': danisman,
@@ -110,6 +129,7 @@ def ticket_listesi(request):
         'bolumler': ticket._meta.get_field("bolumkod").remote_field.model.objects.order_by("kod"),
         'oncelikler': ticket._meta.get_field("oncelikkod").remote_field.model.objects.order_by("kod"),
         'danismanlar': ticket._meta.get_field("danisman").related_model.objects.order_by("isim"),
+        'muhataplar': ticket._meta.get_field("unvan").remote_field.model.objects.filter(ticket__in=filtre_ticketlar).distinct().order_by("unvan"),
     }
     return render(request, 'ticket_listesi.html', context)
 
@@ -265,7 +285,7 @@ def ticket_sil(request, pk):
             if not profile.danisman_profiller.filter(pk__in=kayit.danisman.all()).exists():
                 return render(request, '403.html', status=403)
     kayit.delete()
-    return redirect('ticket_listesi')
+    return _ticket_listesi_redirect(request)
 
 # 5.5 TICKET TAMAMLA
 def ticket_tamamla(request, pk):
@@ -288,7 +308,7 @@ def ticket_tamamla(request, pk):
         if tamamlandi_statu:
             kayit.durumtanim = tamamlandi_statu
             kayit.save()
-    return redirect('ticket_listesi')
+    return _ticket_listesi_redirect(request)
 
 
 def ticket_faturalama_tamamla(request, pk):
@@ -311,7 +331,7 @@ def ticket_faturalama_tamamla(request, pk):
         if fatura_statu:
             kayit.faturadurum = fatura_statu
             kayit.save()
-    return redirect('ticket_listesi')
+    return _ticket_listesi_redirect(request)
 
 
 # 6. TICKET İÇİNDEN AKTİVİTE SİLME
@@ -355,7 +375,7 @@ def ticket_efor_sil(request, ticket_pk, efor_pk):
 def yazisma_sil(request, yazisma_pk):
     from .models import TicketYazisma
     yazisma = get_object_or_404(TicketYazisma, pk=yazisma_pk)
-    ticket_id = yazisma.ticket.pk
+    ticket_id = yazisma.ticketno.pk
     
     # Sadece kendi yazdığı mesajı veya superuser silebilir
     if request.user.is_superuser or yazisma.kullanici == request.user:

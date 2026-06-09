@@ -1,17 +1,209 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+import os
+import tempfile
+import hashlib
+import openpyxl
+import reportlab.pdfbase.pdfdoc
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
 from .models import Masraf, MasrafTuru
 from .forms import MasrafForm, MasrafTuruForm
 from sozlesme.models import sozlesmeler
 from proje.models import projeler
+from modul.models import danisman
 from uyelik.decorators import admin_veya_danisman_only, admin_only
+
+
+def _masraf_queryset(request):
+    queryset = Masraf.objects.select_related("proje", "danisman", "masraf_turu").order_by("-tarih", "-id")
+
+    fis_no = request.GET.get("fis_no", "").strip()
+    proje = request.GET.get("proje", "").strip()
+    danisman_secimi = request.GET.get("danisman", "").strip()
+    masraf_turu = request.GET.get("masraf_turu", "").strip()
+    tarih = request.GET.get("tarih", "").strip()
+    odeme_durumu = request.GET.get("odeme_durumu", "").strip()
+
+    if fis_no:
+        queryset = queryset.filter(fis_no=fis_no)
+    if proje:
+        queryset = queryset.filter(proje_id=proje)
+    if danisman_secimi:
+        queryset = queryset.filter(danisman_id=danisman_secimi)
+    if masraf_turu:
+        queryset = queryset.filter(masraf_turu_id=masraf_turu)
+    if tarih:
+        queryset = queryset.filter(tarih=tarih)
+    if odeme_durumu == "odendi":
+        queryset = queryset.filter(odendi_mi=True)
+    elif odeme_durumu == "odenmedi":
+        queryset = queryset.filter(odendi_mi=False)
+
+    return queryset
+
+
+def _masraf_filter_context(request):
+    return {
+        "secili_fis_no": request.GET.get("fis_no", "").strip(),
+        "secili_proje": request.GET.get("proje", "").strip(),
+        "secili_danisman": request.GET.get("danisman", "").strip(),
+        "secili_masraf_turu": request.GET.get("masraf_turu", "").strip(),
+        "secili_tarih": request.GET.get("tarih", "").strip(),
+        "secili_odeme_durumu": request.GET.get("odeme_durumu", "").strip(),
+        "fis_nolari": Masraf.objects.exclude(fis_no="").values_list("fis_no", flat=True).distinct().order_by("fis_no"),
+        "projeler": projeler.objects.order_by("projeno"),
+        "danismanlar": danisman.objects.order_by("isim"),
+        "masraf_turleri": MasrafTuru.objects.order_by("tanim"),
+    }
+
+
+def _masraf_headers():
+    return ["Tarih", "Fis No", "Proje", "Danisman", "Masraf Turu", "Aciklama", "Tutar", "Durum"]
+
+
+def _masraf_rows(masraflar):
+    rows = []
+    for masraf in masraflar:
+        proje_text = "-"
+        if masraf.proje:
+            proje_text = str(masraf.proje.projeno)
+            if masraf.muhatap_adi:
+                proje_text = f"{proje_text} - {masraf.muhatap_adi}"
+
+        rows.append([
+            masraf.tarih.strftime("%d.%m.%Y") if masraf.tarih else "",
+            masraf.fis_no,
+            proje_text,
+            str(masraf.danisman) if masraf.danisman else "-",
+            masraf.masraf_turu.tanim if masraf.masraf_turu else "-",
+            masraf.aciklama,
+            f"{masraf.tutar} {masraf.para_birimi}",
+            "Odendi" if masraf.odendi_mi else "Odenmedi",
+        ])
+    return rows
+
+
+def _fit_sheet_columns(sheet):
+    for col in sheet.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            if cell.value and len(str(cell.value)) > max_length:
+                max_length = len(str(cell.value))
+        sheet.column_dimensions[column].width = min(max_length + 2, 50)
+
+
+def _excel_response(title, headers, rows, filename):
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = title[:31]
+    sheet.append(headers)
+
+    for cell in sheet[1]:
+        cell.font = openpyxl.styles.Font(bold=True)
+
+    for row in rows:
+        sheet.append(row)
+
+    _fit_sheet_columns(sheet)
+
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    workbook.save(response)
+    return response
+
+
+def link_callback(uri, rel):
+    s_url = settings.STATIC_URL
+    s_root = settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else os.path.join(settings.BASE_DIR, "static")
+    m_url = settings.MEDIA_URL
+    m_root = settings.MEDIA_ROOT
+
+    if not s_url.startswith("/") and uri.startswith("/"):
+        s_url = "/" + s_url
+    if not m_url.startswith("/") and uri.startswith("/"):
+        m_url = "/" + m_url
+
+    if uri.startswith(m_url):
+        path = os.path.join(m_root, uri.replace(m_url, "", 1).lstrip("/\\"))
+    elif uri.startswith(s_url):
+        path = os.path.join(s_root, uri.replace(s_url, "", 1).lstrip("/\\"))
+    else:
+        raise Exception(f'URI DID NOT MATCH: uri="{uri}", sUrl="{s_url}", mUrl="{m_url}"')
+
+    if not os.path.isfile(path):
+        raise Exception(f"media URI path not found: {path}")
+    return path
+
+
+def _pdf_response(request, title, headers, rows, filename, description=""):
+    widths = ["10%", "10%", "16%", "14%", "13%", "20%", "10%", "7%"]
+    context = {
+        "rapor_baslik": title,
+        "rapor_aciklama": description,
+        "headers": list(zip(headers, widths)),
+        "col_count": len(headers),
+        "widths": widths,
+        "pdf_widths": " ".join(width.rstrip("%") for width in widths),
+        "rows": rows,
+        "request": request,
+    }
+    html = render_to_string("pdf_rapor_sablonu.html", context)
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    orig_named_temporary_file = tempfile.NamedTemporaryFile
+    orig_md5 = hashlib.md5
+    orig_rl_md5 = getattr(reportlab.pdfbase.pdfdoc, "md5", None)
+
+    def patched_named_temporary_file(*args, **kwargs):
+        kwargs["delete"] = False
+        return orig_named_temporary_file(*args, **kwargs)
+
+    def patched_md5(*args, **kwargs):
+        kwargs.pop("usedforsecurity", None)
+        return orig_md5(*args, **kwargs)
+
+    tempfile.NamedTemporaryFile = patched_named_temporary_file
+    hashlib.md5 = patched_md5
+    if orig_rl_md5:
+        reportlab.pdfbase.pdfdoc.md5 = patched_md5
+
+    try:
+        pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
+    finally:
+        tempfile.NamedTemporaryFile = orig_named_temporary_file
+        hashlib.md5 = orig_md5
+        if orig_rl_md5:
+            reportlab.pdfbase.pdfdoc.md5 = orig_rl_md5
+
+    if pisa_status.err:
+        return HttpResponse("PDF olusturulurken hata olustu", status=500)
+    return response
+
 
 @admin_veya_danisman_only
 def masraf_listesi(request):
-    masraflar = Masraf.objects.all().order_by('-tarih', '-id')
-    return render(request, 'masraf/masraf_listesi.html', {'masraflar': masraflar})
+    masraflar = _masraf_queryset(request)
+    context = {"masraflar": masraflar}
+    context.update(_masraf_filter_context(request))
+    return render(request, 'masraf/masraf_listesi.html', context)
+
+
+@admin_veya_danisman_only
+def masraf_excel(request):
+    rows = _masraf_rows(_masraf_queryset(request))
+    return _excel_response("Masraf Listesi", _masraf_headers(), rows, "masraf_listesi.xlsx")
+
+
+@admin_veya_danisman_only
+def masraf_pdf(request):
+    rows = _masraf_rows(_masraf_queryset(request))
+    return _pdf_response(request, "MASRAF LISTESI", _masraf_headers(), rows, "masraf_listesi.pdf", "Masraf kayitlari listesi.")
 
 @admin_veya_danisman_only
 def masraf_ekle(request):
@@ -126,4 +318,3 @@ def masraf_odeme_durumu_degistir(request, pk):
         masraf.save()
         messages.success(request, f'Masraf ödeme durumu "{"Ödendi" if masraf.odendi_mi else "Ödenmedi"}" olarak güncellendi.')
     return redirect('masraf_listesi')
-

@@ -1,5 +1,7 @@
+import os
 import openpyxl
 import textwrap
+from django.conf import settings
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -790,9 +792,6 @@ def _excel_response(title, headers, rows, filename):
     return response
 
 
-
-import os
-from django.conf import settings
 
 def link_callback(uri, rel):
     """

@@ -28,7 +28,6 @@ def giris_view(request):
                     return redirect('uyelik:giris')
 
             login(request, user)
-            messages.success(request, "Giriş başarılı.")
             return redirect('index')
         else:
             messages.error(request, "Kullanıcı adı veya şifre hatalı.")

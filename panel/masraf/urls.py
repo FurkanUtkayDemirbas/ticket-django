@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.masraf_listesi, name='masraf_listesi'),
+    path('excel/', views.masraf_excel, name='masraf_excel'),
+    path('pdf/', views.masraf_pdf, name='masraf_pdf'),
     path('ekle/', views.masraf_ekle, name='masraf_ekle'),
     path('<int:pk>/duzenle/', views.masraf_duzenle, name='masraf_duzenle'),
     path('<int:pk>/sil/', views.masraf_sil, name='masraf_sil'),

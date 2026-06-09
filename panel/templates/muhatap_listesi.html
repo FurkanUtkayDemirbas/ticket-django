@@ -17,21 +17,44 @@
     </div>
     
     <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px_auto_auto] md:items-end">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1.2fr_1fr_1fr_220px_auto_auto] xl:items-end">
             <div>
-                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Arama</label>
-                <input type="search" name="arama" value="{{ arama }}" placeholder="Ünvan, VKN, telefon, adres veya grup" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Ünvan</label>
+                <select name="unvan" class="w-full">
+                    <option value="">Seçim yapınız...</option>
+                    {% for unvan in unvanlar %}
+                        <option value="{{ unvan }}" {% if secili_unvan == unvan %}selected{% endif %}>{{ unvan }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">VKN</label>
+                <select name="vkn" class="w-full">
+                    <option value="">Seçim yapınız...</option>
+                    {% for vkn in vknler %}
+                        <option value="{{ vkn }}" {% if secili_vkn == vkn %}selected{% endif %}>{{ vkn }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Hesap Grubu</label>
+                <select name="hesap_grubu" class="w-full">
+                    <option value="">Seçim yapınız...</option>
+                    {% for grup in hesap_gruplari %}
+                        <option value="{{ grup.grupkod_id }}" {% if secili_hesap_grubu == grup.grupkod_id %}selected{% endif %}>{{ grup.grupkod__name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Durum</label>
                 <select name="durum" class="w-full">
-                    <option value="">Tümü</option>
+                    <option value="">Seçim yapınız...</option>
                     <option value="aktif" {% if secili_durum == "aktif" %}selected{% endif %}>Aktif</option>
                     <option value="pasif" {% if secili_durum == "pasif" %}selected{% endif %}>Pasif</option>
                 </select>
             </div>
             <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
-            {% if arama or secili_durum %}
+            {% if secili_unvan or secili_vkn or secili_hesap_grubu or secili_durum %}
                 <a href="{% url 'muhatap_listesi' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
             {% endif %}
         </div>

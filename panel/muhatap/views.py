@@ -1,5 +1,4 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q
 from .models import muhatap
 from .forms import MuhatapForm
 from uyelik.decorators import admin_only
@@ -8,23 +7,30 @@ from uyelik.decorators import admin_only
 @admin_only
 def muhatap_listesi(request):
     muhataplar = muhatap.objects.all().order_by('id')
-    arama = request.GET.get("arama", "").strip()
+    secili_unvan = request.GET.get("unvan", "").strip()
+    secili_vkn = request.GET.get("vkn", "").strip()
+    secili_hesap_grubu = request.GET.get("hesap_grubu", "").strip()
     durum = request.GET.get("durum", "").strip()
 
-    if arama:
-        muhataplar = muhataplar.filter(
-            Q(unvan__icontains=arama)
-            | Q(vkn__icontains=arama)
-            | Q(telefon__icontains=arama)
-            | Q(adres__icontains=arama)
-            | Q(grupkod__name__icontains=arama)
-        )
+    if secili_unvan:
+        muhataplar = muhataplar.filter(unvan=secili_unvan)
+    if secili_vkn:
+        muhataplar = muhataplar.filter(vkn=secili_vkn)
+    if secili_hesap_grubu:
+        muhataplar = muhataplar.filter(grupkod_id=secili_hesap_grubu)
     if durum in {"aktif", "pasif"}:
         muhataplar = muhataplar.filter(aktif=(durum == "aktif"))
 
+    tum_muhataplar = muhatap.objects.select_related("grupkod").all().order_by("id")
+
     return render(request, 'muhatap_listesi.html', {
         'muhataplar': muhataplar,
-        'arama': arama,
+        'unvanlar': tum_muhataplar.values_list("unvan", flat=True).distinct().order_by("unvan"),
+        'vknler': tum_muhataplar.exclude(vkn="").values_list("vkn", flat=True).distinct().order_by("vkn"),
+        'hesap_gruplari': tum_muhataplar.exclude(grupkod__isnull=True).values("grupkod_id", "grupkod__name").distinct().order_by("grupkod__name"),
+        'secili_unvan': secili_unvan,
+        'secili_vkn': secili_vkn,
+        'secili_hesap_grubu': secili_hesap_grubu,
         'secili_durum': durum,
     })
 
