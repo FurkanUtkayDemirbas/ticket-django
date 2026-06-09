@@ -22,7 +22,8 @@ def _masraf_queryset(request):
     queryset = Masraf.objects.select_related("proje", "danisman", "masraf_turu").order_by("-tarih", "-id")
 
     fis_no = request.GET.get("fis_no", "").strip()
-    proje = request.GET.get("proje", "").strip()
+    proje_no = request.GET.get("proje_no", "").strip()
+    proje_adi = request.GET.get("proje_adi", "").strip()
     danisman_secimi = request.GET.get("danisman", "").strip()
     masraf_turu = request.GET.get("masraf_turu", "").strip()
     tarih = request.GET.get("tarih", "").strip()
@@ -30,8 +31,14 @@ def _masraf_queryset(request):
 
     if fis_no:
         queryset = queryset.filter(fis_no=fis_no)
-    if proje:
-        queryset = queryset.filter(proje_id=proje)
+    if proje_no:
+        queryset = queryset.filter(proje__projeno=proje_no)
+    if proje_adi:
+        # tanim ile eşleştir; eğer sayısal değer geldiyse projeno ile dene
+        if proje_adi.isdigit():
+            queryset = queryset.filter(proje__projeno=proje_adi)
+        else:
+            queryset = queryset.filter(proje__tanim=proje_adi)
     if danisman_secimi:
         queryset = queryset.filter(danisman_id=danisman_secimi)
     if masraf_turu:
@@ -49,7 +56,8 @@ def _masraf_queryset(request):
 def _masraf_filter_context(request):
     return {
         "secili_fis_no": request.GET.get("fis_no", "").strip(),
-        "secili_proje": request.GET.get("proje", "").strip(),
+        "secili_proje_no": request.GET.get("proje_no", "").strip(),
+        "secili_proje_adi": request.GET.get("proje_adi", "").strip(),
         "secili_danisman": request.GET.get("danisman", "").strip(),
         "secili_masraf_turu": request.GET.get("masraf_turu", "").strip(),
         "secili_tarih": request.GET.get("tarih", "").strip(),
@@ -289,21 +297,13 @@ def get_proje_muhatap(request):
             proje = projeler.objects.get(pk=proje_id)
             sozlesme = proje.sozlesme_baglantisi
             muhatap_adi = ''
-            masraf_turleri = []
 
             if sozlesme and sozlesme.muhatap:
                 muhatap_adi = str(sozlesme.muhatap).strip()
-                muhatap_obj = sozlesme.muhatap
-                # Genel türler (muhatap=NULL) + firmaya özel türler
-                turler = MasrafTuru.objects.filter(
-                    muhatap__isnull=True
-                ) | MasrafTuru.objects.filter(muhatap=muhatap_obj)
-                turler = turler.order_by('tanim')
-                masraf_turleri = [{'id': t.pk, 'tanim': t.tanim} for t in turler]
-            else:
-                # muhatap yoksa sadece genel türler
-                turler = MasrafTuru.objects.filter(muhatap__isnull=True).order_by('tanim')
-                masraf_turleri = [{'id': t.pk, 'tanim': t.tanim} for t in turler]
+
+            # Tüm masraf türlerini döndür (genel + firmaya özel hepsi)
+            turler = MasrafTuru.objects.order_by('tanim')
+            masraf_turleri = [{'id': t.pk, 'tanim': str(t)} for t in turler]
 
             return JsonResponse({'muhatap_adi': muhatap_adi, 'masraf_turleri': masraf_turleri})
         except (projeler.DoesNotExist, ValueError):

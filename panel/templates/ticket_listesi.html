@@ -209,8 +209,9 @@
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
-        }).then(response => {
-            if (response.ok) {
+        }).then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && data.success) {
                 // Durum etiketini TAMAMLANDI yap
                 let statusSpan = document.getElementById('status-' + ticketId);
                 if (statusSpan) {
@@ -220,9 +221,9 @@
                 // Formu/Butonu gizle
                 form.style.display = 'none';
             } else {
-                alert('Bir hata oluştu!');
+                alert(data.error || 'Bir hata oluştu!');
             }
-        }).catch(err => alert('Bağlantı hatası!'));
+        }).catch(err => alert('Bağlantı hatası: ' + err));
     }
 </script>
 {% endblock %}

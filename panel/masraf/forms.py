@@ -30,3 +30,7 @@ class MasrafForm(forms.ModelForm):
             'tutar': forms.NumberInput(attrs={'class': 'w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm font-semibold text-slate-700', 'step': '0.01'}),
             'para_birimi': forms.Select(attrs={'class': 'w-full'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['proje'].empty_label = 'Proje seçiniz...'

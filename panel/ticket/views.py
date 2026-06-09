@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.urls import reverse
+from django.http import JsonResponse
 from muhatap.models import muhatap
 from sozlesme.models import sozlesmeler
 from .models import TicketYazisma, aktivite, ticket, atama
@@ -11,7 +12,7 @@ def _ticket_listesi_redirect(request):
     query_string = request.GET.urlencode()
     if query_string:
         return redirect(f"{reverse('ticket_listesi')}?{query_string}")
-    return _ticket_listesi_redirect(request)
+    return redirect(reverse('ticket_listesi'))
 
 # 1. DASHBOARD (ANA SAYFA)
 def ana_sayfa(request):
@@ -143,10 +144,10 @@ def ticket_ekle(request):
 
         if form.is_valid():
             yeni_ticket = form.save(commit=False)
-            # Durum seçilmemişse "Yeni Kayıt" olarak ata (fallback)
+            # Durum seçilmemişse "Yeni Talep" olarak ata (fallback)
             if not yeni_ticket.durumtanim:
                 from .models import statu
-                statu_obj = statu.objects.filter(durumtanim="Yeni Kayıt").first()
+                statu_obj = statu.objects.filter(durumtanim="Yeni Talep").first()
                 if statu_obj:
                     yeni_ticket.durumtanim = statu_obj
             yeni_ticket.save()
@@ -298,9 +299,13 @@ def ticket_tamamla(request, pk):
             profile = request.user.userprofile
             if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
                 if kayit.unvan not in profile.muhatap_firmalar.all():
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({'success': False, 'error': 'Yetkisiz erişim'}, status=403)
                     return render(request, '403.html', status=403)
             elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
                 if not profile.danisman_profiller.filter(pk__in=kayit.danisman.all()).exists():
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({'success': False, 'error': 'Yetkisiz erişim'}, status=403)
                     return render(request, '403.html', status=403)
                     
         from .models import statu
@@ -308,6 +313,11 @@ def ticket_tamamla(request, pk):
         if tamamlandi_statu:
             kayit.durumtanim = tamamlandi_statu
             kayit.save()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': '"Tamamlandı" durumu sistemde tanımlı değil'}, status=400)
     return _ticket_listesi_redirect(request)
 
 
