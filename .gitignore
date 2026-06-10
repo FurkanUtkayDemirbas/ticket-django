@@ -1,0 +1,11 @@
+# Local databases must not be deployed over live data.
+*.sqlite
+*.sqlite3
+*.db
+
+# Deploy-time database backups.
+deploy_backups/
+
+# Python runtime artifacts.
+__pycache__/
+*.py[cod]

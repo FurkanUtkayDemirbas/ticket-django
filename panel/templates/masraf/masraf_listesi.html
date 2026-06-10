@@ -181,6 +181,31 @@
                 </tr>
                 {% endfor %}
             </tbody>
+            {% if masraf_toplamlari %}
+            <tfoot>
+                {% for toplam in masraf_toplamlari %}
+                <tr class="border-t-2 border-slate-200 bg-slate-50/70">
+                    <td colspan="6" class="px-6 py-4">
+                        <div class="flex items-center justify-end gap-3">
+                            <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                <i class="fa-solid fa-calculator text-sm"></i>
+                            </span>
+                            <div class="text-right">
+                                <div class="text-sm font-black text-slate-700">Toplam Tutar</div>
+                                <div class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Listelenen masraflar</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="inline-flex items-center justify-end rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700 shadow-sm shadow-emerald-500/5">
+                            {{ toplam.toplam|floatformat:2 }} {{ toplam.para_birimi }}
+                        </span>
+                    </td>
+                    <td colspan="2" class="px-6 py-4"></td>
+                </tr>
+                {% endfor %}
+            </tfoot>
+            {% endif %}
         </table>
     </div>
 </div>

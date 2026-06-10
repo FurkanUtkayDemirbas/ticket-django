@@ -7,6 +7,7 @@ import hashlib
 import openpyxl
 import reportlab.pdfbase.pdfdoc
 from django.conf import settings
+from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
@@ -95,6 +96,25 @@ def _masraf_rows(masraflar):
     return rows
 
 
+def _masraf_totals(masraflar):
+    return list(
+        masraflar.values("para_birimi")
+        .annotate(toplam=Sum("tutar"))
+        .order_by("para_birimi")
+    )
+
+
+def _format_masraf_total(total):
+    return f"{total['toplam'] or 0:.2f} {total['para_birimi']}"
+
+
+def _masraf_total_rows(totals):
+    return [
+        ["", "", "", "", "", "Toplam Tutar", _format_masraf_total(total), ""]
+        for total in totals
+    ]
+
+
 def _fit_sheet_columns(sheet):
     for col in sheet.columns:
         max_length = 0
@@ -105,7 +125,7 @@ def _fit_sheet_columns(sheet):
         sheet.column_dimensions[column].width = min(max_length + 2, 50)
 
 
-def _excel_response(title, headers, rows, filename):
+def _excel_response(title, headers, rows, filename, total_rows=None):
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = title[:31]
@@ -116,6 +136,12 @@ def _excel_response(title, headers, rows, filename):
 
     for row in rows:
         sheet.append(row)
+
+    if total_rows:
+        for row in total_rows:
+            sheet.append(row)
+            for cell in sheet[sheet.max_row]:
+                cell.font = openpyxl.styles.Font(bold=True)
 
     _fit_sheet_columns(sheet)
 
@@ -197,20 +223,24 @@ def _pdf_response(request, title, headers, rows, filename, description=""):
 @admin_veya_danisman_only
 def masraf_listesi(request):
     masraflar = _masraf_queryset(request)
-    context = {"masraflar": masraflar}
+    context = {"masraflar": masraflar, "masraf_toplamlari": _masraf_totals(masraflar)}
     context.update(_masraf_filter_context(request))
     return render(request, 'masraf/masraf_listesi.html', context)
 
 
 @admin_veya_danisman_only
 def masraf_excel(request):
-    rows = _masraf_rows(_masraf_queryset(request))
-    return _excel_response("Masraf Listesi", _masraf_headers(), rows, "masraf_listesi.xlsx")
+    masraflar = _masraf_queryset(request)
+    rows = _masraf_rows(masraflar)
+    total_rows = _masraf_total_rows(_masraf_totals(masraflar))
+    return _excel_response("Masraf Listesi", _masraf_headers(), rows, "masraf_listesi.xlsx", total_rows)
 
 
 @admin_veya_danisman_only
 def masraf_pdf(request):
-    rows = _masraf_rows(_masraf_queryset(request))
+    masraflar = _masraf_queryset(request)
+    rows = _masraf_rows(masraflar)
+    rows.extend(_masraf_total_rows(_masraf_totals(masraflar)))
     return _pdf_response(request, "MASRAF LISTESI", _masraf_headers(), rows, "masraf_listesi.pdf", "Masraf kayitlari listesi.")
 
 @admin_veya_danisman_only

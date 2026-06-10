@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MYKEEP | {% block title %}Yönetim{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'responsive.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
@@ -281,6 +283,14 @@
     </style>
 </head>
 <body class="bg-[#f8f9fa] text-slate-800 overflow-hidden">
+
+    <!-- Hamburger Butonu (mobil) -->
+    <button id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menüyü Aç/Kapat">
+        <i class="fa-solid fa-bars" id="hamburger-icon"></i>
+    </button>
+
+    <!-- Sidebar Overlay (mobil karartma) -->
+    <div id="sidebar-overlay" onclick="closeSidebar()"></div>
     <div class="flex h-screen">
         <aside class="w-[260px] bg-[#0b1221] flex flex-col shadow-2xl z-20">
             <div class="p-6">
@@ -489,6 +499,216 @@
                     if (dd) dd.classList.add('hidden');
                 }
             });
+        });
+
+        // ===== RESPONSIVE SİDEBAR =====
+        function toggleSidebar() {
+            const sidebar = document.querySelector('aside');
+            const overlay = document.getElementById('sidebar-overlay');
+            const icon = document.getElementById('hamburger-icon');
+            const isOpen = sidebar.classList.contains('sidebar-open');
+            if (isOpen) {
+                closeSidebar();
+            } else {
+                sidebar.classList.add('sidebar-open');
+                overlay.classList.add('active');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.querySelector('aside');
+            const overlay = document.getElementById('sidebar-overlay');
+            const icon = document.getElementById('hamburger-icon');
+            sidebar.classList.remove('sidebar-open');
+            overlay.classList.remove('active');
+            icon.classList.remove('fa-xmark');
+            icon.classList.add('fa-bars');
+            document.body.style.overflow = '';
+        }
+
+        // Ekran büyüyünce sidebar'ı sıfırla
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 1024) {
+                closeSidebar();
+                document.body.style.overflow = '';
+            }
+            // Scroll butonlarını yeniden kontrol et
+            document.querySelectorAll('.scroll-table-inner').forEach(updateScrollState);
+        });
+
+        // ===== EVRENSEL SCROLL TABLE WRAPPER =====
+        // Her .overflow-x-auto div'i üstte renkli scroll track + butonlara sahip yapıya dönüştürür.
+        function initScrollTables() {
+            document.querySelectorAll('.overflow-x-auto:not(.scroll-table-inner)').forEach(function(el) {
+
+                // İçinde tablo yoksa atla
+                if (!el.querySelector('table')) return;
+
+                // Ana wrapper
+                var wrapper = document.createElement('div');
+                wrapper.className = 'scroll-table-wrapper';
+
+                // Üst bar: [◀ buton | renkli rail | ▶ buton | label]
+                var trackBar = document.createElement('div');
+                trackBar.className = 'scroll-track-top';
+
+                var btnLeft = document.createElement('button');
+                btnLeft.type = 'button';
+                btnLeft.className = 'scroll-btn scroll-btn-left';
+                btnLeft.setAttribute('aria-label', 'Sola kaydır');
+                btnLeft.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+
+                var rail = document.createElement('div');
+                rail.className = 'scroll-track-rail';
+
+                var thumb = document.createElement('div');
+                thumb.className = 'scroll-track-thumb';
+                rail.appendChild(thumb);
+
+                var btnRight = document.createElement('button');
+                btnRight.type = 'button';
+                btnRight.className = 'scroll-btn scroll-btn-right';
+                btnRight.setAttribute('aria-label', 'Sağa kaydır');
+                btnRight.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+
+                var label = document.createElement('span');
+                label.className = 'scroll-track-label';
+                label.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> Kaydır';
+
+                trackBar.appendChild(btnLeft);
+                trackBar.appendChild(rail);
+                trackBar.appendChild(btnRight);
+                trackBar.appendChild(label);
+
+                // İç scroll div
+                var inner = document.createElement('div');
+                inner.className = 'scroll-table-inner';
+
+                // DOM: wrapper'ı el'in yerine koy, içerikleri inner'a taşı
+                el.parentNode.insertBefore(wrapper, el);
+                while (el.firstChild) { inner.appendChild(el.firstChild); }
+                el.parentNode.removeChild(el);
+
+                wrapper.appendChild(trackBar);
+                wrapper.appendChild(inner);
+
+                // Scroll miktarı
+                function scrollAmt() { return Math.max(180, inner.clientWidth * 0.38); }
+
+                // ---- Buton tıklama ----
+                btnLeft.addEventListener('click', function() {
+                    inner.scrollBy({ left: -scrollAmt(), behavior: 'smooth' });
+                });
+                btnRight.addEventListener('click', function() {
+                    inner.scrollBy({ left: scrollAmt(), behavior: 'smooth' });
+                });
+
+                // ---- Thumb güncelleme ----
+                function updateThumb() {
+                    var scrollWidth  = inner.scrollWidth;
+                    var clientWidth  = inner.clientWidth;
+                    var railWidth    = rail.clientWidth;
+                    if (scrollWidth <= clientWidth) { thumb.style.width = '100%'; thumb.style.left = '0'; return; }
+                    var ratio     = clientWidth / scrollWidth;
+                    var thumbW    = Math.max(28, railWidth * ratio);
+                    var maxLeft   = railWidth - thumbW;
+                    var thumbLeft = (inner.scrollLeft / (scrollWidth - clientWidth)) * maxLeft;
+                    thumb.style.width = thumbW + 'px';
+                    thumb.style.left  = thumbLeft + 'px';
+                }
+
+                // ---- State güncelleme ----
+                function updateState() {
+                    updateScrollState(inner);
+                    updateThumb();
+                }
+
+                inner.addEventListener('scroll', updateState, { passive: true });
+                window.addEventListener('resize', updateState, { passive: true });
+                updateState();
+
+                // ---- Rail tıklama (jump) ----
+                rail.addEventListener('click', function(e) {
+                    if (e.target === thumb) return;
+                    var rect   = rail.getBoundingClientRect();
+                    var clickX = e.clientX - rect.left;
+                    var ratio  = clickX / rail.clientWidth;
+                    inner.scrollLeft = ratio * (inner.scrollWidth - inner.clientWidth);
+                });
+
+                // ---- Thumb sürükleme ----
+                var isDragging = false, dragStartX = 0, dragStartScroll = 0;
+                thumb.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    dragStartX = e.clientX;
+                    dragStartScroll = inner.scrollLeft;
+                    document.body.style.userSelect = 'none';
+                    e.preventDefault();
+                });
+                document.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    var dx = e.clientX - dragStartX;
+                    var maxScroll = inner.scrollWidth - inner.clientWidth;
+                    var scrollRatio = maxScroll / (rail.clientWidth - thumb.offsetWidth);
+                    inner.scrollLeft = Math.max(0, Math.min(maxScroll, dragStartScroll + dx * scrollRatio));
+                });
+                document.addEventListener('mouseup', function() {
+                    if (isDragging) { isDragging = false; document.body.style.userSelect = ''; }
+                });
+
+                // ---- Dokunmatik sürükleme (thumb) ----
+                thumb.addEventListener('touchstart', function(e) {
+                    isDragging = true;
+                    dragStartX = e.touches[0].clientX;
+                    dragStartScroll = inner.scrollLeft;
+                }, { passive: true });
+                document.addEventListener('touchmove', function(e) {
+                    if (!isDragging) return;
+                    var dx = e.touches[0].clientX - dragStartX;
+                    var maxScroll = inner.scrollWidth - inner.clientWidth;
+                    var scrollRatio = maxScroll / (rail.clientWidth - thumb.offsetWidth);
+                    inner.scrollLeft = Math.max(0, Math.min(maxScroll, dragStartScroll + dx * scrollRatio));
+                    updateThumb();
+                }, { passive: true });
+                document.addEventListener('touchend', function() { isDragging = false; }, { passive: true });
+            });
+        }
+
+        // Wrapper'ın sol/sağ scroll durumunu günceller
+        function updateScrollState(inner) {
+            var wrapper = inner.closest ? inner.closest('.scroll-table-wrapper') : inner.parentElement;
+            if (!wrapper) return;
+
+            var sl = inner.scrollLeft;
+            var sw = inner.scrollWidth;
+            var cw = inner.clientWidth;
+            var canScroll = sw > cw + 2;
+
+            if (canScroll) {
+                wrapper.classList.add('has-scroll');
+            } else {
+                wrapper.classList.remove('has-scroll', 'can-scroll-left', 'can-scroll-right');
+                return;
+            }
+
+            sl > 2
+                ? wrapper.classList.add('can-scroll-left')
+                : wrapper.classList.remove('can-scroll-left');
+
+            sl + cw < sw - 2
+                ? wrapper.classList.add('can-scroll-right')
+                : wrapper.classList.remove('can-scroll-right');
+        }
+
+        // DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', initScrollTables);
+
+        // Tam yükleme sonrası kontrol (geç render edilen elemanlar için)
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.scroll-table-inner').forEach(updateScrollState);
         });
     </script>
 </body>

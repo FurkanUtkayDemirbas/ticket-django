@@ -4,7 +4,11 @@ from .models import TicketYazisma, aktivite, ticket
 class TicketForm(forms.ModelForm):
     class Meta:
         model = ticket
-        fields = ['konu', 'unvan', 'sozlesmeno', 'bolumkod', 'destekturu', 'taleptarih', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum']
+        fields = ['konu', 'unvan', 'sozlesmeno', 'departmankod', 'bolumkod', 'destekturu', 'taleptarih', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum']
+        labels = {
+            'departmankod': 'Departman Kodu',
+            'bolumkod': 'Bölüm Kodu',
+        }
         
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)

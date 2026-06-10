@@ -1,0 +1,675 @@
+/* ================================================================
+   MYKEEP — responsive.css
+   Tüm sayfalar için evrensel responsive / mobil uyum katmanı.
+   Tailwind sınıflarıyla ÇAKIŞMAZ; yalnızca layout override eder.
+   ================================================================
+
+   Breakpoint haritası:
+     xs  : max-width  480px  → küçük telefonlar
+     sm  : max-width  640px  → telefonlar (genel)
+     md  : max-width  768px  → büyük telefon / küçük tablet
+     lg  : max-width 1024px  → tablet
+     xl  : max-width 1280px  → küçük laptop
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   0. GENEL TEMEL DÜZELTMELER (tüm boyutlarda aktif)
+   ---------------------------------------------------------------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+img, video, iframe, embed, object {
+    max-width: 100%;
+    height: auto;
+}
+
+table {
+    min-width: 0;
+}
+
+/* ================================================================
+   1. SCROLL TABLE WRAPPER — Tüm tablolar için evrensel kaydırma
+   Her .overflow-x-auto div'i JS tarafından bu yapıya dönüştürülür
+   ================================================================ */
+
+/* Wrapper */
+.scroll-table-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* İki yanda beliren bulanık gradient geçiş göstergesi */
+.scroll-table-wrapper::before,
+.scroll-table-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 36px;   /* track yüksekliği kadar aşağı it */
+    bottom: 0;
+    width: 56px;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+/* Sol fade */
+.scroll-table-wrapper::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 100%);
+}
+
+/* Sağ fade */
+.scroll-table-wrapper::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 100%);
+}
+
+/* Gradient aktif durumlar */
+.scroll-table-wrapper.can-scroll-left::before  { opacity: 1; }
+.scroll-table-wrapper.can-scroll-right::after  { opacity: 1; }
+
+/* İçerideki kaydırılabilir alan */
+.scroll-table-wrapper .scroll-table-inner {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    /* Native scrollbar tamamen gizle */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scroll-table-wrapper .scroll-table-inner::-webkit-scrollbar {
+    display: none;
+}
+
+/* ================================================================
+   ÜSTTE RENKLİ SCROLL TRACK ÇUBUĞU
+   - Varsayılan gizli; JS "has-scroll" class'ı ekleyince açılır
+   - İçinde: ◀ sol buton | renkli kaydırma çubuğu | ▶ sağ buton
+   ================================================================ */
+.scroll-track-top {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 12px;
+    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+    border-bottom: 1.5px solid #e2e8f0;
+    border-radius: 0;
+}
+
+.scroll-table-wrapper.has-scroll .scroll-track-top {
+    display: flex;
+}
+
+/* "Kaydır" yazısı / ikonu */
+.scroll-track-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Ray (arka plan çizgisi) */
+.scroll-track-rail {
+    flex: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    min-width: 40px;
+}
+
+/* Renkli kaydırıcı thumb */
+.scroll-track-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    min-width: 32px;
+    background: linear-gradient(90deg, #3b82f6 0%, #818cf8 100%);
+    border-radius: 999px;
+    cursor: grab;
+    transition: background 0.15s ease;
+    box-shadow: 0 0 0 1px rgba(59,130,246,0.3), 0 2px 6px rgba(59,130,246,0.35);
+    will-change: width, left;
+}
+
+.scroll-track-thumb:active {
+    cursor: grabbing;
+    background: linear-gradient(90deg, #2563eb 0%, #6366f1 100%);
+}
+
+/* ---- SCROLL BUTONLARI ◀ ▶ ---- */
+.scroll-btn {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    font-size: 10px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.10);
+    transition: all 0.18s ease;
+    user-select: none;
+    position: static;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* has-scroll varken her iki butonu göster */
+.scroll-table-wrapper.has-scroll .scroll-btn {
+    display: flex;
+}
+
+.scroll-btn:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 6px 20px rgba(29, 78, 216, 0.35);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.scroll-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.scroll-btn-left  { left:  8px; }
+.scroll-btn-right { right: 8px; }
+
+/* Scroll mümkünse butonları göster */
+.scroll-table-wrapper.can-scroll-left  .scroll-btn-left  { opacity: 1; pointer-events: auto; }
+.scroll-table-wrapper.can-scroll-right .scroll-btn-right { opacity: 1; pointer-events: auto; }
+
+/* Scrollbar yokken buton biraz daha aşağıda dur */
+.scroll-table-wrapper:not(.has-scroll) .scroll-btn {
+    display: none !important;
+}
+
+/* ---- STICKY İŞLEMLER SÜTUNU (tüm tablolar) ---- */
+/* Header satırındaki son th sticky sağ */
+table thead tr th:last-child,
+table tbody tr td:last-child {
+    position: sticky;
+    right: 0;
+    background: #ffffff;
+    z-index: 3;
+    /* Sola doğru ince gölge */
+    box-shadow: -6px 0 12px -8px rgba(15, 23, 42, 0.12);
+}
+
+/* Hover satırında arka plan rengi sticky td'de de devam etsin */
+table tbody tr:hover td:last-child {
+    background: #f8fafc;
+}
+
+/* Thead'deki son th için arka plan farklı olabilir */
+table thead tr th:last-child {
+    background: #f8fafc;
+}
+
+/* Tablo container'ında overflow-hidden varsa sticky çalışmaz,
+   bunu genel önlemek için overflow-hidden'ı yok et */
+.scroll-table-wrapper .scroll-table-inner > table {
+    border-collapse: collapse;
+}
+
+/* ================================================================
+   2. HAMBURGER BUTONU — yalnızca mobilde görünür
+   ================================================================ */
+#hamburger-btn {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 9999;
+    background: #1d4ed8;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(29, 78, 216, 0.4);
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+#hamburger-btn:hover {
+    background: #1e40af;
+    transform: scale(1.05);
+}
+
+/* Overlay (sidebar arkası karartma) */
+#sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    backdrop-filter: blur(2px);
+}
+
+#sidebar-overlay.active {
+    display: block;
+}
+
+/* ================================================================
+   3. TABLET — max-width: 1024px
+   ================================================================ */
+@media (max-width: 1024px) {
+
+    /* --- Layout: Sidebar + Ana içerik --- */
+    body {
+        overflow: auto !important;
+    }
+
+    .flex.h-screen {
+        flex-direction: column !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Sidebar: varsayılan konum sola sabitlenir, gizlenir */
+    aside {
+        position: fixed !important;
+        top: 0 !important;
+        left: -280px !important;
+        width: 260px !important;
+        height: 100vh !important;
+        z-index: 999 !important;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        overflow-y: auto !important;
+    }
+
+    aside.sidebar-open {
+        left: 0 !important;
+        box-shadow: 4px 0 32px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    /* Ana içerik tam genişlik */
+    main {
+        flex: none !important;
+        width: 100% !important;
+        overflow-y: visible !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Header: hamburger için sol boşluk */
+    header {
+        padding-left: 64px !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+    }
+
+    /* İçerik padding küçültme */
+    main > .p-8 {
+        padding: 1.25rem !important;
+    }
+
+    /* Hamburger görünür */
+    #hamburger-btn {
+        display: flex !important;
+    }
+
+    /* Scroll butonları her zaman görünür (tablet) */
+    .scroll-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+}
+
+/* ================================================================
+   4. KÜÇÜK TABLET / BÜYÜK TELEFON — max-width: 768px
+   ================================================================ */
+@media (max-width: 768px) {
+
+    /* Header içindeki elemanlar */
+    header {
+        flex-wrap: wrap !important;
+        gap: 0.5rem !important;
+        padding-left: 60px !important;
+        padding-right: 1rem !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    header .text-slate-800.font-bold {
+        font-size: 0.95rem !important;
+    }
+
+    /* Kullanıcı dropdown mobilde tam genişlik */
+    #kullanici-dropdown {
+        right: 0 !important;
+        width: 200px !important;
+    }
+
+    /* Dashboard stat kartları — 2 sütun */
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Sayfa genel içerik padding */
+    main > .p-8 {
+        padding: 1rem !important;
+    }
+
+    /* Kart başlıkları: flex-col */
+    .bg-white.border.border-slate-200.rounded-3xl .px-8.py-6.border-b.border-slate-100.flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Liste başlığı bölümü (başlık + buton satırı) */
+    .flex.justify-between.items-center {
+        flex-wrap: wrap !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Filtre formları: grid tek sütun */
+    .grid.grid-cols-1.gap-4.md\:grid-cols-2.xl\:grid-cols-\[1\.25fr_1\.05fr_1fr_1fr_170px\],
+    .grid.grid-cols-1.gap-4.md\:grid-cols-2.xl\:grid-cols-\[1fr_1fr_1fr_auto_auto\] {
+        grid-template-columns: 1fr !important;
+    }
+
+    table {
+        font-size: 0.8rem !important;
+    }
+
+    table th,
+    table td {
+        padding: 0.5rem 0.75rem !important;
+        white-space: nowrap !important;
+    }
+
+    /* İşlem butonları küçük */
+    .w-10.h-10 {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    /* Dashboard 2-sütun grid (lg:grid-cols-2) */
+    .grid.grid-cols-1.lg\:grid-cols-2.gap-8.mt-10 {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        margin-top: 1.5rem !important;
+    }
+
+    /* Büyük form sayfaları (ticket_ekle, ticket_duzenle vb.) */
+    .grid.grid-cols-1.md\:grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .grid.grid-cols-1.lg\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Rapor sayfası kartlar */
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Tom Select dropdown — mobilde ekrana sığsın */
+    .ts-dropdown {
+        max-width: calc(100vw - 2rem) !important;
+    }
+}
+
+/* ================================================================
+   5. TELEFON — max-width: 640px
+   ================================================================ */
+@media (max-width: 640px) {
+
+    /* Dashboard stat kartları — 1 sütun */
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Başlık buton grubu dikey */
+    header .flex.items-center.space-x-4 {
+        gap: 0.5rem !important;
+    }
+
+    /* Kullanıcı adı metni gizle, yalnızca avatar */
+    header .flex.items-center.space-x-2 span.text-sm.font-semibold {
+        display: none !important;
+    }
+
+    /* "Kullanıcılar" butonu kısalt */
+    header button span {
+        display: none !important;
+    }
+
+    header button .fa-chevron-down {
+        display: none !important;
+    }
+
+    /* İçerik padding minimum */
+    main > .p-8 {
+        padding: 0.75rem !important;
+    }
+
+    /* Kart padding küçüt */
+    .p-8 {
+        padding: 1.25rem !important;
+    }
+
+    .p-6 {
+        padding: 1rem !important;
+    }
+
+    /* Tablo font küçük */
+    table {
+        font-size: 0.75rem !important;
+    }
+
+    table th,
+    table td {
+        padding: 0.4rem 0.6rem !important;
+    }
+
+    /* Geniş tablolarda bazı sütunları gizle (opsiyonel yardımcı class) */
+    .resp-hide-sm {
+        display: none !important;
+    }
+
+    /* Form alanları tam genişlik */
+    input, select, textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Buton tam genişlik (yardımcı class) */
+    .resp-full-sm {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Aktivite / atama liste kartları */
+    .rounded-3xl {
+        border-radius: 1rem !important;
+    }
+
+    .rounded-2xl {
+        border-radius: 0.75rem !important;
+    }
+
+    /* Rapor merkezi: kart flex-col */
+    .raporlar-kart {
+        flex-direction: column !important;
+    }
+
+    /* Footer padding */
+    footer {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Ticket detay / düzenle sayfası büyük formlar */
+    .ticket-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ================================================================
+   6. KÜÇÜK TELEFON — max-width: 480px
+   ================================================================ */
+@media (max-width: 480px) {
+
+    /* Hamburger konumu */
+    #hamburger-btn {
+        top: 8px !important;
+        left: 8px !important;
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 15px !important;
+    }
+
+    header {
+        padding-left: 54px !important;
+    }
+
+    /* Başlık h1/h2 küçült */
+    h1 { font-size: 1.15rem !important; }
+    h2 { font-size: 1rem !important; }
+    h3 { font-size: 0.9rem !important; }
+
+    /* İçerik padding minimum */
+    main > .p-8 {
+        padding: 0.5rem !important;
+    }
+
+    .p-8 {
+        padding: 1rem !important;
+    }
+
+    /* İşlem butonları daha küçük */
+    .w-10.h-10 {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Yazı küçültme */
+    .text-2xl { font-size: 1.25rem !important; }
+    .text-xl  { font-size: 1.1rem !important; }
+    .text-3xl { font-size: 1.5rem !important; }
+}
+
+/* ================================================================
+   7. ÖZEL BİLEŞEN OVERRIDE'LARI
+   ================================================================ */
+
+/* --- Sidebar nav linkleri dokunmatik hedef boyutu --- */
+@media (max-width: 1024px) {
+    aside nav a,
+    aside nav summary {
+        min-height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+}
+
+/* --- Tom Select mobil uyum --- */
+@media (max-width: 640px) {
+    .ts-control {
+        min-height: 42px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* --- Flatpickr takvim mobil --- */
+@media (max-width: 640px) {
+    .flatpickr-calendar {
+        width: calc(100vw - 2rem) !important;
+        left: 1rem !important;
+    }
+}
+
+/* --- Yardımcı class: sütun gizleme --- */
+@media (max-width: 768px) {
+    .hide-md { display: none !important; }
+}
+
+@media (max-width: 640px) {
+    .hide-sm { display: none !important; }
+}
+
+/* --- Ticket duzenle sayfası yatay sekme (tab) --- */
+@media (max-width: 640px) {
+    .ticket-tabs {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        padding-bottom: 4px !important;
+    }
+    .ticket-tabs::-webkit-scrollbar {
+        display: none !important;
+    }
+}
+
+/* --- Masraf / Rapor formları --- */
+@media (max-width: 768px) {
+    .masraf-form-grid,
+    .rapor-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* --- Pagination --- */
+@media (max-width: 480px) {
+    nav[aria-label="pagination"],
+    .pagination {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        justify-content: center !important;
+    }
+}
+
+/* ================================================================
+   8. YAZDIRMA (Print) — Sidebar gizle
+   ================================================================ */
+@media print {
+    aside,
+    #hamburger-btn,
+    #sidebar-overlay,
+    header,
+    footer,
+    .scroll-btn {
+        display: none !important;
+    }
+
+    main { width: 100% !important; }
+
+    .scroll-table-wrapper .scroll-table-inner {
+        overflow: visible !important;
+    }
+
+    .scroll-table-wrapper::before,
+    .scroll-table-wrapper::after {
+        display: none !important;
+    }
+}

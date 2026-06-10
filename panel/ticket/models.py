@@ -24,6 +24,7 @@ class ticket(models.Model):
     konu: models.CharField= models.CharField(max_length=100)
     unvan = models.ForeignKey("muhatap.muhatap", to_field="unvan", on_delete=models.CASCADE, null=True)
     sozlesmeno = models.ForeignKey("sozlesme.sozlesmeler", to_field="sozlesmeno", on_delete=models.CASCADE, null=True)
+    departmankod = models.ForeignKey("departman.departman", to_field="kod", on_delete=models.SET_NULL, null=True, blank=True)
     bolumkod = models.ForeignKey("modul.bolum", to_field="kod", on_delete=models.CASCADE, null=True)
     destekturu = models.ForeignKey("destekturu.destektur", to_field="definition", on_delete=models.PROTECT, null=True)
     taleptarih = models.DateTimeField(default=timezone.now)

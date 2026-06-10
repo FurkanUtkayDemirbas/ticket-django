@@ -4,68 +4,121 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto">
+
+    <!-- Sayfa Başlığı -->
     <div class="mb-8">
-        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Raporlama Merkezi</h1>
-        <p class="text-sm text-slate-500 mt-1">Ticket, aktivite ve efor süreçleri için takip ekranları.</p>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Raporlama Merkezi</h1>
+        <p class="text-sm text-slate-500 mt-1 font-medium">Sistemdeki tüm verilerin analiz ve özet ekranları</p>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4 mb-6">
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Toplam Ticket</p>
-            <p class="mt-2 text-2xl font-black text-slate-900">{{ toplam_ticket }}</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Atanmamış</p>
-            <p class="mt-2 text-2xl font-black text-amber-600">{{ atanmamis_ticket }}</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Onay Bekleyen</p>
-            <p class="mt-2 text-2xl font-black text-rose-600">{{ onay_bekleyen }}</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Toplam Aktivite Saati</p>
-            <p class="mt-2 text-2xl font-black text-emerald-600">{{ toplam_aktivite_sure }}</p>
-        </div>
-    </div>
+    <!-- Rapor Kartları Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <a href="{% url 'ticket_rapor_detay' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-blue-200 hover:bg-blue-50/30 transition">
-                <i class="fa-solid fa-envelope-open-text text-blue-600 mb-4"></i>
-                <h3 class="font-bold text-slate-900">Ticket Raporu</h3>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">Durum, danışman ve tarih aralığına göre destek talepleri.</p>
-            </a>
-            <a href="{% url 'ticket_ozet_raporu' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-violet-200 hover:bg-violet-50/30 transition">
-                <i class="fa-solid fa-table-list text-violet-600 mb-4"></i>
-                <h3 class="font-bold text-slate-900">Ticket Özet Raporu</h3>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">Seçilen ticket için yazılım, modül, fatura ve aktivite toplamları.</p>
-            </a>
-            <a href="{% url 'aktivite_rapor_detay' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-emerald-200 hover:bg-emerald-50/30 transition">
-                <i class="fa-solid fa-clock-rotate-left text-emerald-600 mb-4"></i>
-                <h3 class="font-bold text-slate-900">Aktivite Raporu</h3>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">Danışman, modül, ticket ve tarih aralığına göre efor kayıtları.</p>
-            </a>
-            <a href="{% url 'atanmamis_ticket_raporu' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-amber-200 hover:bg-amber-50/30 transition">
-                <i class="fa-solid fa-user-clock text-amber-600 mb-4"></i>
-                <h3 class="font-bold text-slate-900">Atanmamış Ticketlar</h3>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">Danışman ataması bekleyen talepler.</p>
-            </a>
-            <a href="{% url 'efor_onayi_bekleyen_raporu' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-rose-200 hover:bg-rose-50/30 transition">
-                <i class="fa-solid fa-circle-check text-rose-600 mb-4"></i>
-                <h3 class="font-bold text-slate-900">Atama Onayı Bekleyenler</h3>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">Onay bekleyen efor ve ticket kayıtları.</p>
-            </a>
-            <a href="{% url 'danisman_efor_ozeti' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-indigo-200 hover:bg-indigo-50/30 transition">
-                <i class="fa-solid fa-user-tie text-indigo-600 mb-4"></i>
-                <h3 class="font-bold text-slate-900">Danışman Atama Özeti</h3>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">Danışman bazında toplam saat ve aktivite sayısı.</p>
-            </a>
-            <a href="{% url 'modul_efor_ozeti' %}" class="rounded-2xl border border-slate-200 p-5 hover:border-cyan-200 hover:bg-cyan-50/30 transition">
-                <i class="fa-solid fa-cubes text-cyan-600 mb-4"></i>
-                <h3 class="font-bold text-slate-900">Modül Atama Özeti</h3>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">Modül bazında harcanan süre ve ticket yoğunluğu.</p>
+        <!-- Ticket Raporu -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-7 shadow-sm flex flex-col hover:shadow-md hover:border-blue-200 transition-all duration-200 group">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-5 group-hover:bg-blue-100 transition">
+                <i class="fa-solid fa-envelope-open-text text-blue-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Ticket Raporu</h3>
+            <p class="text-sm leading-relaxed text-slate-500 flex-1">
+                Durum, danışman ve tarih aralığına göre destek taleplerinin detaylı listesini ve özetini gösterir.
+            </p>
+            <a href="{% url 'ticket_rapor_detay' %}"
+               class="mt-6 flex items-center justify-center w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-blue-600 hover:text-white transition active:scale-95">
+                Raporu Görüntüle &rarr;
             </a>
         </div>
+
+        <!-- Ticket Özet Raporu -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-7 shadow-sm flex flex-col hover:shadow-md hover:border-violet-200 transition-all duration-200 group">
+            <div class="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center mb-5 group-hover:bg-violet-100 transition">
+                <i class="fa-solid fa-table-list text-violet-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Ticket Özet Raporu</h3>
+            <p class="text-sm leading-relaxed text-slate-500 flex-1">
+                Seçilen ticket için yazılım, modül, fatura ve aktivite toplamlarını tek ekranda sunar.
+            </p>
+            <a href="{% url 'ticket_ozet_raporu' %}"
+               class="mt-6 flex items-center justify-center w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-violet-600 hover:text-white transition active:scale-95">
+                Raporu Görüntüle &rarr;
+            </a>
+        </div>
+
+        <!-- Aktivite Raporu -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-7 shadow-sm flex flex-col hover:shadow-md hover:border-emerald-200 transition-all duration-200 group">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-5 group-hover:bg-emerald-100 transition">
+                <i class="fa-solid fa-clock-rotate-left text-emerald-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Aktivite Raporu</h3>
+            <p class="text-sm leading-relaxed text-slate-500 flex-1">
+                Danışman, modül, ticket ve tarih aralığına göre efor kayıtlarını filtreler ve listeler.
+            </p>
+            <a href="{% url 'aktivite_rapor_detay' %}"
+               class="mt-6 flex items-center justify-center w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-emerald-600 hover:text-white transition active:scale-95">
+                Raporu Görüntüle &rarr;
+            </a>
+        </div>
+
+        <!-- Atanmamış Ticketlar -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-7 shadow-sm flex flex-col hover:shadow-md hover:border-amber-200 transition-all duration-200 group">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-5 group-hover:bg-amber-100 transition">
+                <i class="fa-solid fa-user-clock text-amber-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Atanmamış Ticketlar</h3>
+            <p class="text-sm leading-relaxed text-slate-500 flex-1">
+                Danışman ataması henüz yapılmamış olan destek taleplerini listeler ve takibini sağlar.
+            </p>
+            <a href="{% url 'atanmamis_ticket_raporu' %}"
+               class="mt-6 flex items-center justify-center w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-amber-500 hover:text-white transition active:scale-95">
+                Raporu Görüntüle &rarr;
+            </a>
+        </div>
+
+        <!-- Atama Onayı Bekleyenler -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-7 shadow-sm flex flex-col hover:shadow-md hover:border-rose-200 transition-all duration-200 group">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center mb-5 group-hover:bg-rose-100 transition">
+                <i class="fa-solid fa-circle-check text-rose-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Atama Onayı Bekleyenler</h3>
+            <p class="text-sm leading-relaxed text-slate-500 flex-1">
+                Onay bekleyen efor ve ticket kayıtlarını bir arada göstererek süreç takibini kolaylaştırır.
+            </p>
+            <a href="{% url 'efor_onayi_bekleyen_raporu' %}"
+               class="mt-6 flex items-center justify-center w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-rose-500 hover:text-white transition active:scale-95">
+                Raporu Görüntüle &rarr;
+            </a>
+        </div>
+
+        <!-- Danışman Atama Özeti -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-7 shadow-sm flex flex-col hover:shadow-md hover:border-indigo-200 transition-all duration-200 group">
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mb-5 group-hover:bg-indigo-100 transition">
+                <i class="fa-solid fa-user-tie text-indigo-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Danışman Atama Özeti</h3>
+            <p class="text-sm leading-relaxed text-slate-500 flex-1">
+                Danışman bazında toplam harcanan saat, aktivite sayısı ve iş yükü dağılımını gösterir.
+            </p>
+            <a href="{% url 'danisman_efor_ozeti' %}"
+               class="mt-6 flex items-center justify-center w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-indigo-600 hover:text-white transition active:scale-95">
+                Raporu Görüntüle &rarr;
+            </a>
+        </div>
+
+        <!-- Modül Atama Özeti -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-7 shadow-sm flex flex-col hover:shadow-md hover:border-cyan-200 transition-all duration-200 group">
+            <div class="w-12 h-12 rounded-xl bg-cyan-50 flex items-center justify-center mb-5 group-hover:bg-cyan-100 transition">
+                <i class="fa-solid fa-cubes text-cyan-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Modül Atama Özeti</h3>
+            <p class="text-sm leading-relaxed text-slate-500 flex-1">
+                Modül bazında harcanan toplam süre ve ticket yoğunluğunu analiz ederek raporlar.
+            </p>
+            <a href="{% url 'modul_efor_ozeti' %}"
+               class="mt-6 flex items-center justify-center w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-cyan-600 hover:text-white transition active:scale-95">
+                Raporu Görüntüle &rarr;
+            </a>
+        </div>
+
     </div>
 </div>
 {% endblock %}
