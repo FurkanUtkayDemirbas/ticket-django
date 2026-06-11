@@ -1,23 +1,25 @@
-import django, os, tempfile
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'panel.settings')
-django.setup()
-from django.template.loader import render_to_string
-from xhtml2pdf import pisa
-from raporlar.views import _ticket_headers, _ticket_rows, link_callback
-from ticket.models import ticket
+import os
+import django
 
-ticketlar = ticket.objects.order_by('-ticketno')[:1]
-rows = _ticket_rows(ticketlar)
-headers = _ticket_headers()
-widths = ['9%','20%','19%','12%','15%','12%','6%','7%']
-context = {
-    'rapor_baslik': 'TICKET RAPORU',
-    'headers': headers,
-    'pdf_widths': ', '.join(widths),
-    'rows': rows
-}
-html = render_to_string('pdf_rapor_sablonu.html', context)
-orig = tempfile.NamedTemporaryFile
-tempfile.NamedTemporaryFile = lambda *a, **k: orig(*a, **{**k, 'delete': False})
-with open('test_output.pdf', 'wb') as f:
-    pisa.CreatePDF(html, dest=f, link_callback=link_callback)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "panel.settings")
+django.setup()
+
+from django.test import RequestFactory
+from masraf.views import masraf_rapor_pdf
+from ticket.models import User
+
+# Superuser olustur veya al
+user = User.objects.filter(is_superuser=True).first()
+
+factory = RequestFactory()
+request = factory.get('/masraf/rapor/pdf/')
+request.user = user
+
+response = masraf_rapor_pdf(request)
+
+if response.status_code == 200:
+    with open("test_masraf.pdf", "wb") as f:
+        f.write(response.content)
+    print("PDF basariyla uretildi: test_masraf.pdf")
+else:
+    print(f"Hata: {response.status_code}")

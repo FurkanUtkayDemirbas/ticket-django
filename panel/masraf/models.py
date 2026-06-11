@@ -40,6 +40,7 @@ class Masraf(models.Model):
     tutar = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Tutar")
     para_birimi = models.CharField(max_length=3, choices=PARA_BIRIMI_CHOICES, default='TRY', verbose_name="Para Birimi")
     odendi_mi = models.BooleanField(default=False, verbose_name="Ödendi mi?")
+    dosya = models.FileField(upload_to='masraf_dosyalari/', null=True, blank=True, verbose_name="Dosya (PDF/Resim)")
     olusturulma_tarihi = models.DateTimeField(auto_now_add=True)
     guncellenme_tarihi = models.DateTimeField(auto_now=True)
 

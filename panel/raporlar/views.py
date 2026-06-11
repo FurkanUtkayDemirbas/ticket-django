@@ -9,14 +9,6 @@ from django.urls import reverse
 from django.utils import timezone
 from xhtml2pdf import pisa
 from django.template.loader import render_to_string
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.units import cm
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from ticket.models import aktivite, atama, ticket
 from proje.models import projeler
@@ -349,9 +341,15 @@ def aktivite_rapor_indir_excel(request):
 
 def aktivite_rapor_pdf(request):
     aktiviteler = _aktivite_queryset(request)
-    rows = _aktivite_pdf_table_rows(aktiviteler)
-    toplam_sure = aktiviteler.aggregate(toplam=Sum("time"))["toplam"] or 0
-    return _aktivite_reportlab_pdf_response(request, _aktivite_headers(), rows, toplam_sure)
+    rows = _aktivite_rows(aktiviteler, include_aciklama=True)
+    return _pdf_response(
+        request,
+        "AKTİVİTE RAPORU",
+        _aktivite_headers(include_aciklama=True),
+        rows,
+        "aktivite_raporu.pdf",
+        description="Danışman ve efor süreleri listesi.",
+    )
 
 
 def atanmamis_ticket_raporu(request):
@@ -838,7 +836,7 @@ def _pdf_response(request, title, headers, rows, filename, description="", summa
     elif len(headers) == 8 and headers[0] == "Muhatap Kodu":
         widths = ["9%", "13%", "8%", "28%", "11%", "6%", "12%", "13%"]
     elif len(headers) == 9 and headers[0] == "Muhatap Kodu":
-        widths = ["7%", "10%", "7%", "17%", "9%", "5%", "10%", "10%", "25%"]
+        widths = ["6%", "11%", "6%", "16%", "8%", "5%", "11%", "9%", "28%"]
     elif len(headers) == 4 and headers[0] == "Grup":
         widths = ["40%", "20%", "20%", "20%"]
     else:

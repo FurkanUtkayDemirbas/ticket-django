@@ -9,6 +9,8 @@ from modul import views as modul_views
 from destekturu import views as destekturu_views
 from raporlar import views as raporlar_views
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -109,4 +111,4 @@ urlpatterns = [
 
     # Masraf Modülü
     path('masraflar/', include('masraf.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

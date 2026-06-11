@@ -132,6 +132,8 @@
             font-size: 6.2pt;
             line-height: 1.2;
             white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .data-table tr {
             page-break-inside: auto;
@@ -187,11 +189,11 @@
     </div>
     {% endif %}
 
-    <table class="data-table{% if compact_table %} compact{% endif %}" repeat="1" style="-pdf-widths: {{ pdf_widths }};">
+    <table class="data-table{% if compact_table %} compact{% endif %}" repeat="1">
         <thead>
             <tr>
                 {% for header, width in headers %}
-                <th>{{ header }}</th>
+                <th width="{{ width }}">{{ header }}</th>
                 {% endfor %}
             </tr>
         </thead>
@@ -199,7 +201,7 @@
             {% for row in rows %}
             <tr>
                 {% for cell in row %}
-                <td>{{ cell|linebreaksbr }}</td>
+                <td>{% if cell == "" or cell is None %}-{% else %}{{ cell|linebreaksbr }}{% endif %}</td>
                 {% endfor %}
             </tr>
             {% endfor %}

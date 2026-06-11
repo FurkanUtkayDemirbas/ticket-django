@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
+from django.utils import timezone
 from xhtml2pdf import pisa
 from .models import Masraf, MasrafTuru
 from .forms import MasrafForm, MasrafTuruForm
@@ -220,6 +221,147 @@ def _pdf_response(request, title, headers, rows, filename, description=""):
     return response
 
 
+def _register_pdf_fonts():
+    regular_path = os.path.join(settings.BASE_DIR, "static", "fonts", "Roboto-Regular.ttf")
+    bold_path = os.path.join(settings.BASE_DIR, "static", "fonts", "Roboto-Bold.ttf")
+    if "Roboto" not in pdfmetrics.getRegisteredFontNames() and os.path.exists(regular_path):
+        pdfmetrics.registerFont(TTFont("Roboto", regular_path))
+    if "Roboto-Bold" not in pdfmetrics.getRegisteredFontNames() and os.path.exists(bold_path):
+        pdfmetrics.registerFont(TTFont("Roboto-Bold", bold_path))
+    return (
+        "Roboto" if "Roboto" in pdfmetrics.getRegisteredFontNames() else "Helvetica",
+        "Roboto-Bold" if "Roboto-Bold" in pdfmetrics.getRegisteredFontNames() else "Helvetica-Bold",
+    )
+
+
+def _pdf_paragraph(value, style):
+    text = str(value or "")
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return Paragraph(text.replace("\n", "<br/>"), style)
+
+
+def _masraf_reportlab_pdf_response(headers, rows):
+    font_name, bold_font_name = _register_pdf_fonts()
+    now = timezone.localtime()
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="masraf_listesi.pdf"'
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=landscape(A4),
+        leftMargin=0.4 * cm,
+        rightMargin=0.4 * cm,
+        topMargin=0.55 * cm,
+        bottomMargin=0.7 * cm,
+    )
+    title_style = ParagraphStyle(
+        "MasrafReportTitle",
+        fontName=bold_font_name,
+        fontSize=17,
+        leading=20,
+        textColor=colors.HexColor("#1e3a8a"),
+    )
+    subtitle_style = ParagraphStyle(
+        "MasrafReportSubtitle",
+        fontName=font_name,
+        fontSize=9,
+        leading=11,
+        textColor=colors.HexColor("#475569"),
+    )
+    meta_style = ParagraphStyle(
+        "MasrafReportMeta",
+        fontName=font_name,
+        fontSize=7,
+        leading=10,
+        alignment=TA_RIGHT,
+        textColor=colors.HexColor("#475569"),
+    )
+    header_style = ParagraphStyle(
+        "MasrafTableHeader",
+        fontName=bold_font_name,
+        fontSize=8.2,
+        leading=10,
+        textColor=colors.white,
+        alignment=TA_LEFT,
+        wordWrap="CJK",
+    )
+    cell_style = ParagraphStyle(
+        "MasrafTableCell",
+        fontName=font_name,
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#334155"),
+        wordWrap="CJK",
+        splitLongWords=True,
+    )
+    center_style = ParagraphStyle("MasrafTableCellCenter", parent=cell_style, alignment=TA_CENTER)
+    right_style = ParagraphStyle("MasrafTableCellRight", parent=cell_style, alignment=TA_RIGHT)
+
+    story = [
+        Table(
+            [[
+                Paragraph("MASRAF LISTESI", title_style),
+                Paragraph(
+                    f"<b>Tarih:</b> {now:%d.%m.%Y %H:%M}<br/><b>Belge No:</b> RPR-{now:%Y%m%d%H%M}",
+                    meta_style,
+                ),
+            ]],
+            colWidths=[doc.width * 0.68, doc.width * 0.32],
+            style=TableStyle([
+                ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
+                ("LINEBELOW", (0, 0), (-1, -1), 1.5, colors.HexColor("#2563eb")),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]),
+        ),
+        Paragraph("Masraf kayitlari listesi.", subtitle_style),
+        Spacer(1, 10),
+    ]
+
+    table_data = [[_pdf_paragraph(header, header_style) for header in headers]]
+    for row in rows:
+        table_data.append([
+            _pdf_paragraph(
+                cell,
+                right_style if index == 6 else center_style if index in {0, 1, 7} else cell_style,
+            )
+            for index, cell in enumerate(row)
+        ])
+
+    col_widths = [2.2 * cm, 2.1 * cm, 4.4 * cm, 3.7 * cm, 3.4 * cm, 7.4 * cm, 3.0 * cm, 2.5 * cm]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1, splitByRow=1)
+    table_styles = [
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+        ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#cbd5e1")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+    ]
+    if rows and len(rows[-1]) > 5 and rows[-1][5] == "Toplam Tutar":
+        table_styles.extend([
+            ("FONTNAME", (0, -1), (-1, -1), bold_font_name),
+            ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#eff6ff")),
+        ])
+    table.setStyle(TableStyle(table_styles))
+    story.append(table)
+
+    def draw_footer(canvas, document):
+        canvas.saveState()
+        canvas.setFont(font_name, 7)
+        canvas.setFillColor(colors.HexColor("#94a3b8"))
+        canvas.drawCentredString(
+            landscape(A4)[0] / 2,
+            0.35 * cm,
+            f"Bu belge MYKEEP Sistemleri tarafindan otomatik olarak olusturulmustur. | Sayfa {document.page}",
+        )
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
+    return response
+
+
 @admin_veya_danisman_only
 def masraf_listesi(request):
     masraflar = _masraf_queryset(request)
@@ -241,12 +383,12 @@ def masraf_pdf(request):
     masraflar = _masraf_queryset(request)
     rows = _masraf_rows(masraflar)
     rows.extend(_masraf_total_rows(_masraf_totals(masraflar)))
-    return _pdf_response(request, "MASRAF LISTESI", _masraf_headers(), rows, "masraf_listesi.pdf", "Masraf kayitlari listesi.")
+    return _pdf_response(request, "MASRAF LİSTESİ", _masraf_headers(), rows, "masraf_listesi.pdf", description="Masraf kayıtları listesi.")
 
 @admin_veya_danisman_only
 def masraf_ekle(request):
     if request.method == 'POST':
-        form = MasrafForm(request.POST)
+        form = MasrafForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Masraf başarıyla eklendi.')
@@ -259,14 +401,14 @@ def masraf_ekle(request):
 def masraf_duzenle(request, pk):
     masraf = get_object_or_404(Masraf, pk=pk)
     if request.method == 'POST':
-        form = MasrafForm(request.POST, instance=masraf)
+        form = MasrafForm(request.POST, request.FILES, instance=masraf)
         if form.is_valid():
             form.save()
             messages.success(request, 'Masraf başarıyla güncellendi.')
             return redirect('masraf_listesi')
     else:
         form = MasrafForm(instance=masraf)
-    return render(request, 'masraf/masraf_form.html', {'form': form, 'title': 'Masraf Düzenle'})
+    return render(request, 'masraf/masraf_form.html', {'form': form, 'title': 'Masraf Düzenle', 'masraf': masraf})
 
 @admin_veya_danisman_only
 def masraf_sil(request, pk):

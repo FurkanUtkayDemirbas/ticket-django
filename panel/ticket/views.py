@@ -402,7 +402,7 @@ def yazisma_sil(request, yazisma_pk):
 # ═══════════════════════════════════════════════════════
 
 def aktivite_listesi(request):
-    aktiviteler = aktivite.objects.select_related("ticketno", "ticketno__unvan", "danisman", "modul").all().order_by("-date")
+    aktiviteler = aktivite.objects.select_related("ticketno", "ticketno__unvan", "danisman", "modul").all().order_by("-number")
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
@@ -512,8 +512,10 @@ def aktivite_sil(request, pk):
 
 def efor_listesi(request):
     """Tüm efor/atama kayıtlarını listeler."""
-    atamalar = atama.objects.select_related("danisman", "ticketno", "modul").all().order_by("-pk")
-    
+    atamalar = atama.objects.select_related(
+        "danisman", "ticketno", "ticketno__unvan", "ticketno__durumtanim", "modul"
+    ).all().order_by("-pk")
+
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile
         if profile.role == 'Firma' and profile.muhatap_firmalar.exists():
@@ -522,10 +524,12 @@ def efor_listesi(request):
             atamalar = atamalar.filter(danisman__in=profile.danisman_profiller.all())
 
     arama = request.GET.get("arama", "").strip()
-    danisman = request.GET.get("danisman", "").strip()
+    danisman_filtre = request.GET.get("danisman", "").strip()
     ticket_secimi = request.GET.get("ticket", "").strip()
     modul = request.GET.get("modul", "").strip()
     onay = request.GET.get("onay", "").strip()
+    secili_unvan = request.GET.get("unvan", "").strip()
+    secili_durum = request.GET.get("durum", "").strip()
 
     if arama:
         atamalar = atamalar.filter(
@@ -534,8 +538,8 @@ def efor_listesi(request):
             | Q(ticketno__ticketno__icontains=arama)
             | Q(ticketno__konu__icontains=arama)
         )
-    if danisman:
-        atamalar = atamalar.filter(danisman__username=danisman)
+    if danisman_filtre:
+        atamalar = atamalar.filter(danisman__username=danisman_filtre)
     if ticket_secimi:
         atamalar = atamalar.filter(ticketno_id=ticket_secimi)
     if modul:
@@ -544,6 +548,10 @@ def efor_listesi(request):
         atamalar = atamalar.filter(onay=True)
     elif onay == "0":
         atamalar = atamalar.filter(onay=False)
+    if secili_unvan:
+        atamalar = atamalar.filter(ticketno__unvan__pk=secili_unvan)
+    if secili_durum:
+        atamalar = atamalar.filter(ticketno__durumtanim__pk=secili_durum)
 
     a_qs = atama.objects.all()
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
@@ -553,14 +561,26 @@ def efor_listesi(request):
         elif profile.role == 'Danisman' and profile.danisman_profiller.exists():
             a_qs = a_qs.filter(danisman__in=profile.danisman_profiller.all())
 
+    # Filtrelerde gösterilecek listeler
+    from muhatap.models import muhatap as Muhatap
+    from ticket.models import statu
+    filtre_unvanlar = Muhatap.objects.filter(
+        ticket__atama__isnull=False
+    ).distinct().order_by("unvan")
+    durumlar = statu.objects.order_by("durumtanim")
+
     context = {
         "atamalar": atamalar,
         "filtre_ticketlari": ticket.objects.filter(atama__in=a_qs).distinct().order_by("-ticketno"),
+        "filtre_unvanlar": filtre_unvanlar,
+        "durumlar": durumlar,
         "arama": arama,
-        "secili_danisman": danisman,
+        "secili_danisman": danisman_filtre,
         "secili_ticket": ticket_secimi,
         "secili_modul": modul,
         "secili_onay": onay,
+        "secili_unvan": secili_unvan,
+        "secili_durum": secili_durum,
         "form": AtamaForm(user=request.user),
     }
     return render(request, "atama_listesi.html", context)

@@ -16,11 +16,63 @@
     </div>
 
     <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-        <form method="post" class="p-10 space-y-7">
+        <form method="post" enctype="multipart/form-data" class="p-10 space-y-7">
             {% csrf_token %}
             
             <div class="grid grid-cols-1 gap-y-7">
                 {% for field in form %}
+                {% if field.name == 'dosya' %}
+                <div class="group">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-blue-600">
+                        Dosya <span class="text-slate-300 font-normal normal-case">(PDF veya Resim)</span>
+                    </label>
+
+                    {# Düzenlemede mevcut dosya göster #}
+                    {% if masraf and masraf.dosya %}
+                    <div class="mb-3 flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                        {% with masraf.dosya.name|lower as fname %}
+                        {% if ".pdf" in fname %}
+                            <span class="w-9 h-9 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </span>
+                        {% else %}
+                            <span class="w-9 h-9 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-image"></i>
+                            </span>
+                        {% endif %}
+                        {% endwith %}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold text-slate-600 truncate">{{ masraf.dosya.name|cut:"masraf_dosyalari/" }}</p>
+                            <a href="{{ masraf.dosya.url }}" target="_blank" class="text-xs text-emerald-600 hover:text-emerald-800 font-semibold">
+                                <i class="fa-solid fa-external-link-alt mr-1"></i>Dosyayı Görüntüle
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# Dosya Yükleme Alanı #}
+                    <label for="id_dosya"
+                        id="dosya-drop-zone"
+                        class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer bg-slate-50 hover:bg-blue-50 hover:border-blue-300 transition-all group/drop">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none" id="dosya-placeholder">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 group-hover/drop:text-blue-400 transition mb-2"></i>
+                            <p class="text-sm font-semibold text-slate-400 group-hover/drop:text-blue-500 transition">Dosya yüklemek için tıklayın</p>
+                            <p class="text-xs text-slate-300 mt-1">PDF, JPG, PNG, WebP — Maks. 10 MB</p>
+                        </div>
+                        <div class="hidden flex-col items-center justify-center pointer-events-none" id="dosya-preview-wrap">
+                            <i id="dosya-icon" class="fa-solid fa-file text-4xl text-blue-400 mb-2"></i>
+                            <p class="text-sm font-semibold text-slate-600" id="dosya-name"></p>
+                            <p class="text-xs text-slate-400" id="dosya-size"></p>
+                        </div>
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-red-500 text-[10px] mt-1.5 font-semibold px-1">
+                            <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ field.errors.0 }}
+                        </p>
+                    {% endif %}
+                </div>
+                {% else %}
                 <div class="group">
                     <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-blue-600">
                         {{ field.label }}
@@ -42,6 +94,7 @@
                     </p>
                     {% endif %}
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
 
@@ -60,6 +113,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ─── Proje & Muhatap Dinamik Güncelleme ───
     const projeSelect = document.getElementById('id_proje');
     const muhatapInput = document.getElementById('id_muhatap_adi');
     const masrafTuruSelect = document.getElementById('id_masraf_turu');
@@ -73,12 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/masraflar/api/get-proje-muhatap/?proje_id=${projeId}`)
             .then(response => response.json())
             .then(data => {
-                // Muhatap adını doldur
                 if (muhatapInput) {
                     muhatapInput.value = data.muhatap_adi || '';
                 }
-
-                // Masraf türlerini dinamik güncelle
                 if (masrafTuruSelect && data.masraf_turleri) {
                     const mevcutDeger = masrafTuruSelect.value;
                     masrafTuruSelect.innerHTML = '<option value="">---------</option>';
@@ -91,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         masrafTuruSelect.appendChild(opt);
                     });
-
                     if (masrafTuruHint) {
                         masrafTuruHint.style.display = data.masraf_turleri.length > 0 ? 'block' : 'none';
                     }
@@ -104,13 +154,48 @@ document.addEventListener('DOMContentLoaded', function() {
         projeSelect.addEventListener('change', function() {
             guncelleFormu(this.value);
         });
-
-        // Sayfa açılışında proje seçiliyse türleri yükle
         if (projeSelect.value) {
             guncelleFormu(projeSelect.value);
         }
     }
+
+    // ─── Dosya Yükleme Önizleme ───
+    const dosyaInput = document.getElementById('id_dosya');
+    const placeholder = document.getElementById('dosya-placeholder');
+    const previewWrap = document.getElementById('dosya-preview-wrap');
+    const dosyaIcon = document.getElementById('dosya-icon');
+    const dosyaName = document.getElementById('dosya-name');
+    const dosyaSize = document.getElementById('dosya-size');
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    if (dosyaInput) {
+        dosyaInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const isPdf = file.type === 'application/pdf';
+            const isImage = file.type.startsWith('image/');
+
+            dosyaIcon.className = isPdf
+                ? 'fa-solid fa-file-pdf text-4xl text-red-500 mb-2'
+                : isImage
+                    ? 'fa-solid fa-file-image text-4xl text-blue-500 mb-2'
+                    : 'fa-solid fa-file text-4xl text-slate-400 mb-2';
+
+            dosyaName.textContent = file.name;
+            dosyaSize.textContent = formatBytes(file.size);
+
+            placeholder.classList.add('hidden');
+            placeholder.classList.remove('flex');
+            previewWrap.classList.remove('hidden');
+            previewWrap.classList.add('flex');
+        });
+    }
 });
 </script>
 {% endblock %}
-

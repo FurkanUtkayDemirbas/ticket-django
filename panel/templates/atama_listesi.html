@@ -17,12 +17,13 @@
     </div>
 
     <!-- Arama ve Filtreleme -->
-    <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_200px_auto_auto] xl:items-end">
+    <form method="get" class="px-8 py-5 border-b border-slate-100 bg-slate-50/40">
+        <!-- Satır 1: Danışman, Ticket, Modül, Unvan, Durum Tanımı -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5 mb-3">
             {% if request.user.is_superuser or request.user.userprofile.role != 'Danisman' %}
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Danışman</label>
-                <select name="danisman" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <select name="danisman" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
                     {% for d in form.fields.danisman.queryset %}
                         <option value="{{ d.username }}" {% if secili_danisman == d.username %}selected{% endif %}>{{ d.isim }}</option>
@@ -32,7 +33,7 @@
             {% endif %}
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Ticket</label>
-                <select name="ticket" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <select name="ticket" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
                     {% for t in filtre_ticketlari %}
                         <option value="{{ t.ticketno }}" {% if secili_ticket == t.ticketno|stringformat:"s" %}selected{% endif %}>{{ t.ticketno }} - {{ t.konu }}</option>
@@ -41,7 +42,7 @@
             </div>
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Modül</label>
-                <select name="modul" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <select name="modul" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
                     {% for m in form.fields.modul.queryset %}
                         <option value="{{ m.kod }}" {% if secili_modul == m.kod %}selected{% endif %}>{{ m }}</option>
@@ -49,8 +50,29 @@
                 </select>
             </div>
             <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Unvan</label>
+                <select name="unvan" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    {% for u in filtre_unvanlar %}
+                        <option value="{{ u.pk }}" {% if secili_unvan == u.pk|stringformat:"s" %}selected{% endif %}>{{ u.unvan }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Durum Tanımı</label>
+                <select name="durum" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    {% for d in durumlar %}
+                        <option value="{{ d.pk }}" {% if secili_durum == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.durumtanim }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <!-- Satır 2: Onay Durumu, Arama, Ara, Temizle -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[200px_1fr_auto_auto] xl:items-end">
+            <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Onay Durumu</label>
-                <select name="onay" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <select name="onay" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
                     <option value="1" {% if secili_onay == "1" %}selected{% endif %}>Onaylı</option>
                     <option value="0" {% if secili_onay == "0" %}selected{% endif %}>Bekliyor</option>
@@ -58,48 +80,80 @@
             </div>
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Kelime Arama</label>
-                <input type="search" name="arama" value="{{ arama }}" placeholder="Arama yap..." class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <input type="search" name="arama" value="{{ arama }}" placeholder="Danışman, ticket no veya konu..." class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
             </div>
-            <div>
-                <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
+            <div class="flex items-end">
+                <button type="submit" class="h-11 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 w-full xl:w-auto">Ara</button>
             </div>
-            <div>
-                {% if arama or secili_danisman or secili_ticket or secili_modul or secili_onay %}
-                    <a href="{% url 'efor_listesi' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
+            <div class="flex items-end">
+                {% if arama or secili_danisman or secili_ticket or secili_modul or secili_onay or secili_unvan or secili_durum %}
+                    <a href="{% url 'efor_listesi' %}" class="inline-flex h-11 w-full xl:w-auto items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">
+                        <i class="fa-solid fa-xmark mr-1.5"></i> Temizle
+                    </a>
                 {% endif %}
             </div>
         </div>
     </form>
-    
+
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 bg-slate-50/10">
-                    <th class="px-8 py-4">Ticket</th>
-                    <th class="px-8 py-4">Danışman</th>
-                    <th class="px-8 py-4">Modül</th>
-                    <th class="px-8 py-4 text-center">Efor</th>
-                    <th class="px-8 py-4 text-center">Onay Durumu</th>
-                    <th class="px-8 py-4 text-right">İşlem</th>
+                    <th class="px-5 py-4">Ticket</th>
+                    <th class="px-5 py-4">Unvan</th>
+                    <th class="px-5 py-4">Ticket Konusu</th>
+                    <th class="px-5 py-4">Durum</th>
+                    <th class="px-5 py-4">Danışman</th>
+                    <th class="px-5 py-4">Modül</th>
+                    <th class="px-5 py-4 text-center">Efor</th>
+                    <th class="px-5 py-4 text-center">Onay</th>
+                    <th class="px-5 py-4 text-right">İşlem</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for a in atamalar %}
                 <tr class="hover:bg-slate-50/80 transition group">
-                    <td class="px-8 py-4 text-sm text-blue-600 font-semibold cursor-pointer hover:underline">
-                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}">{{ a.ticketno.ticketno }}</a>
+                    <!-- Ticket No -->
+                    <td class="px-5 py-4 text-sm text-blue-600 font-semibold whitespace-nowrap">
+                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}" class="hover:underline">{{ a.ticketno.ticketno }}</a>
                     </td>
-                    <td class="px-8 py-4 text-sm font-bold text-slate-700">
+                    <!-- Unvan -->
+                    <td class="px-5 py-4 text-sm font-semibold text-slate-700 whitespace-nowrap">
+                        {% if a.ticketno and a.ticketno.unvan %}
+                            <a href="{% url 'muhatap_duzenle' a.ticketno.unvan.pk %}" class="hover:text-blue-600 hover:underline">{{ a.ticketno.unvan.unvan }}</a>
+                        {% else %}
+                            <span class="text-slate-400">-</span>
+                        {% endif %}
+                    </td>
+                    <!-- Ticket Konusu -->
+                    <td class="px-5 py-4 text-sm text-slate-600 max-w-[200px]">
+                        <span class="truncate block" title="{{ a.ticketno.konu|default:'' }}">{{ a.ticketno.konu|default:"-"|truncatechars:45 }}</span>
+                    </td>
+                    <!-- Durum Tanımı -->
+                    <td class="px-5 py-4 text-sm whitespace-nowrap">
+                        {% if a.ticketno.durumtanim %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100">
+                                <i class="fa-solid fa-circle-dot mr-1.5 text-[9px]"></i>{{ a.ticketno.durumtanim.durumtanim }}
+                            </span>
+                        {% else %}
+                            <span class="text-slate-300 text-xs">-</span>
+                        {% endif %}
+                    </td>
+                    <!-- Danışman -->
+                    <td class="px-5 py-4 text-sm font-bold text-slate-700 whitespace-nowrap">
                         <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs mr-3">
+                            <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[10px] mr-2 shrink-0">
                                 {{ a.danisman.isim|default:a.danisman.username|make_list|first|upper }}
                             </div>
                             {{ a.danisman.isim|default:a.danisman.username }}
                         </div>
                     </td>
-                    <td class="px-8 py-4 text-sm text-slate-500">{{ a.modul.isim|default:"-" }}</td>
-                    <td class="px-8 py-4 text-center text-sm font-semibold text-slate-600">{{ a.efor|default:"0" }} Saat</td>
-                    <td class="px-8 py-4 text-center">
+                    <!-- Modül -->
+                    <td class="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">{{ a.modul.isim|default:"-" }}</td>
+                    <!-- Efor -->
+                    <td class="px-5 py-4 text-center text-sm font-semibold text-slate-600 whitespace-nowrap">{{ a.efor|default:"0" }} Saat</td>
+                    <!-- Onay -->
+                    <td class="px-5 py-4 text-center whitespace-nowrap">
                         {% if a.onay %}
                             <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
                                 <i class="fa-solid fa-circle-check mr-1.5"></i> Onaylı
@@ -110,24 +164,25 @@
                             </span>
                         {% endif %}
                     </td>
-                    <td class="px-8 py-4 text-right">
+                    <!-- İşlem -->
+                    <td class="px-5 py-4 text-right">
                         <div class="flex items-center justify-end space-x-2">
                             {% if not a.onay %}
                             <a href="{% url 'efor_onayla' a.pk %}"
-                               class="group flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all duration-200"
+                               class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all duration-200"
                                title="Onayla">
                                 <i class="fa-solid fa-check text-xs"></i>
                             </a>
                             {% endif %}
-                            <a href="{% url 'efor_duzenle' a.pk %}" 
-                            class="group flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
-                            title="Düzenle">
+                            <a href="{% url 'efor_duzenle' a.pk %}"
+                               class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
+                               title="Düzenle">
                                 <i class="fa-solid fa-pen-to-square text-xs"></i>
                             </a>
-                            <a href="{% url 'efor_sil' a.pk %}" 
-                            onclick="return confirm('Bu eforu silmek istediğinize emin misiniz?')"
-                            class="group flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200"
-                            title="Sil">
+                            <a href="{% url 'efor_sil' a.pk %}"
+                               onclick="return confirm('Bu eforu silmek istediğinize emin misiniz?')"
+                               class="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200"
+                               title="Sil">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
                             </a>
                         </div>
@@ -135,7 +190,10 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="px-8 py-10 text-center text-slate-400 text-sm italic">Sistemde kayıtlı efor kaydı bulunmamaktadır.</td>
+                    <td colspan="9" class="px-8 py-10 text-center text-slate-400 text-sm italic">
+                        <i class="fa-regular fa-folder-open text-2xl mb-2 block text-slate-200"></i>
+                        Filtrelere uygun efor kaydı bulunamadı.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
