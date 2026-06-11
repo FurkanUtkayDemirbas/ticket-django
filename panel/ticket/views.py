@@ -232,7 +232,7 @@ def ticket_duzenle(request, pk):
             aktivite_form = TicketIciAktiviteForm()
             yazisma_form = TicketYazismaForm()
         elif 'yazisma_ekle' in request.POST:
-            yazisma_form = TicketYazismaForm(request.POST)
+            yazisma_form = TicketYazismaForm(request.POST, request.FILES)
             if yazisma_form.is_valid():
                 yeni_yazisma = yazisma_form.save(commit=False)
                 yeni_yazisma.ticketno = kayit

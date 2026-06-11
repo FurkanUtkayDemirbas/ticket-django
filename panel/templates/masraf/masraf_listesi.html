@@ -84,10 +84,14 @@
             </div>
         </div>
         <!-- İkinci satır: Tarih, Ödeme Durumu, Ara, Temizle -->
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[200px_200px_auto_auto] xl:items-end">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[150px_150px_200px_auto_auto] xl:items-end">
             <div>
-                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tarih</label>
-                <input type="date" name="tarih" value="{{ secili_tarih }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Başlangıç</label>
+                <input type="date" name="baslangic_tarihi" value="{{ secili_baslangic_tarihi }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Bitiş</label>
+                <input type="date" name="bitis_tarihi" value="{{ secili_bitis_tarihi }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
             </div>
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Ödeme Durumu</label>
@@ -100,7 +104,7 @@
             <div class="flex items-end">
                 <button type="submit" class="h-11 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 w-full xl:w-auto">Ara</button>
             </div>
-            {% if secili_fis_no or secili_proje_no or secili_proje_adi or secili_danisman or secili_masraf_turu or secili_tarih or secili_odeme_durumu %}
+            {% if secili_fis_no or secili_proje_no or secili_proje_adi or secili_danisman or secili_masraf_turu or secili_baslangic_tarihi or secili_bitis_tarihi or secili_odeme_durumu %}
             <div class="flex items-end">
                 <a href="{{ request.path }}" class="inline-flex h-11 w-full xl:w-auto items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">
                     <i class="fa-solid fa-xmark mr-1.5"></i> Temizle

@@ -6,6 +6,9 @@ class MuhatapForm(forms.ModelForm):
         model = muhatap
         # Modellerindeki alan isimleri: unvan, vkn, adres, telefon, grupkod, aktif
         fields = ['unvan', 'vkn', 'adres', 'telefon', 'grupkod', 'aktif']
+        labels = {
+            'unvan': 'Muhatap',
+        }
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

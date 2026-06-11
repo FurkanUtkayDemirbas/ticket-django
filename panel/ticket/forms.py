@@ -8,6 +8,7 @@ class TicketForm(forms.ModelForm):
         labels = {
             'departmankod': 'Departman Kodu',
             'bolumkod': 'Bölüm Kodu',
+            'unvan': 'Muhatap',
         }
         
     def __init__(self, *args, **kwargs):
@@ -166,7 +167,6 @@ class TicketIciEforForm(forms.ModelForm):
             "efor": "Efor (Saat)",
             "onay": "Onay",
         }
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
@@ -178,13 +178,13 @@ class TicketIciEforForm(forms.ModelForm):
                     "outline-none transition-all cursor-pointer select-none"
                 )
 
-
 class TicketYazismaForm(forms.ModelForm):
     class Meta:
         model = TicketYazisma
-        fields = ["mesaj"]
+        fields = ["mesaj", "dosya"]
         labels = {
             "mesaj": "Yazışma",
+            "dosya": "Dosya Eki",
         }
 
     def __init__(self, *args, **kwargs):
@@ -197,4 +197,8 @@ class TicketYazismaForm(forms.ModelForm):
             ),
             "rows": 4,
             "placeholder": "Ticket ile ilgili yazışma veya açıklama ekleyin...",
+        })
+        
+        self.fields["dosya"].widget = forms.ClearableFileInput(attrs={
+            "class": "block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
         })

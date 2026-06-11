@@ -86,6 +86,7 @@ class TicketYazisma(models.Model):
     ticketno = models.ForeignKey("ticket", to_field="ticketno", on_delete=models.CASCADE, related_name="yazismalar")
     kullanici = models.ForeignKey("auth.User", on_delete=models.SET_NULL, null=True, blank=True)
     mesaj = models.TextField()
+    dosya = models.FileField(upload_to='ticket_yazisma_dosyalari/', null=True, blank=True)
     olusturma_tarihi = models.DateTimeField(auto_now_add=True)
 
     class Meta:

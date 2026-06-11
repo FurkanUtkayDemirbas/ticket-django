@@ -28,7 +28,8 @@ def _masraf_queryset(request):
     proje_adi = request.GET.get("proje_adi", "").strip()
     danisman_secimi = request.GET.get("danisman", "").strip()
     masraf_turu = request.GET.get("masraf_turu", "").strip()
-    tarih = request.GET.get("tarih", "").strip()
+    baslangic_tarihi = request.GET.get("baslangic_tarihi", "").strip()
+    bitis_tarihi = request.GET.get("bitis_tarihi", "").strip()
     odeme_durumu = request.GET.get("odeme_durumu", "").strip()
 
     if fis_no:
@@ -45,8 +46,10 @@ def _masraf_queryset(request):
         queryset = queryset.filter(danisman_id=danisman_secimi)
     if masraf_turu:
         queryset = queryset.filter(masraf_turu_id=masraf_turu)
-    if tarih:
-        queryset = queryset.filter(tarih=tarih)
+    if baslangic_tarihi:
+        queryset = queryset.filter(tarih__gte=baslangic_tarihi)
+    if bitis_tarihi:
+        queryset = queryset.filter(tarih__lte=bitis_tarihi)
     if odeme_durumu == "odendi":
         queryset = queryset.filter(odendi_mi=True)
     elif odeme_durumu == "odenmedi":
@@ -62,7 +65,8 @@ def _masraf_filter_context(request):
         "secili_proje_adi": request.GET.get("proje_adi", "").strip(),
         "secili_danisman": request.GET.get("danisman", "").strip(),
         "secili_masraf_turu": request.GET.get("masraf_turu", "").strip(),
-        "secili_tarih": request.GET.get("tarih", "").strip(),
+        "secili_baslangic_tarihi": request.GET.get("baslangic_tarihi", "").strip(),
+        "secili_bitis_tarihi": request.GET.get("bitis_tarihi", "").strip(),
         "secili_odeme_durumu": request.GET.get("odeme_durumu", "").strip(),
         "fis_nolari": Masraf.objects.exclude(fis_no="").values_list("fis_no", flat=True).distinct().order_by("fis_no"),
         "projeler": projeler.objects.order_by("projeno"),
