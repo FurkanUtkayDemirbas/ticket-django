@@ -68,14 +68,23 @@
                 </select>
             </div>
         </div>
-        <!-- Satır 2: Onay Durumu, Arama, Ara, Temizle -->
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[200px_1fr_auto_auto] xl:items-end">
+        <!-- Satır 2: Onay Durumu, Fatura Durumu, Arama, Ara, Temizle -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[200px_200px_1fr_auto_auto] xl:items-end">
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Onay Durumu</label>
                 <select name="onay" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
                     <option value="">Tümü</option>
                     <option value="1" {% if secili_onay == "1" %}selected{% endif %}>Onaylı</option>
                     <option value="0" {% if secili_onay == "0" %}selected{% endif %}>Bekliyor</option>
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Fatura Durumu</label>
+                <select name="fatura_durumu" class="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                    <option value="">Tümü</option>
+                    {% for f in fatura_durumlari %}
+                        <option value="{{ f.pk }}" {% if secili_fatura_durumu == f.pk|stringformat:"s" %}selected{% endif %}>{{ f.faturadurum }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div>
@@ -86,7 +95,7 @@
                 <button type="submit" class="h-11 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 w-full xl:w-auto">Ara</button>
             </div>
             <div class="flex items-end">
-                {% if arama or secili_danisman or secili_ticket or secili_modul or secili_onay or secili_unvan or secili_durum %}
+                {% if arama or secili_danisman or secili_ticket or secili_modul or secili_onay or secili_unvan or secili_durum or secili_fatura_durumu %}
                     <a href="{% url 'efor_listesi' %}" class="inline-flex h-11 w-full xl:w-auto items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">
                         <i class="fa-solid fa-xmark mr-1.5"></i> Temizle
                     </a>
@@ -103,6 +112,7 @@
                     <th class="px-5 py-4">Unvan</th>
                     <th class="px-5 py-4">Ticket Konusu</th>
                     <th class="px-5 py-4">Durum</th>
+                    <th class="px-5 py-4">Fatura Durumu</th>
                     <th class="px-5 py-4">Danışman</th>
                     <th class="px-5 py-4">Modül</th>
                     <th class="px-5 py-4 text-center">Efor</th>
@@ -135,6 +145,18 @@
                             <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100">
                                 <i class="fa-solid fa-circle-dot mr-1.5 text-[9px]"></i>{{ a.ticketno.durumtanim.durumtanim }}
                             </span>
+                        {% else %}
+                            <span class="text-slate-300 text-xs">-</span>
+                        {% endif %}
+                    </td>
+                    <!-- Fatura Durumu -->
+                    <td class="px-5 py-4 text-sm whitespace-nowrap">
+                        {% if a.ticketno.faturadurum %}
+                            {% if a.ticketno.faturadurum.faturadurum == "Faturalandı" %}
+                                <span class="px-3 py-1.5 bg-purple-50 text-purple-600 text-xs font-bold rounded-lg border border-purple-100">FATURALANDI</span>
+                            {% else %}
+                                <span class="px-3 py-1.5 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg border border-slate-200">{{ a.ticketno.faturadurum.faturadurum|upper }}</span>
+                            {% endif %}
                         {% else %}
                             <span class="text-slate-300 text-xs">-</span>
                         {% endif %}
