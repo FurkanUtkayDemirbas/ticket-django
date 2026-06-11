@@ -66,7 +66,8 @@ def ticket_listesi(request):
     durum = request.GET.get("durum", "").strip()
     durum_grubu = request.GET.get("durum_grubu", "").strip()
     danisman = request.GET.get("danisman", "").strip()
-    tarih = request.GET.get("tarih", "").strip()
+    baslangic_tarihi = request.GET.get("baslangic_tarihi", "").strip()
+    bitis_tarihi = request.GET.get("bitis_tarihi", "").strip()
     bolum = request.GET.get("bolum", "").strip()
     faturalama = request.GET.get("faturalama", "").strip()
     oncelik = request.GET.get("oncelik", "").strip()
@@ -87,8 +88,10 @@ def ticket_listesi(request):
         tum_ticketlar = tum_ticketlar.filter(durumtanim__durumtanim="Tamamlandı")
     if danisman:
         tum_ticketlar = tum_ticketlar.filter(danisman__username=danisman)
-    if tarih:
-        tum_ticketlar = tum_ticketlar.filter(taleptarih__date=tarih)
+    if baslangic_tarihi:
+        tum_ticketlar = tum_ticketlar.filter(taleptarih__date__gte=baslangic_tarihi)
+    if bitis_tarihi:
+        tum_ticketlar = tum_ticketlar.filter(taleptarih__date__lte=bitis_tarihi)
     if bolum:
         tum_ticketlar = tum_ticketlar.filter(bolumkod_id=bolum)
     if faturalama:
@@ -121,7 +124,8 @@ def ticket_listesi(request):
         'secili_durum': durum,
         'secili_durum_grubu': durum_grubu,
         'secili_danisman': danisman,
-        'tarih': tarih,
+        'secili_baslangic_tarihi': baslangic_tarihi,
+        'secili_bitis_tarihi': bitis_tarihi,
         'secili_bolum': bolum,
         'secili_faturalama': faturalama,
         'secili_oncelik': oncelik,
@@ -416,7 +420,8 @@ def aktivite_listesi(request):
     ticket_secimi = request.GET.get("ticket", "").strip()
     danisman = request.GET.get("danisman", "").strip()
     modul = request.GET.get("modul", "").strip()
-    tarih = request.GET.get("tarih", "").strip()
+    baslangic_tarihi = request.GET.get("baslangic_tarihi", "").strip()
+    bitis_tarihi = request.GET.get("bitis_tarihi", "").strip()
 
     if aktivite_no:
         aktiviteler = aktiviteler.filter(number=aktivite_no)
@@ -428,8 +433,10 @@ def aktivite_listesi(request):
         aktiviteler = aktiviteler.filter(danisman__username=danisman)
     if modul:
         aktiviteler = aktiviteler.filter(modul_id=modul)
-    if tarih:
-        aktiviteler = aktiviteler.filter(date__date=tarih)
+    if baslangic_tarihi:
+        aktiviteler = aktiviteler.filter(date__date__gte=baslangic_tarihi)
+    if bitis_tarihi:
+        aktiviteler = aktiviteler.filter(date__date__lte=bitis_tarihi)
 
     a_qs = aktivite.objects.select_related("ticketno", "ticketno__unvan").order_by("number")
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
@@ -449,7 +456,8 @@ def aktivite_listesi(request):
         "secili_ticket": ticket_secimi,
         "secili_danisman": danisman,
         "secili_modul": modul,
-        "tarih": tarih,
+        "secili_baslangic_tarihi": baslangic_tarihi,
+        "secili_bitis_tarihi": bitis_tarihi,
         "form": AktiviteForm(user=request.user),
     }
     return render(request, "aktivite_listesi.html", context)

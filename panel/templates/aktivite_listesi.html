@@ -14,7 +14,7 @@
     </div>
 
     <form method="get" class="px-8 py-5 border-b border-slate-100 bg-white">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_160px_auto_auto] xl:items-end">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_130px_130px_auto_auto] xl:items-end">
             <div>
                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">No</label>
                 <select name="aktivite_no" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
@@ -63,14 +63,18 @@
                 </select>
             </div>
             <div>
-                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tarih</label>
-                <input type="date" name="tarih" value="{{ tarih }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Başlangıç</label>
+                <input type="date" name="baslangic_tarihi" value="{{ secili_baslangic_tarihi }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+            </div>
+            <div>
+                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Bitiş</label>
+                <input type="date" name="bitis_tarihi" value="{{ secili_bitis_tarihi }}" class="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
             </div>
             <div>
                 <button type="submit" class="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700">Ara</button>
             </div>
             <div>
-                {% if secili_aktivite_no or secili_muhatap or secili_ticket or secili_danisman or secili_modul or tarih %}
+                {% if secili_aktivite_no or secili_muhatap or secili_ticket or secili_danisman or secili_modul or secili_baslangic_tarihi or secili_bitis_tarihi %}
                     <a href="{% url 'aktivite_listesi' %}" class="inline-flex h-11 items-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-500 transition hover:bg-slate-100">Temizle</a>
                 {% endif %}
             </div>
