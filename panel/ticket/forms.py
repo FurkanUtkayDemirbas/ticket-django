@@ -2,9 +2,15 @@ from django import forms
 from .models import TicketYazisma, aktivite, ticket
 
 class TicketForm(forms.ModelForm):
+    ilk_dosya = forms.FileField(
+        required=False,
+        label="Dosya Eki",
+        widget=forms.ClearableFileInput(),
+    )
+
     class Meta:
         model = ticket
-        fields = ['konu', 'unvan', 'sozlesmeno', 'departmankod', 'bolumkod', 'destekturu', 'taleptarih', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum']
+        fields = ['konu', 'unvan', 'sozlesmeno', 'departmankod', 'bolumkod', 'destekturu', 'taleptarih', 'termintarih', 'oncelikkod', 'musteri_ticket_no', 'aciklama', 'durumtanim', 'faturadurum', 'ilk_dosya']
         labels = {
             'departmankod': 'Departman Kodu',
             'bolumkod': 'Bölüm Kodu',
@@ -33,6 +39,14 @@ class TicketForm(forms.ModelForm):
             # Açıklama (textarea) yüksekliğini sabitle
             if field_name == 'aciklama':
                 field.widget.attrs['rows'] = '4'
+
+            if field_name == 'ilk_dosya':
+                field.widget.attrs['class'] = (
+                    'block w-full text-sm text-slate-500 '
+                    'file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 '
+                    'file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 '
+                    'hover:file:bg-blue-100'
+                )
             
             # Tarihler için HTML5 datetime-local tipi ekle (Flatpickr takvimi için)
             if field_name in ['taleptarih', 'termintarih']:

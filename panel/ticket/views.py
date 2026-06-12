@@ -142,7 +142,7 @@ def ticket_listesi(request):
 def ticket_ekle(request):
     """Sıfırdan yeni bir ticket oluşturur. Aynı ekranda aktivite ve atama da eklenebilir."""
     if request.method == "POST":
-        form = TicketForm(request.POST, user=request.user, is_creation=True)
+        form = TicketForm(request.POST, request.FILES, user=request.user, is_creation=True)
         aktivite_form = TicketIciAktiviteForm(request.POST)
         efor_form = TicketIciEforForm(request.POST)
 
@@ -156,6 +156,15 @@ def ticket_ekle(request):
                     yeni_ticket.durumtanim = statu_obj
             yeni_ticket.save()
             form.save_m2m()
+
+            ilk_dosya = form.cleaned_data.get('ilk_dosya')
+            if ilk_dosya:
+                TicketYazisma.objects.create(
+                    ticketno=yeni_ticket,
+                    kullanici=request.user if request.user.is_authenticated else None,
+                    mesaj="Ticket açılışında dosya eklendi.",
+                    dosya=ilk_dosya,
+                )
             
             # Eğer aktivite formu doldurulmuşsa (örn: açıklama veya süre varsa) kaydet
             if aktivite_form.is_valid() and (aktivite_form.cleaned_data.get('aciklama') or aktivite_form.cleaned_data.get('time')):
@@ -249,9 +258,18 @@ def ticket_duzenle(request, pk):
             efor_form = TicketIciEforForm()
         else:
             # Ticket güncelleme işlemi
-            form = TicketForm(request.POST, instance=kayit, user=request.user)
+            form = TicketForm(request.POST, request.FILES, instance=kayit, user=request.user)
             if form.is_valid():
                 form.save()
+
+                yeni_dosya = form.cleaned_data.get('ilk_dosya')
+                if yeni_dosya:
+                    TicketYazisma.objects.create(
+                        ticketno=kayit,
+                        kullanici=request.user if request.user.is_authenticated else None,
+                        mesaj="Ticket düzenlemesinde dosya eklendi.",
+                        dosya=yeni_dosya,
+                    )
                 return redirect('ticket_listesi')
             aktivite_form = TicketIciAktiviteForm()
             efor_form = TicketIciEforForm()

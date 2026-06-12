@@ -108,9 +108,9 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 bg-slate-50/10">
-                    <th class="px-5 py-4">Ticket</th>
                     <th class="px-5 py-4">Muhatap</th>
-                    <th class="px-5 py-4">Ticket Konusu</th>
+                    <th class="px-5 py-4">Ticket No</th>
+                    <th class="px-5 py-4">Ticket Tanımı</th>
                     <th class="px-5 py-4">Durum</th>
                     <th class="px-5 py-4">Fatura Durumu</th>
                     <th class="px-5 py-4">Danışman</th>
@@ -123,11 +123,7 @@
             <tbody class="divide-y divide-slate-100">
                 {% for a in atamalar %}
                 <tr class="hover:bg-slate-50/80 transition group">
-                    <!-- Ticket No -->
-                    <td class="px-5 py-4 text-sm text-blue-600 font-semibold whitespace-nowrap">
-                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}" class="hover:underline">{{ a.ticketno.ticketno }}</a>
-                    </td>
-                    <!-- Unvan -->
+                    <!-- Muhatap -->
                     <td class="px-5 py-4 text-sm font-semibold text-slate-700 whitespace-nowrap">
                         {% if a.ticketno and a.ticketno.unvan %}
                             <a href="{% url 'muhatap_duzenle' a.ticketno.unvan.pk %}" class="hover:text-blue-600 hover:underline">{{ a.ticketno.unvan.unvan }}</a>
@@ -135,7 +131,11 @@
                             <span class="text-slate-400">-</span>
                         {% endif %}
                     </td>
-                    <!-- Ticket Konusu -->
+                    <!-- Ticket No -->
+                    <td class="px-5 py-4 text-sm text-blue-600 font-semibold whitespace-nowrap">
+                        <a href="{% url 'ticket_duzenle' a.ticketno.pk %}" class="hover:underline">{{ a.ticketno.ticketno }}</a>
+                    </td>
+                    <!-- Ticket Tanımı -->
                     <td class="px-5 py-4 text-sm text-slate-600 max-w-[200px]">
                         <span class="truncate block" title="{{ a.ticketno.konu|default:'' }}">{{ a.ticketno.konu|default:"-"|truncatechars:45 }}</span>
                     </td>
@@ -212,7 +212,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="9" class="px-8 py-10 text-center text-slate-400 text-sm italic">
+                    <td colspan="10" class="px-8 py-10 text-center text-slate-400 text-sm italic">
                         <i class="fa-regular fa-folder-open text-2xl mb-2 block text-slate-200"></i>
                         Filtrelere uygun efor kaydı bulunamadı.
                     </td>

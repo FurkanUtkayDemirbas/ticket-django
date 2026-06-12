@@ -21,7 +21,13 @@ from uyelik.decorators import admin_veya_danisman_only, admin_only
 
 
 def _masraf_queryset(request):
-    queryset = Masraf.objects.select_related("proje", "danisman", "masraf_turu").order_by("-tarih", "-id")
+    queryset = Masraf.objects.select_related(
+        "proje",
+        "proje__sozlesme_baglantisi",
+        "proje__sozlesme_baglantisi__muhatap",
+        "danisman",
+        "masraf_turu",
+    ).order_by("-tarih", "-id")
 
     fis_no = request.GET.get("fis_no", "").strip()
     proje_no = request.GET.get("proje_no", "").strip()
@@ -475,7 +481,7 @@ def get_proje_muhatap(request):
             muhatap_adi = ''
 
             if sozlesme and sozlesme.muhatap:
-                muhatap_adi = str(sozlesme.muhatap).strip()
+                muhatap_adi = sozlesme.muhatap.unvan.strip()
 
             # Tüm masraf türlerini döndür (genel + firmaya özel hepsi)
             turler = MasrafTuru.objects.order_by('tanim')

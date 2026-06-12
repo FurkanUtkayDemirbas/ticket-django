@@ -120,6 +120,7 @@
                     <th class="px-6 py-4 font-semibold">Tarih</th>
                     <th class="px-6 py-4 font-semibold">Fiş No</th>
                     <th class="px-6 py-4 font-semibold">Proje</th>
+                    <th class="px-6 py-4 font-semibold">Muhatap</th>
                     <th class="px-6 py-4 font-semibold">Danışman</th>
                     <th class="px-6 py-4 font-semibold">Tür</th>
                     <th class="px-6 py-4 font-semibold">Açıklama</th>
@@ -138,8 +139,15 @@
                         <div class="text-sm font-semibold text-blue-600">{{ masraf.proje.projeno|default:"-" }}</div>
                         {% if masraf.proje.tanim %}
                             <div class="text-xs text-slate-500">{{ masraf.proje.tanim }}</div>
-                        {% elif masraf.muhatap_adi %}
-                            <div class="text-xs text-slate-500">{{ masraf.muhatap_adi }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm font-semibold text-slate-700 whitespace-nowrap">
+                        {% if masraf.muhatap_adi %}
+                            {{ masraf.muhatap_adi }}
+                        {% elif masraf.proje.sozlesme_baglantisi.muhatap %}
+                            {{ masraf.proje.sozlesme_baglantisi.muhatap.unvan }}
+                        {% else %}
+                            -
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-sm text-slate-600">{{ masraf.danisman|default:"-" }}</td>
@@ -201,7 +209,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="10" class="px-6 py-8 text-center text-slate-500">
+                    <td colspan="11" class="px-6 py-8 text-center text-slate-500">
                         Henüz masraf kaydı bulunmamaktadır.
                     </td>
                 </tr>
@@ -211,7 +219,7 @@
             <tfoot>
                 {% for toplam in masraf_toplamlari %}
                 <tr class="border-t-2 border-slate-200 bg-slate-50/70">
-                    <td colspan="6" class="px-6 py-4">
+                    <td colspan="7" class="px-6 py-4">
                         <div class="flex items-center justify-end gap-3">
                             <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
                                 <i class="fa-solid fa-calculator text-sm"></i>
@@ -227,7 +235,7 @@
                             {{ toplam.toplam|floatformat:2 }} {{ toplam.para_birimi }}
                         </span>
                     </td>
-                    <td colspan="2" class="px-6 py-4"></td>
+                    <td colspan="3" class="px-6 py-4"></td>
                 </tr>
                 {% endfor %}
             </tfoot>

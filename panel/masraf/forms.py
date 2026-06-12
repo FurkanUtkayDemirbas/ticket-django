@@ -40,3 +40,13 @@ class MasrafForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['proje'].empty_label = 'Proje seçiniz...'
         self.fields['dosya'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        proje = cleaned_data.get('proje')
+        if proje and proje.sozlesme_baglantisi_id:
+            muhatap = proje.sozlesme_baglantisi.muhatap
+            cleaned_data['muhatap_adi'] = muhatap.unvan if muhatap else ''
+        else:
+            cleaned_data['muhatap_adi'] = ''
+        return cleaned_data
