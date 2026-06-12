@@ -52,7 +52,7 @@ def ticket_listesi(request):
     """Tüm ticket kayıtlarını tablo halinde listeler."""
     tum_ticketlar = ticket.objects.select_related(
         "unvan", "durumtanim", "faturadurum", "bolumkod", "oncelikkod"
-    ).prefetch_related("danisman").all().order_by('-ticketno')
+    ).prefetch_related("danisman", "yazismalar").all().order_by('-ticketno')
     
     if hasattr(request.user, 'userprofile') and not request.user.is_superuser:
         profile = request.user.userprofile

@@ -13,4 +13,6 @@ class projeler(models.Model):
     aciklama = models.TextField(null=True, blank=True, verbose_name="Proje Açıklaması")
 
     def __str__(self):
-        return f"{self.projeno} - {self.sozlesme_baglantisi}"
+        if self.tanim:
+            return f"{self.projeno} - {self.tanim}"
+        return f"{self.projeno}"

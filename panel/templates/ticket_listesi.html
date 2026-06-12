@@ -105,6 +105,7 @@
                     <th class="px-4 py-4">Danışman</th>
                     <th class="px-4 py-4 text-center">Onay</th>
                     <th class="px-4 py-4">Talep Tarihi</th>
+                    <th class="px-4 py-4 text-center">Dosya</th>
                     <th class="px-4 py-4">Durum</th>
                     <th class="px-4 py-4">Fatura Durumu</th>
                     <th class="px-6 py-4 text-right">İşlemler</th>
@@ -142,6 +143,29 @@
                         {% endif %}
                     </td>
                     <td class="px-4 py-4 text-sm text-slate-500">{{ t.taleptarih|date:"d.m.Y H:i" }}</td>
+                    <td class="px-4 py-4 text-center">
+                        {% with ilk_yazisma=t.yazismalar.last %}
+                            {% if ilk_yazisma and ilk_yazisma.dosya %}
+                                {% with ilk_yazisma.dosya.name|lower as fname %}
+                                {% if ".pdf" in fname %}
+                                <a href="{{ ilk_yazisma.dosya.url }}" target="_blank"
+                                   class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition shadow-sm"
+                                   title="PDF dosyasını aç">
+                                    <i class="fa-solid fa-file-pdf text-xs"></i>
+                                </a>
+                                {% else %}
+                                <a href="{{ ilk_yazisma.dosya.url }}" target="_blank"
+                                   class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition shadow-sm"
+                                   title="Resmi aç">
+                                    <i class="fa-solid fa-image text-xs"></i>
+                                </a>
+                                {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-slate-300 text-xs"><i class="fa-regular fa-file"></i></span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
                     <td class="px-4 py-4">
                         {% if t.durumtanim.durumtanim == "Tamamlandı" %}
                             <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-100" id="status-{{ t.pk }}">TAMAMLANDI</span>
