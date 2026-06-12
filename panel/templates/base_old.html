@@ -280,59 +280,6 @@
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
             transform: translateY(-1px);
         }
-
-        /* ============================================
-           SIDEBAR AÇILIR/KAPANIR (DESKTOP HOVER)
-           ============================================ */
-        @media (min-width: 1025px) {
-            aside {
-                width: 76px !important;
-                transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                overflow-x: hidden !important;
-            }
-            aside:hover {
-                width: 260px !important;
-            }
-            /* İçeriklerin padding'ini icon'un tam ortalanacağı şekilde ayarla */
-            aside .px-8 {
-                padding-left: 1.5rem !important; /* px-6 */
-                padding-right: 1.5rem !important;
-            }
-            aside .pl-8 {
-                padding-left: 1.5rem !important;
-            }
-            /* Metinleri ve dropdown okunu gizle */
-            aside span, 
-            aside .aside-logo-text,
-            aside .fa-chevron-down {
-                opacity: 0;
-                white-space: nowrap;
-                transition: opacity 0.2s ease;
-                pointer-events: none;
-            }
-            aside:hover span,
-            aside:hover .aside-logo-text,
-            aside:hover .fa-chevron-down {
-                opacity: 1;
-                pointer-events: auto;
-                transition-delay: 0.1s;
-            }
-            /* İkonları hizala */
-            aside i.fa-solid {
-                min-width: 20px;
-                text-align: center;
-            }
-            /* MYKEEP Logo alanını düzenle */
-            aside .logo-container {
-                display: flex;
-                align-items: center;
-                height: 40px;
-            }
-            aside .aside-logo-text {
-                text-align: left;
-                width: 100%;
-            }
-        }
     </style>
 </head>
 <body class="bg-[#f8f9fa] text-slate-800 overflow-hidden">
@@ -346,10 +293,10 @@
     <div id="sidebar-overlay" onclick="closeSidebar()"></div>
     <div class="flex h-screen">
         <aside class="w-[260px] bg-[#0b1221] flex flex-col shadow-2xl z-20">
-            <div class="p-6 pt-10 logo-container">
-                <h1 class="text-2xl font-extrabold tracking-wide text-blue-500 uppercase aside-logo-text">MYKEEP</h1>
+            <div class="p-6">
+                <h1 class="text-2xl font-extrabold tracking-wide text-blue-500 uppercase">MYKEEP</h1>
             </div>
-            <nav class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden mt-4">
+            <nav class="flex-1 space-y-1 overflow-y-auto mt-4">
                 <a href="{% url 'index' %}" class="flex items-center space-x-3 py-3 px-8 transition-all duration-200 {% if request.resolver_match.url_name == 'index' %}bg-[#151f32] text-white font-bold border-l-[5px] border-blue-500{% else %}text-slate-400 hover:text-white hover:bg-[#151f32]/50 border-l-[5px] border-transparent{% endif %}">
                     <i class="fa-solid fa-house-chimney text-sm"></i>
                     <span class="text-sm">Genel Bakış</span>
